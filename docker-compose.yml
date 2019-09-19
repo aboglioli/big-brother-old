@@ -33,6 +33,8 @@ services:
     restart: always
     ports:
       - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis:/data
     networks:
       - redis
 
@@ -54,11 +56,15 @@ services:
     ports:
       - "${RABBITMQ_PORT:-5672}:5672"
       - "${RABBITMQ_MANAGEMENT_PORT:-8082}:15672"
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
     networks:
       - rabbitmq
 
 volumes:
   mongo:
+  redis:
+  rabbitmq:
 
 networks:
   mongo:

@@ -16,6 +16,7 @@ func Start() {
 	r.GET("/product/:id/stock", getStockByProductID)
 	r.GET("/stock/:id", getStockByID)
 	r.POST("/stock", createStock)
+	r.PUT("/stock/:id", updateStock)
 
 	r.Run(fmt.Sprintf(":%d", c.Port))
 }

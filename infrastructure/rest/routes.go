@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/aboglioli/big-brother/quantity"
 	"github.com/aboglioli/big-brother/stock"
 	"github.com/gin-gonic/gin"
 )
@@ -70,6 +71,41 @@ func getStockByProductID(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": err.Error(), // TODO: errors from infrastructure!!!
 		})
+		return
+	}
+
+	c.JSON(http.StatusOK, stockToJSON(stock))
+}
+
+type UpdateRequest struct {
+	Action   string            `json:"action" binding:"required"`
+	Quantity quantity.Quantity `json:"quantity" binding:"required"`
+}
+
+func updateStock(c *gin.Context) {
+	stockID := c.Param("id")
+
+	var body UpdateRequest
+	if err := c.ShouldBindJSON(&body); err != nil {
+		log.Println(err)
+		return
+	}
+
+	stockService, err := stock.NewService()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	var stock *stock.Stock
+	if body.Action == "add" {
+		stock, err = stockService.AddQuantity(stockID, body.Quantity)
+	} else if body.Action == "substract" {
+		stock, err = stockService.SubstractQuantity(stockID, body.Quantity)
+	}
+
+	if err != nil {
+		log.Println(err)
 		return
 	}
 

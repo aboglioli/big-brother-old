@@ -10,8 +10,8 @@ type Service interface {
 	Create(CreateRequest) (*Stock, error)
 	GetByID(string) (*Stock, error)
 	GetByProductID(string) (*Stock, error)
-	AddQuantity(string, AddRequest) (*Stock, error)
-	SubstractQuantity(string, SubstractRequest) (*Stock, error)
+	AddQuantity(string, quantity.Quantity) (*Stock, error)
+	SubstractQuantity(string, quantity.Quantity) (*Stock, error)
 }
 
 type service struct {
@@ -58,17 +58,13 @@ func (s *service) GetByProductID(productID string) (*Stock, error) {
 	return s.repository.FindByProductID(productID)
 }
 
-type AddRequest struct {
-	quantity.Quantity
-}
-
-func (s *service) AddQuantity(stockId string, req AddRequest) (*Stock, error) {
-	stock, err := s.repository.FindByID(stockId)
+func (s *service) AddQuantity(stockID string, q quantity.Quantity) (*Stock, error) {
+	stock, err := s.repository.FindByID(stockID)
 	if err != nil {
 		return nil, err
 	}
 
-	newQuantity, err := s.quantityService.Add(&stock.Quantity, &req.Quantity)
+	newQuantity, err := s.quantityService.Add(&stock.Quantity, &q)
 	if err != nil {
 		return nil, err
 	}
@@ -81,17 +77,13 @@ func (s *service) AddQuantity(stockId string, req AddRequest) (*Stock, error) {
 	return stock, nil
 }
 
-type SubstractRequest struct {
-	quantity.Quantity
-}
-
-func (s *service) SubstractQuantity(stockId string, req SubstractRequest) (*Stock, error) {
-	stock, err := s.repository.FindByID(stockId)
+func (s *service) SubstractQuantity(stockID string, q quantity.Quantity) (*Stock, error) {
+	stock, err := s.repository.FindByID(stockID)
 	if err != nil {
 		return nil, err
 	}
 
-	newQuantity, err := s.quantityService.Substract(&stock.Quantity, &req.Quantity)
+	newQuantity, err := s.quantityService.Substract(&stock.Quantity, &q)
 	if err != nil {
 		return nil, err
 	}

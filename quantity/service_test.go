@@ -7,18 +7,18 @@ var s Service
 
 func init() {
 	q1 = &Quantity{
-		Unit:  "kg",
-		Value: 2,
+		Unit:     "kg",
+		Quantity: 2,
 	}
 
 	q2 = &Quantity{
-		Unit:  "g",
-		Value: 500,
+		Unit:     "g",
+		Quantity: 500,
 	}
 
 	q3 = &Quantity{
-		Unit:  "km",
-		Value: 3,
+		Unit:     "km",
+		Quantity: 3,
 	}
 
 	s = NewService()
@@ -28,8 +28,8 @@ func TestAddSuccessful(t *testing.T) {
 	t.Run("Successful", func(t *testing.T) {
 		qTotal, _ := s.Add(q1, q2)
 
-		if qTotal.Value != 2.5 {
-			t.Errorf("Result value: %f", qTotal.Value)
+		if qTotal.Quantity != 2.5 {
+			t.Errorf("Result value: %f", qTotal.Quantity)
 		}
 
 		if qTotal.Unit != "kg" {
@@ -50,8 +50,8 @@ func TestSubstract(t *testing.T) {
 	t.Run("Successful", func(t *testing.T) {
 		qTotal, _ := s.Substract(q1, q2)
 
-		if qTotal.Value != 1.5 {
-			t.Errorf("Result value: %f", qTotal.Value)
+		if qTotal.Quantity != 1.5 {
+			t.Errorf("Result value: %f", qTotal.Quantity)
 		}
 
 		if qTotal.Unit != "kg" {

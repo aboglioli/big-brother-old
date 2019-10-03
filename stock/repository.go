@@ -20,7 +20,7 @@ type repository struct {
 }
 
 func newRepository() (Repository, error) {
-	db, err := db.Get()
+	db, err := db.Get("stock")
 
 	if err != nil {
 		return nil, err

@@ -9,34 +9,54 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var database *mongo.Database
+var client *mongo.Client
+var databases map[string]*mongo.Database
 
-func Get() (*mongo.Database, error) {
-	if database == nil {
-		c := config.Get()
+func init() {
+	databases = make(map[string]*mongo.Database)
+}
 
-		clientOptions := options.Client().ApplyURI(c.MongoURL).SetAuth(
-			options.Credential{
-				AuthSource: "admin",
-				Username:   "admin",
-				Password:   "admin",
-			})
+func connect() (*mongo.Client, error) {
+	c := config.Get()
 
-		client, err := mongo.Connect(context.TODO(), clientOptions)
-		if err != nil {
-			log.Fatal(err)
-			return nil, err
-		}
+	clientOptions := options.Client().ApplyURI(c.MongoURL).SetAuth(
+		options.Credential{
+			AuthSource: "admin",
+			Username:   "admin",
+			Password:   "admin",
+		})
 
-		err = client.Ping(context.TODO(), nil)
-
-		if err != nil {
-			log.Fatal(err)
-			return nil, err
-		}
-
-		database = client.Database("stock")
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
 	}
 
-	return database, nil
+	err = client.Ping(context.TODO(), nil)
+
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+
+	return client, nil
+}
+
+func Get(database string) (*mongo.Database, error) {
+	if client == nil {
+		c, err := connect()
+		if err != nil {
+			return nil, err
+		}
+		client = c
+	}
+
+	d, ok := databases[database]
+
+	if !ok {
+		d = client.Database(database)
+		databases[database] = d
+	}
+
+	return d, nil
 }

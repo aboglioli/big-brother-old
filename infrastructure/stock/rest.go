@@ -1,13 +1,29 @@
-package rest
+package stock
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
+	"github.com/aboglioli/big-brother/config"
 	"github.com/aboglioli/big-brother/quantity"
 	"github.com/aboglioli/big-brother/stock"
 	"github.com/gin-gonic/gin"
 )
+
+func StartREST() {
+	c := config.Get()
+
+	r := gin.Default()
+
+	r.GET("/ping", ping)
+	r.GET("/product/:id/stock", getStockByProductID)
+	r.GET("/stock/:id", getStockByID)
+	r.POST("/stock", createStock)
+	r.PUT("/stock/:id", updateStock)
+
+	r.Run(fmt.Sprintf(":%d", c.StockPort))
+}
 
 func ping(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{

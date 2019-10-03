@@ -3,10 +3,10 @@ package unit
 type Unit struct {
 	Type     string
 	Name     string
-	Modifier float32
+	Modifier float64
 }
 
-func NewUnit(t string, n string, m float32) *Unit {
+func NewUnit(t string, n string, m float64) *Unit {
 	return &Unit{
 		Type:     t,
 		Name:     n,

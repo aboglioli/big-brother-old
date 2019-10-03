@@ -1,15 +1,9 @@
 package main
 
 import (
-	"log"
-
-	"github.com/aboglioli/big-brother/infrastructure/rest"
+	"github.com/aboglioli/big-brother/infrastructure/stock"
 )
 
 func main() {
-	log.Println("[INTERFACES] Starting...")
-
-	rest.Start()
-
-	log.Println("[INTERFACES] Started")
+	stock.StartREST()
 }

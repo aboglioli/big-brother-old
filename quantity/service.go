@@ -9,7 +9,7 @@ import (
 type Service interface {
 	Add(*Quantity, *Quantity) (*Quantity, error)
 	Substract(*Quantity, *Quantity) (*Quantity, error)
-	MultiplyByScalar(*Quantity, float32) *Quantity
+	MultiplyByScalar(*Quantity, float64) *Quantity
 }
 
 type service struct {
@@ -44,8 +44,8 @@ func (s *service) Add(q1 *Quantity, q2 *Quantity) (*Quantity, error) {
 	total = total / u1.Modifier
 
 	return &Quantity{
-		Unit:  q1.Unit,
-		Value: total,
+		Unit:     q1.Unit,
+		Quantity: total,
 	}, nil
 }
 
@@ -71,18 +71,18 @@ func (s *service) Substract(q1 *Quantity, q2 *Quantity) (*Quantity, error) {
 	total = total / u1.Modifier
 
 	return &Quantity{
-		Unit:  q1.Unit,
-		Value: total,
+		Unit:     q1.Unit,
+		Quantity: total,
 	}, nil
 }
 
-func (s *service) MultiplyByScalar(q *Quantity, scalar float32) *Quantity {
+func (s *service) MultiplyByScalar(q *Quantity, scalar float64) *Quantity {
 	return &Quantity{
-		Unit:  q.Unit,
-		Value: scalar * q.Value,
+		Unit:     q.Unit,
+		Quantity: scalar * q.Quantity,
 	}
 }
 
-func normalizeQuantity(q *Quantity, u *unit.Unit) float32 {
-	return q.Value * u.Modifier
+func normalizeQuantity(q *Quantity, u *unit.Unit) float64 {
+	return q.Quantity * u.Modifier
 }

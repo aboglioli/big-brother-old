@@ -1,6 +1,7 @@
 package unit
 
 type Repository interface {
+	FindAll() []*Unit
 	FindByName(string) *Unit
 	FindByType(string) []*Unit
 }
@@ -30,6 +31,14 @@ func NewRepository() Repository {
 			"km": &Unit{"length", "km", 1000},
 		},
 	}
+}
+
+func (r *repository) FindAll() []*Unit {
+	units := make([]*Unit, 0, len(r.units))
+	for _, v := range r.units {
+		units = append(units, v)
+	}
+	return units
 }
 
 func (r *repository) FindByName(n string) *Unit {

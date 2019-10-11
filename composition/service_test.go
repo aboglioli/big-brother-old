@@ -22,7 +22,8 @@ func newComposition() *Composition {
 
 func TestCreate(t *testing.T) {
 	repo := NewMockRepository()
-	serv := NewService(repo)
+	qServ := quantity.NewService()
+	serv := NewService(repo, qServ)
 
 	t.Run("Default values with valid units", func(t *testing.T) {
 		comp := newComposition()
@@ -35,6 +36,7 @@ func TestCreate(t *testing.T) {
 
 	t.Run("Negative cost", func(t *testing.T) {
 		comp := newComposition()
+		comp.Cost = -1.0
 		err := serv.Create(comp)
 
 		if err == nil {

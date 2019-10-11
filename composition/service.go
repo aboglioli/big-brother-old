@@ -1,13 +1,12 @@
 package composition
 
 import (
-	"errors"
-
+	"github.com/aboglioli/big-brother/errors"
 	"github.com/aboglioli/big-brother/quantity"
 )
 
 type Service interface {
-	Create(*Composition) error
+	Create(*Composition) errors.Error
 }
 
 type service struct {
@@ -22,22 +21,27 @@ func NewService(r Repository, qServ quantity.Service) Service {
 	}
 }
 
-func (s *service) Create(c *Composition) error {
+func (s *service) Create(c *Composition) errors.Error {
 	if err := s.validateSchema(c); err != nil {
 		return err
 	}
-	return s.repository.Insert(c)
+	err := s.repository.Insert(c)
+	if err != nil {
+		return errors.New("composition/service.Create", "INSERT", err.Error())
+	}
+	return nil
 }
 
-func (s *service) validateSchema(c *Composition) error {
+func (s *service) validateSchema(c *Composition) errors.Error {
+	errGen := errors.FromPath("composition/service.validateSchema")
 	if c.Cost < 0 {
-		return errors.New("Negative cost")
+		return errGen("NEGATIVE_COST", "")
 	}
 	if !s.quantityService.IsValid(&c.Unit) {
-		return errors.New("Invalid Unit")
+		return errGen("INVALID_UNIT", "")
 	}
 	if !s.quantityService.IsValid(&c.Stock) {
-		return errors.New("Invalid Stock")
+		return errGen("INVALID_STOCK", "")
 	}
 	return nil
 }

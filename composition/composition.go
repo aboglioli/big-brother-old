@@ -3,6 +3,7 @@ package composition
 import (
 	"time"
 
+	"github.com/aboglioli/big-brother/errors"
 	"github.com/aboglioli/big-brother/quantity"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -36,4 +37,23 @@ func (c *Composition) CalculateCost() {
 		cost += d.Subvalue
 	}
 	c.Cost = cost
+}
+
+func (c *Composition) AddDendency(d *Dependency) errors.Error {
+	if c.dependencyExists(d.Of.String()) {
+		return errors.New("composition.Composition.AddDependency", "DEPENDENCY_ALREADY_EXISTS", "")
+	}
+
+	c.Dependencies = append(c.Dependencies, d)
+
+	return nil
+}
+
+func (c *Composition) dependencyExists(of string) bool {
+	for _, d := range c.Dependencies {
+		if d.Of.String() == of {
+			return true
+		}
+	}
+	return false
 }

@@ -3,9 +3,17 @@ package composition
 import (
 	"testing"
 
+	"github.com/aboglioli/big-brother/errors"
 	"github.com/aboglioli/big-brother/quantity"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+func hasErrCode(err errors.Error, code string) bool {
+	if err == nil {
+		return false
+	}
+	return err.Code() == code
+}
 
 var comps []*Composition
 
@@ -39,7 +47,7 @@ func TestCreate(t *testing.T) {
 		comp.Cost = -1.0
 		err := serv.Create(comp)
 
-		if err == nil {
+		if !hasErrCode(err, "NEGATIVE_COST") {
 			t.Error("Cost can't be negative")
 		}
 	})
@@ -48,14 +56,14 @@ func TestCreate(t *testing.T) {
 		comp := newComposition()
 		comp.Unit.Unit = ""
 		err := serv.Create(comp)
-		if err == nil {
+		if !hasErrCode(err, "INVALID_UNIT") {
 			t.Error("Unit shuld exist")
 		}
 
 		comp.Unit.Unit = "u"
 		comp.Stock.Unit = ""
 		err = serv.Create(comp)
-		if err == nil {
+		if !hasErrCode(err, "INVALID_STOCK") {
 			t.Error("Stock unit should exist")
 		}
 	})
@@ -71,7 +79,7 @@ func TestCreate(t *testing.T) {
 		})
 		err := serv.Create(comp)
 
-		if err == nil {
+		if !hasErrCode(err, "DEPENDENCY_DOES_NOT_EXIST") {
 			t.Error("Dependency doesn't exist")
 		}
 	})

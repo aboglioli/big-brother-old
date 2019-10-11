@@ -2,8 +2,9 @@ package unit
 
 type Repository interface {
 	FindAll() []*Unit
-	FindByName(string) *Unit
-	FindByType(string) []*Unit
+	FindByName(u string) *Unit
+	FindByType(u string) []*Unit
+	Exists(u string) bool
 }
 
 type repository struct {
@@ -55,4 +56,9 @@ func (r *repository) FindByType(t string) []*Unit {
 	}
 
 	return units
+}
+
+func (r *repository) Exists(u string) bool {
+	_, ok := r.units[u]
+	return ok
 }

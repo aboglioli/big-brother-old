@@ -7,9 +7,9 @@ import (
 )
 
 type Service interface {
+	IsValid(*Quantity) bool
 	Add(*Quantity, *Quantity) (*Quantity, error)
 	Substract(*Quantity, *Quantity) (*Quantity, error)
-	MultiplyByScalar(*Quantity, float64) *Quantity
 }
 
 type service struct {
@@ -20,6 +20,13 @@ func NewService() Service {
 	return &service{
 		unitRepository: unit.NewRepository(),
 	}
+}
+
+func (s *service) IsValid(q *Quantity) bool {
+	if s.unitRepository.Exists(q.Unit) && q.Quantity >= 0 {
+		return true
+	}
+	return false
 }
 
 func (s *service) Add(q1 *Quantity, q2 *Quantity) (*Quantity, error) {
@@ -74,13 +81,6 @@ func (s *service) Substract(q1 *Quantity, q2 *Quantity) (*Quantity, error) {
 		Unit:     q1.Unit,
 		Quantity: total,
 	}, nil
-}
-
-func (s *service) MultiplyByScalar(q *Quantity, scalar float64) *Quantity {
-	return &Quantity{
-		Unit:     q.Unit,
-		Quantity: scalar * q.Quantity,
-	}
 }
 
 func normalizeQuantity(q *Quantity, u *unit.Unit) float64 {

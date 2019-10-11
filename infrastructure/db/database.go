@@ -18,21 +18,22 @@ func init() {
 
 func connect() (*mongo.Client, error) {
 	c := config.Get()
+	ctx := context.TODO()
 
-	clientOptions := options.Client().ApplyURI(c.MongoURL).SetAuth(
+	options := options.Client().ApplyURI(c.MongoURL).SetAuth(
 		options.Credential{
 			AuthSource: "admin",
 			Username:   "admin",
 			Password:   "admin",
 		})
 
-	client, err := mongo.Connect(context.TODO(), clientOptions)
+	client, err := mongo.Connect(ctx, options)
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
 	}
 
-	err = client.Ping(context.TODO(), nil)
+	err = client.Ping(ctx, nil)
 
 	if err != nil {
 		log.Fatal(err)

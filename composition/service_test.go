@@ -17,8 +17,7 @@ func hasErrCode(err errors.Error, code string) bool {
 
 func TestCreate(t *testing.T) {
 	repo := NewMockRepository()
-	qServ := quantity.NewService()
-	serv := NewService(repo, qServ)
+	serv := NewService(repo)
 
 	// Errors
 	t.Run("Negative cost", func(t *testing.T) {
@@ -96,4 +95,31 @@ func TestCreate(t *testing.T) {
 			t.Error("Component with single dependency should be created")
 		}
 	})
+}
+
+func TestCalculateCostFromDependencies(t *testing.T) {
+	repo := NewMockRepository()
+	serv := NewService(repo)
+	comps := makeCompositions()
+	repo.InsertMany(comps)
+	for _, c := range comps {
+		err := serv.CalculateCostFromDependencies(c)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+	}
+
+	checkComp := func(index int, shouldBe float64) {
+		comp := comps[index]
+		if comp.Cost != shouldBe {
+			t.Errorf("Comp %d: %f", index+1, comp.Cost)
+			for _, dep := range comp.Dependencies {
+				t.Errorf("Dep %s: %f", dep.Of, dep.Subvalue)
+			}
+		}
+	}
+
+	checkComp(0, 200)
+	checkComp(1, 20)
 }

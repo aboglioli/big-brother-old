@@ -32,11 +32,13 @@ func NewComposition() *Composition {
 }
 
 func (c *Composition) CalculateCost() {
-	var cost float64
-	for _, d := range c.Dependencies {
-		cost += d.Subvalue
+	if c.AutoupdateCost && len(c.Dependencies) > 0 {
+		var cost float64
+		for _, d := range c.Dependencies {
+			cost += d.Subvalue
+		}
+		c.Cost = cost
 	}
-	c.Cost = cost
 }
 
 func (c *Composition) UpsertDependency(d *Dependency) errors.Error {

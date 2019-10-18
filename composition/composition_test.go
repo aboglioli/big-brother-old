@@ -7,7 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func TestCalculateCost(t *testing.T) {
+func TestCalculateCostFromSubvalue(t *testing.T) {
 	c := newComposition()
 	c.Dependencies = append(
 		c.Dependencies,
@@ -87,7 +87,6 @@ func TestCompareDependencies(t *testing.T) {
 	c1 := makeCompositions()[1]
 
 	left, common, right := c1.CompareDependencies(c1)
-	t.Log(len(left), len(common), len(right))
 	if len(left) != 0 {
 		t.Error("Left should be empty")
 	}

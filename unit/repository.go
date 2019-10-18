@@ -11,27 +11,32 @@ type repository struct {
 	units map[string]*Unit
 }
 
-func NewRepository() Repository {
-	return &repository{
-		units: map[string]*Unit{
-			"u": &Unit{"unit", "u", 1},
+var repo Repository
 
-			"mg": &Unit{"mass", "mg", 0.001},
-			"cg": &Unit{"mass", "cg", 0.01},
-			"g":  &Unit{"mass", "g", 1},
-			"kg": &Unit{"mass", "kg", 1000},
+func GetRepository() Repository {
+	if repo == nil {
+		repo = &repository{
+			units: map[string]*Unit{
+				"u": &Unit{"unit", "u", 1},
 
-			"ml": &Unit{"volume", "ml", 0.001},
-			"cl": &Unit{"volume", "cl", 0.01},
-			"l":  &Unit{"volume", "l", 1},
-			"kl": &Unit{"volume", "kl", 1000},
+				"mg": &Unit{"mass", "mg", 0.001},
+				"cg": &Unit{"mass", "cg", 0.01},
+				"g":  &Unit{"mass", "g", 1},
+				"kg": &Unit{"mass", "kg", 1000},
 
-			"mm": &Unit{"length", "mm", 0.001},
-			"cm": &Unit{"length", "cm", 0.01},
-			"m":  &Unit{"length", "m", 1},
-			"km": &Unit{"length", "km", 1000},
-		},
+				"ml": &Unit{"volume", "ml", 0.001},
+				"cl": &Unit{"volume", "cl", 0.01},
+				"l":  &Unit{"volume", "l", 1},
+				"kl": &Unit{"volume", "kl", 1000},
+
+				"mm": &Unit{"length", "mm", 0.001},
+				"cm": &Unit{"length", "cm", 0.01},
+				"m":  &Unit{"length", "m", 1},
+				"km": &Unit{"length", "km", 1000},
+			},
+		}
 	}
+	return repo
 }
 
 func (r *repository) FindAll() []*Unit {
@@ -49,9 +54,9 @@ func (r *repository) FindByName(n string) *Unit {
 func (r *repository) FindByType(t string) []*Unit {
 	units := make([]*Unit, 0)
 
-	for _, v := range r.units {
-		if v.Type == t {
-			units = append(units, v)
+	for _, u := range r.units {
+		if u.Type == t {
+			units = append(units, u)
 		}
 	}
 

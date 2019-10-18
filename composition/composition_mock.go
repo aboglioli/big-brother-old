@@ -128,5 +128,12 @@ func makeCompositions() []*Composition {
 			},
 		},
 	}
-	return []*Composition{p1, p2, p3, p4, p5, p6, p7}
+	comps := []*Composition{p1, p2, p3, p4, p5, p6, p7}
+
+	for _, c := range comps {
+		c.AutoupdateCost = true
+		c.Enabled = true
+	}
+
+	return comps
 }

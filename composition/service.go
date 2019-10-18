@@ -7,17 +7,16 @@ import (
 
 type Service interface {
 	Create(*Composition) errors.Error
+	CalculateCostFromDependencies(*Composition) errors.Error
 }
 
 type service struct {
-	repository      Repository
-	quantityService quantity.Service
+	repository Repository
 }
 
-func NewService(r Repository, qServ quantity.Service) Service {
+func NewService(r Repository) Service {
 	return &service{
-		repository:      r,
-		quantityService: qServ,
+		repository: r,
 	}
 }
 
@@ -40,20 +39,43 @@ func (s *service) Create(c *Composition) errors.Error {
 	return nil
 }
 
+// Calculate cost of composition from dependencies
+func (s *service) CalculateCostFromDependencies(c *Composition) errors.Error {
+	if c.AutoupdateCost && len(c.Dependencies) > 0 {
+		for _, dep := range c.Dependencies {
+			comp, err := s.repository.FindByID(dep.Of.String())
+			if err != nil {
+				return errors.New("composition/service.calculateCost", "DEPENDENCY_DOES_NOT_EXIST", err.Error())
+			}
+
+			if !dep.Quantity.Compatible(comp.Unit) {
+				return errors.New("compatible/service.calculateCost", "INCOMPATBLE_QUANTITIES", "")
+			}
+
+			nDepQ := dep.Quantity.Normalize()
+			nCompQ := comp.Unit.Normalize()
+
+			dep.Subvalue = nDepQ * comp.Cost / nCompQ
+		}
+		c.CalculateCost()
+	}
+	return nil
+}
+
 func (s *service) validateSchema(c *Composition) errors.Error {
 	errGen := errors.FromPath("composition/service.validateSchema")
 	if c.Cost < 0 {
 		return errGen("NEGATIVE_COST", "")
 	}
-	if !s.quantityService.IsValid(&c.Unit) {
+	if !quantity.IsValid(c.Unit) {
 		return errGen("INVALID_UNIT", "")
 	}
-	if !s.quantityService.IsValid(&c.Stock) {
+	if !quantity.IsValid(c.Stock) {
 		return errGen("INVALID_STOCK", "")
 	}
 
 	for _, d := range c.Dependencies {
-		if !s.quantityService.IsValid(&d.Quantity) {
+		if !quantity.IsValid(d.Quantity) {
 			return errGen("INVALID_DEPENDENCY_QUANTITY", "")
 		}
 	}

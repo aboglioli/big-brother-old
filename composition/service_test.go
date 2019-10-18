@@ -122,4 +122,9 @@ func TestCalculateCostFromDependencies(t *testing.T) {
 
 	checkComp(0, 200)
 	checkComp(1, 20)
+	checkComp(2, 10)
+	checkComp(3, 150)
+	checkComp(4, 41)
+	checkComp(5, 525)
+	checkComp(6, 475.75)
 }

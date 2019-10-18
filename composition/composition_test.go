@@ -1,0 +1,106 @@
+package composition
+
+import (
+	"testing"
+
+	"github.com/aboglioli/big-brother/quantity"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+func TestCalculateCost(t *testing.T) {
+	c := newComposition()
+	c.Dependencies = append(
+		c.Dependencies,
+		&Dependency{
+			Subvalue: 100,
+		},
+		&Dependency{
+			Subvalue: 250,
+		},
+	)
+	c.CalculateCost()
+	if c.Cost != 350 {
+		t.Error("Cost should be 350")
+	}
+}
+
+func TestAddAndRemoveCompositionDependencies(t *testing.T) {
+	c := newComposition()
+	randID := primitive.NewObjectID()
+
+	t.Run("New dependency", func(t *testing.T) {
+		c.UpsertDependency(&Dependency{
+			Of: randID,
+			Quantity: quantity.Quantity{
+				Unit:     "u",
+				Quantity: 1,
+			},
+		})
+
+		if len(c.Dependencies) != 1 {
+			t.Error("Dependency should have been added")
+		}
+	})
+	t.Run("Add same dependency", func(t *testing.T) {
+		c.UpsertDependency(&Dependency{
+			Of: randID,
+			Quantity: quantity.Quantity{
+				Unit:     "u",
+				Quantity: 2,
+			},
+		})
+
+		if len(c.Dependencies) != 1 || c.Dependencies[0].Quantity.Quantity != 2 {
+			t.Error("Upsert same dependency")
+		}
+	})
+	t.Run("Add new dependency", func(t *testing.T) {
+		c.UpsertDependency(&Dependency{
+			Of: primitive.NewObjectID(),
+			Quantity: quantity.Quantity{
+				Unit:     "u",
+				Quantity: 1.5,
+			},
+		})
+
+		if len(c.Dependencies) != 2 || c.Dependencies[1].Quantity.Quantity != 1.5 {
+			t.Error("Upsert different dependency")
+		}
+	})
+	t.Run("Remove existing dependency", func(t *testing.T) {
+		err := c.RemoveDependency(randID.String())
+
+		if err != nil || len(c.Dependencies) != 1 {
+			t.Error("Dependency should be removed")
+		}
+	})
+	t.Run("Remove non-existing dependency", func(t *testing.T) {
+		err := c.RemoveDependency(primitive.NewObjectID().String())
+
+		if err == nil {
+			t.Error("Shouldn't be removed")
+		}
+	})
+}
+
+func TestCompareDependencies(t *testing.T) {
+	c1 := makeCompositions()[1]
+
+	left, common, right := c1.CompareDependencies(c1)
+	t.Log(len(left), len(common), len(right))
+	if len(left) != 0 {
+		t.Error("Left should be empty")
+	}
+	if len(common) != 1 {
+		t.Error("Common should have 1 element")
+	}
+	if len(right) != 0 {
+		t.Error("Right should be empty")
+	}
+
+	c2 := *c1
+	c2.Dependencies = []*Dependency{}
+	for _, d := range c1.Dependencies {
+		c2.Dependencies = append(c2.Dependencies, d)
+	}
+}

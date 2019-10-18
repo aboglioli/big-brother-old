@@ -5,7 +5,14 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func MakeCompositions() []*Composition {
+func newComposition() *Composition {
+	comp := NewComposition()
+	comp.Unit.Unit = "u"
+	comp.Stock.Unit = "u"
+	return comp
+}
+
+func makeCompositions() []*Composition {
 	p1 := &Composition{
 		ID:   primitive.NewObjectID(),
 		Cost: 200.0,
@@ -15,7 +22,8 @@ func MakeCompositions() []*Composition {
 		},
 	}
 	p2 := &Composition{
-		ID: primitive.NewObjectID(),
+		ID:   primitive.NewObjectID(),
+		Cost: 0.0, // 0.2 * 200 / 2 = 20
 		Unit: quantity.Quantity{
 			Quantity: 0.2,
 			Unit:     "kg",
@@ -31,7 +39,8 @@ func MakeCompositions() []*Composition {
 		},
 	}
 	p3 := &Composition{
-		ID: primitive.NewObjectID(),
+		ID:   primitive.NewObjectID(),
+		Cost: 0.0, // 0.1 * 200 / 2 = 10
 		Unit: quantity.Quantity{
 			Quantity: 500.0,
 			Unit:     "g",
@@ -55,7 +64,8 @@ func MakeCompositions() []*Composition {
 		},
 	}
 	p5 := &Composition{
-		ID: primitive.NewObjectID(),
+		ID:   primitive.NewObjectID(),
+		Cost: 0.0, // 0.4*20/0.2 + 0.05*10/0.5 = 41
 		Unit: quantity.Quantity{
 			Quantity: 1.0,
 			Unit:     "u",
@@ -78,7 +88,8 @@ func MakeCompositions() []*Composition {
 		},
 	}
 	p6 := &Composition{
-		ID: primitive.NewObjectID(),
+		ID:   primitive.NewObjectID(),
+		Cost: 0.0, // 0.35*150/0.1 = 525
 		Unit: quantity.Quantity{
 			Quantity: 2.0,
 			Unit:     "u",
@@ -87,14 +98,15 @@ func MakeCompositions() []*Composition {
 			&Dependency{
 				Of: p4.ID,
 				Quantity: quantity.Quantity{
-					Quantity: 20.0,
+					Quantity: 350.0,
 					Unit:     "g",
 				},
 			},
 		},
 	}
 	p7 := &Composition{
-		ID: primitive.NewObjectID(),
+		ID:   primitive.NewObjectID(),
+		Cost: 0.0, // 2*41/1 + 1.5*525/2 = 475.75
 		Unit: quantity.Quantity{
 			Quantity: 3.0,
 			Unit:     "u",

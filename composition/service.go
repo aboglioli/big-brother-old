@@ -25,6 +25,14 @@ func (s *service) Create(c *Composition) errors.Error {
 	if err := s.validateSchema(c); err != nil {
 		return err
 	}
+
+	for _, d := range c.Dependencies {
+		_, err := s.repository.FindByID(d.Of.String())
+		if err != nil {
+			return errors.New("composition/service.Create", "DEPENDENCY_DOES_NOT_EXIST", err.Error())
+		}
+	}
+
 	err := s.repository.Insert(c)
 	if err != nil {
 		return errors.New("composition/service.Create", "INSERT", err.Error())
@@ -43,5 +51,12 @@ func (s *service) validateSchema(c *Composition) errors.Error {
 	if !s.quantityService.IsValid(&c.Stock) {
 		return errGen("INVALID_STOCK", "")
 	}
+
+	for _, d := range c.Dependencies {
+		if !s.quantityService.IsValid(&d.Quantity) {
+			return errGen("INVALID_DEPENDENCY_QUANTITY", "")
+		}
+	}
+
 	return nil
 }

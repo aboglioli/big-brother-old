@@ -15,33 +15,12 @@ func hasErrCode(err errors.Error, code string) bool {
 	return err.Code() == code
 }
 
-var comps []*Composition
-
-func init() {
-	comps = []*Composition{}
-}
-
-func newComposition() *Composition {
-	comp := NewComposition()
-	comp.Unit.Unit = "u"
-	comp.Stock.Unit = "u"
-	return comp
-}
-
 func TestCreate(t *testing.T) {
 	repo := NewMockRepository()
 	qServ := quantity.NewService()
 	serv := NewService(repo, qServ)
 
-	t.Run("Default values with valid units", func(t *testing.T) {
-		comp := newComposition()
-		err := serv.Create(comp)
-
-		if err != nil || repo.Count() != 1 {
-			t.Error("Composition should be created")
-		}
-	})
-
+	// Errors
 	t.Run("Negative cost", func(t *testing.T) {
 		comp := newComposition()
 		comp.Cost = -1.0
@@ -70,17 +49,51 @@ func TestCreate(t *testing.T) {
 
 	t.Run("Invalid dependency", func(t *testing.T) {
 		comp := newComposition()
-		comp.Dependencies = append(comp.Dependencies, &Dependency{
-			Of: primitive.NewObjectID(),
-			Quantity: quantity.Quantity{
-				Quantity: 5,
-				Unit:     "u",
+		comp.Dependencies = []*Dependency{
+			&Dependency{
+				Of: primitive.NewObjectID(),
+				Quantity: quantity.Quantity{
+					Quantity: 5,
+					Unit:     "u",
+				},
 			},
-		})
+		}
 		err := serv.Create(comp)
 
 		if !hasErrCode(err, "DEPENDENCY_DOES_NOT_EXIST") {
-			t.Error("Dependency doesn't exist")
+			t.Error("Check dependency existence")
+		}
+	})
+
+	// Create
+	t.Run("Default values with valid units", func(t *testing.T) {
+		repo.Clean()
+		comp := newComposition()
+		err := serv.Create(comp)
+
+		if err != nil || repo.Count() != 1 {
+			t.Error("Composition should be created")
+		}
+	})
+
+	t.Run("Valid dependency", func(t *testing.T) {
+		repo.Clean()
+		dep, comp := newComposition(), newComposition()
+		repo.Insert(dep)
+		comp.Dependencies = []*Dependency{
+			&Dependency{
+				Of: dep.ID,
+				Quantity: quantity.Quantity{
+					Quantity: 5,
+					Unit:     "u",
+				},
+			},
+		}
+
+		err := serv.Create(comp)
+
+		if err != nil || repo.Count() != 2 {
+			t.Error("Component with single dependency should be created")
 		}
 	})
 }

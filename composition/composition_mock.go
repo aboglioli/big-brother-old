@@ -12,7 +12,7 @@ func newComposition() *Composition {
 	return comp
 }
 
-func makeCompositions() []*Composition {
+func makeMockedCompositions() []*Composition {
 	p1 := &Composition{
 		ID:   primitive.NewObjectID(),
 		Cost: 200.0,

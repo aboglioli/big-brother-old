@@ -84,7 +84,7 @@ func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 }
 
 func TestCompareDependencies(t *testing.T) {
-	c1 := makeCompositions()[1]
+	c1 := makeMockedCompositions()[1]
 
 	left, common, right := c1.CompareDependencies(c1)
 	if len(left) != 0 {

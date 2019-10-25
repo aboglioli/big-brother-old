@@ -15,7 +15,17 @@ func hasErrCode(err errors.Error, code string) bool {
 	return err.Code() == code
 }
 
-func TestCreate(t *testing.T) {
+func checkComp(t *testing.T, comps []*Composition, index int, shouldBe float64) {
+	comp := comps[index]
+	if comp.Cost != shouldBe {
+		t.Errorf("Comp %d: %.2f should be %.2f", index+1, comp.Cost, shouldBe)
+		for _, dep := range comp.Dependencies {
+			t.Errorf("Dep %s subvalue %.2f", dep.Of.String(), dep.Subvalue)
+		}
+	}
+}
+
+func TestCreateComposition(t *testing.T) {
 	repo := NewMockRepository()
 	serv := NewService(repo)
 
@@ -92,15 +102,95 @@ func TestCreate(t *testing.T) {
 		err := serv.Create(comp)
 
 		if err != nil || repo.Count() != 2 {
-			t.Error("Component with single dependency should be created")
+			t.Error("Composition with single dependency should be created")
+		}
+	})
+
+	t.Run("Calculate cost on creating", func(t *testing.T) {
+		repo.Clean()
+		dep, comp := newComposition(), newComposition()
+		dep.Cost = 100
+		dep.Unit = quantity.Quantity{
+			Quantity: 2,
+			Unit:     "kg",
+		}
+		comp.Dependencies = []*Dependency{
+			&Dependency{
+				Of: dep.ID,
+				Quantity: quantity.Quantity{
+					Quantity: 750,
+					Unit:     "g",
+				},
+			},
+		}
+		repo.Insert(dep)
+
+		if err := serv.Create(comp); err != nil {
+			t.Error("Composition should be created")
+		}
+
+		if comp.Cost != 37.5 {
+			t.Error("Cost wrong calculated")
 		}
 	})
 }
 
-func TestCalculateCostFromDependencies(t *testing.T) {
+func TestUpdateComposition(t *testing.T) {
 	repo := NewMockRepository()
 	serv := NewService(repo)
-	comps := makeCompositions()
+	comps := makeMockedCompositions()
+	repo.InsertMany(comps)
+	for _, c := range comps {
+		if err := serv.CalculateDependenciesSubvalue(c.Dependencies); err != nil {
+			t.Error(err)
+			continue
+		}
+		c.CalculateCost()
+		if err := repo.Update(c); err != nil {
+			t.Error(err)
+			continue
+		}
+	}
+
+	t.Run("Update dependency", func(t *testing.T) {
+		comps[0].Cost = 300
+		comps[0].Unit = quantity.Quantity{
+			Quantity: 2500,
+			Unit:     "g",
+		}
+
+		if err := serv.Update(comps[0]); err != nil {
+			t.Error(err)
+		}
+
+		comps, _ = repo.FindAll()
+		if len(comps) != 7 {
+			t.Error("Compositions count has changed")
+		}
+
+		c1 := 300.0
+		q1 := 2.5
+		c2 := 0.2 * c1 / q1 // 20
+		c3 := 0.1 * c1 / q1 // 10
+		c4 := 150.0
+		c5 := 0.4*c2/0.2 + 0.05*c3/0.5 // 41
+		c6 := 0.35 * c4 / 0.1          // 525
+		c7 := 2*c5/1 + 1.5*c6/2        // 475.75
+
+		checkComp(t, comps, 0, c1)
+		checkComp(t, comps, 1, c2)
+		checkComp(t, comps, 2, c3)
+		checkComp(t, comps, 3, c4)
+		checkComp(t, comps, 4, c5)
+		checkComp(t, comps, 5, c6)
+		checkComp(t, comps, 6, c7)
+	})
+}
+
+func TestCalculateDependenciesSubvalue(t *testing.T) {
+	repo := NewMockRepository()
+	serv := NewService(repo)
+	comps := makeMockedCompositions()
 	repo.InsertMany(comps)
 	for _, c := range comps {
 		err := serv.CalculateDependenciesSubvalue(c.Dependencies)
@@ -111,21 +201,20 @@ func TestCalculateCostFromDependencies(t *testing.T) {
 		c.CalculateCost()
 	}
 
-	checkComp := func(index int, shouldBe float64) {
-		comp := comps[index]
-		if comp.Cost != shouldBe {
-			t.Errorf("Comp %d: %f", index+1, comp.Cost)
-			for _, dep := range comp.Dependencies {
-				t.Errorf("Dep %s: %f", dep.Of, dep.Subvalue)
-			}
-		}
-	}
+	c1 := 200.0
+	q1 := 2.0
+	c2 := 0.2 * c1 / q1 // 20
+	c3 := 0.1 * c1 / q1 // 10
+	c4 := 150.0
+	c5 := 0.4*c2/0.2 + 0.05*c3/0.5 // 41
+	c6 := 0.35 * c4 / 0.1          // 525
+	c7 := 2*c5/1 + 1.5*c6/2        // 475.75
 
-	checkComp(0, 200)
-	checkComp(1, 20)
-	checkComp(2, 10)
-	checkComp(3, 150)
-	checkComp(4, 41)
-	checkComp(5, 525)
-	checkComp(6, 475.75)
+	checkComp(t, comps, 0, c1)
+	checkComp(t, comps, 1, c2)
+	checkComp(t, comps, 2, c3)
+	checkComp(t, comps, 3, c4)
+	checkComp(t, comps, 4, c5)
+	checkComp(t, comps, 5, c6)
+	checkComp(t, comps, 6, c7)
 }

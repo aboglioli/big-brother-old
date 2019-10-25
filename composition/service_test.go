@@ -103,11 +103,12 @@ func TestCalculateCostFromDependencies(t *testing.T) {
 	comps := makeCompositions()
 	repo.InsertMany(comps)
 	for _, c := range comps {
-		err := serv.CalculateCostFromDependencies(c)
+		err := serv.CalculateDependenciesSubvalue(c.Dependencies)
 		if err != nil {
 			t.Error(err)
 			continue
 		}
+		c.CalculateCost()
 	}
 
 	checkComp := func(index int, shouldBe float64) {

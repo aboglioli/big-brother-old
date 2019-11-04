@@ -31,7 +31,9 @@ func (s *service) Create(c *Composition) errors.Error {
 		return err
 	}
 
-	s.CalculateDependenciesSubvalue(c.Dependencies)
+	if err := s.CalculateDependenciesSubvalue(c.Dependencies); err != nil {
+		return err
+	}
 	c.CalculateCost()
 
 	if err := s.repository.Insert(c); err != nil {
@@ -84,7 +86,7 @@ func (s *service) CalculateDependenciesSubvalue(dependencies []*Dependency) erro
 		}
 
 		if !dep.Quantity.Compatible(comp.Unit) {
-			return errGen("INCOMPATBLE_QUANTITIES", "")
+			return errGen("INCOMPATIBLE_DEPENDENCY_QUANTITY", "")
 		}
 
 		nDepQ := dep.Quantity.Normalize()

@@ -59,7 +59,7 @@ func TestCreateComposition(t *testing.T) {
 		}
 	})
 
-	t.Run("Invalid dependency", func(t *testing.T) {
+	t.Run("Non-existing dependency", func(t *testing.T) {
 		comp := newComposition()
 		comp.Dependencies = []*Dependency{
 			&Dependency{
@@ -74,6 +74,51 @@ func TestCreateComposition(t *testing.T) {
 
 		if !hasErrCode(err, "DEPENDENCY_DOES_NOT_EXIST") {
 			t.Error("Check dependency existence")
+		}
+	})
+
+	t.Run("Incompatible dependency quantity", func(t *testing.T) {
+		repo.Clean()
+		dep, comp := newComposition(), newComposition()
+		dep.Unit = quantity.Quantity{2, "kg"}
+		repo.Insert(dep)
+		comp.Dependencies = []*Dependency{
+			&Dependency{
+				Of: dep.ID,
+				Quantity: quantity.Quantity{
+					Quantity: 5,
+					Unit:     "l",
+				},
+			},
+		}
+
+		if err := serv.Create(comp); !hasErrCode(err, "INCOMPATIBLE_DEPENDENCY_QUANTITY") {
+			t.Error("Dependency cannot be created with incompatible dependency quantity")
+		}
+	})
+
+	t.Run("Invalid dependency quantity", func(t *testing.T) {
+		repo.Clean()
+		dep, comp := newComposition(), newComposition()
+		dep.Unit = quantity.Quantity{2, "kg"}
+		repo.Insert(dep)
+		comp.Dependencies = []*Dependency{
+			&Dependency{
+				Of: dep.ID,
+				Quantity: quantity.Quantity{
+					Quantity: 5,
+					Unit:     "kk",
+				},
+			},
+		}
+
+		if err := serv.Create(comp); !hasErrCode(err, "INVALID_DEPENDENCY_QUANTITY") {
+			t.Error("Dependency cannot be created with invalid dependency quantity")
+		}
+
+		comp.Dependencies[0].Quantity = quantity.Quantity{-5, "kg"}
+		if err := serv.Create(comp); !hasErrCode(err, "INVALID_DEPENDENCY_QUANTITY") {
+			t.Error("Dependency cannot be created with invalid dependency quantity")
 		}
 	})
 
@@ -154,6 +199,40 @@ func TestUpdateComposition(t *testing.T) {
 			continue
 		}
 	}
+
+	t.Run("Update dependency", func(t *testing.T) {
+		comps[0].Cost = 300
+		comps[0].Unit = quantity.Quantity{
+			Quantity: 2500,
+			Unit:     "g",
+		}
+
+		if err := serv.Update(comps[0]); err != nil {
+			t.Error(err)
+		}
+
+		comps, _ = repo.FindAll()
+		if len(comps) != 7 {
+			t.Error("Compositions count has changed")
+		}
+
+		c1 := 300.0
+		q1 := 2.5
+		c2 := 0.2 * c1 / q1 // 24
+		c3 := 0.1 * c1 / q1 // 12
+		c4 := 150.0
+		c5 := 0.4*c2/0.2 + 0.05*c3/0.5 // 49.5
+		c6 := 0.35 * c4 / 0.1          // 525
+		c7 := 2*c5/1 + 1.5*c6/2        // 492.75
+
+		checkComp(t, comps, 0, c1)
+		checkComp(t, comps, 1, c2)
+		checkComp(t, comps, 2, c3)
+		checkComp(t, comps, 3, c4)
+		checkComp(t, comps, 4, c5)
+		checkComp(t, comps, 5, c6)
+		checkComp(t, comps, 6, c7)
+	})
 
 	t.Run("Update dependency", func(t *testing.T) {
 		comps[0].Cost = 300

@@ -8,7 +8,7 @@ type mockRepository struct {
 	compositions []*Composition
 }
 
-func NewMockRepository() *mockRepository {
+func newMockRepository() *mockRepository {
 	repo := &mockRepository{}
 	return repo
 }

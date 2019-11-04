@@ -29,7 +29,7 @@ func checkComp(t *testing.T, comps []*Composition, index int, shouldBe float64) 
 }
 
 func TestCreateComposition(t *testing.T) {
-	repo := NewMockRepository()
+	repo := newMockRepository()
 	serv := NewService(repo)
 
 	// Errors
@@ -184,7 +184,7 @@ func TestCreateComposition(t *testing.T) {
 }
 
 func TestUpdateComposition(t *testing.T) {
-	repo := NewMockRepository()
+	repo := newMockRepository()
 	serv := NewService(repo)
 	comps := makeMockedCompositions()
 	repo.InsertMany(comps)
@@ -270,7 +270,7 @@ func TestUpdateComposition(t *testing.T) {
 }
 
 func TestDeleteComposition(t *testing.T) {
-	repo := NewMockRepository()
+	repo := newMockRepository()
 	serv := NewService(repo)
 	comp, dep := newComposition(), newComposition()
 	dep.Cost = 10
@@ -294,7 +294,7 @@ func TestDeleteComposition(t *testing.T) {
 }
 
 func TestCalculateDependenciesSubvalue(t *testing.T) {
-	repo := NewMockRepository()
+	repo := newMockRepository()
 	serv := NewService(repo)
 	comps := makeMockedCompositions()
 	repo.InsertMany(comps)

@@ -11,6 +11,7 @@ import (
 type Service interface {
 	Create(*Composition) errors.Error
 	Update(*Composition) errors.Error
+	Delete(id string) errors.Error
 
 	UpdateUses(c *Composition) errors.Error
 	CalculateDependenciesSubvalue([]*Dependency) errors.Error
@@ -60,6 +61,21 @@ func (s *service) Update(c *Composition) errors.Error {
 
 	if err := s.UpdateUses(c); err != nil {
 		return errGen("UPDATE_USES", err.Error())
+	}
+
+	return nil
+}
+
+func (s *service) Delete(id string) errors.Error {
+	errGen := errors.FromPath("composition/service.Delete")
+
+	uses, _ := s.repository.FindUses(id)
+	if len(uses) > 0 {
+		return errGen("COMPOSITION_USED_AS_DEPENDENCY", "")
+	}
+
+	if err := s.repository.Delete(id); err != nil {
+		return errGen("NOT_FOUND", err.Error())
 	}
 
 	return nil

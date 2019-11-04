@@ -269,6 +269,30 @@ func TestUpdateComposition(t *testing.T) {
 	})
 }
 
+func TestDeleteComposition(t *testing.T) {
+	repo := NewMockRepository()
+	serv := NewService(repo)
+	comp, dep := newComposition(), newComposition()
+	dep.Cost = 10
+	dep.Unit = quantity.Quantity{1, "u"}
+	repo.Insert(dep)
+	comp.Dependencies = []*Dependency{
+		&Dependency{
+			Of:       dep.ID,
+			Quantity: quantity.Quantity{2, "u"},
+		},
+	}
+	repo.Insert(comp)
+
+	if err := serv.Delete(dep.ID.String()); !hasErrCode(err, "COMPOSITION_USED_AS_DEPENDENCY") || repo.Count() != 2 {
+		t.Error("Used dependency cannot be deleted")
+	}
+
+	if err := serv.Delete(comp.ID.String()); err != nil || repo.Count() != 1 {
+		t.Error("Not used composition should be deleted")
+	}
+}
+
 func TestCalculateDependenciesSubvalue(t *testing.T) {
 	repo := NewMockRepository()
 	serv := NewService(repo)

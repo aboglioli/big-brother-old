@@ -14,12 +14,18 @@ func NewMockRepository() *mockRepository {
 }
 
 func (r *mockRepository) FindAll() ([]*Composition, error) {
-	return r.compositions, nil
+	comps := make([]*Composition, 0)
+	for _, c := range r.compositions {
+		if c.Enabled {
+			comps = append(comps, c)
+		}
+	}
+	return comps, nil
 }
 
 func (r *mockRepository) FindByID(id string) (*Composition, error) {
 	for _, c := range r.compositions {
-		if c.ID.String() == id {
+		if c.ID.String() == id && c.Enabled {
 			return c, nil
 		}
 	}
@@ -29,6 +35,10 @@ func (r *mockRepository) FindByID(id string) (*Composition, error) {
 func (r *mockRepository) FindUses(id string) ([]*Composition, error) {
 	comps := make([]*Composition, 0)
 	for _, c := range r.compositions {
+		if !c.Enabled {
+			break
+		}
+
 		for _, d := range c.Dependencies {
 			if d.Of.String() == id {
 				comps = append(comps, c)
@@ -52,6 +62,9 @@ func (r *mockRepository) InsertMany(comps []*Composition) error {
 func (r *mockRepository) Update(c *Composition) error {
 	for _, comp := range r.compositions {
 		if comp.ID.String() == c.ID.String() {
+			if !comp.Enabled {
+				return errors.New("Disabled")
+			}
 			*comp = *c
 			break
 		}
@@ -61,16 +74,22 @@ func (r *mockRepository) Update(c *Composition) error {
 
 func (r *mockRepository) Delete(id string) error {
 	for _, comp := range r.compositions {
-		if comp.ID.String() == id {
+		if comp.ID.String() == id && comp.Enabled {
 			comp.Enabled = false
-			break
+			return nil
 		}
 	}
-	return nil
+	return errors.New("Not found")
 }
 
 func (r *mockRepository) Count() int {
-	return len(r.compositions)
+	count := 0
+	for _, c := range r.compositions {
+		if c.Enabled {
+			count++
+		}
+	}
+	return count
 }
 
 func (r *mockRepository) Clean() {

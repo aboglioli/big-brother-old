@@ -2,6 +2,7 @@ package composition
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/aboglioli/big-brother/errors"
 	"github.com/aboglioli/big-brother/quantity"
@@ -64,7 +65,6 @@ func (s *service) Update(c *Composition) errors.Error {
 
 func (s *service) UpdateUses(c *Composition) errors.Error {
 	uses, _ := s.repository.FindUses(c.ID.String())
-	fmt.Println("uses", uses)
 
 	for _, c := range uses {
 		if err := s.Update(c); err != nil {
@@ -90,7 +90,8 @@ func (s *service) CalculateDependenciesSubvalue(dependencies []*Dependency) erro
 		nDepQ := dep.Quantity.Normalize()
 		nCompQ := comp.Unit.Normalize()
 
-		dep.Subvalue = nDepQ * comp.Cost / nCompQ
+		subvalue := nDepQ * comp.Cost / nCompQ
+		dep.Subvalue = math.Round(subvalue*100) / 100
 	}
 
 	return nil

@@ -1,6 +1,7 @@
 package composition
 
 import (
+	"math"
 	"time"
 
 	"github.com/aboglioli/big-brother/errors"
@@ -37,7 +38,7 @@ func (c *Composition) CalculateCost() {
 		for _, d := range c.Dependencies {
 			cost += d.Subvalue
 		}
-		c.Cost = cost
+		c.Cost = math.Round(cost*1000) / 1000
 	}
 }
 

@@ -1,6 +1,7 @@
 package composition
 
 import (
+	"math"
 	"testing"
 
 	"github.com/aboglioli/big-brother/errors"
@@ -16,11 +17,13 @@ func hasErrCode(err errors.Error, code string) bool {
 }
 
 func checkComp(t *testing.T, comps []*Composition, index int, shouldBe float64) {
+	shouldBe = math.Round(shouldBe*100) / 100
 	comp := comps[index]
 	if comp.Cost != shouldBe {
-		t.Errorf("Comp %d: %.2f should be %.2f", index+1, comp.Cost, shouldBe)
+		t.Errorf("Comp %d: %.2f should be %.2f", index, comp.Cost, shouldBe)
+		t.Error(comp.Cost, shouldBe)
 		for _, dep := range comp.Dependencies {
-			t.Errorf("Dep %s subvalue %.2f", dep.Of.String(), dep.Subvalue)
+			t.Errorf("- dep %s subvalue %.2f", dep.Of.String(), dep.Subvalue)
 		}
 	}
 }
@@ -170,12 +173,12 @@ func TestUpdateComposition(t *testing.T) {
 
 		c1 := 300.0
 		q1 := 2.5
-		c2 := 0.2 * c1 / q1 // 20
-		c3 := 0.1 * c1 / q1 // 10
+		c2 := 0.2 * c1 / q1 // 24
+		c3 := 0.1 * c1 / q1 // 12
 		c4 := 150.0
-		c5 := 0.4*c2/0.2 + 0.05*c3/0.5 // 41
+		c5 := 0.4*c2/0.2 + 0.05*c3/0.5 // 49.5
 		c6 := 0.35 * c4 / 0.1          // 525
-		c7 := 2*c5/1 + 1.5*c6/2        // 475.75
+		c7 := 2*c5/1 + 1.5*c6/2        // 492.75
 
 		checkComp(t, comps, 0, c1)
 		checkComp(t, comps, 1, c2)

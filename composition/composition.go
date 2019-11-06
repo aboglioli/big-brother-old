@@ -110,7 +110,7 @@ func (c *Composition) dependencyExists(of string) bool {
 
 func isDependencyInArray(d *Dependency, dependencies []*Dependency) bool {
 	for _, dep := range dependencies {
-		if d.Of.String() == dep.Of.String() {
+		if d.Equals(dep) {
 			return true
 		}
 	}

@@ -51,16 +51,27 @@ func (s *service) Create(c *Composition) errors.Error {
 }
 
 func (s *service) Update(c *Composition) errors.Error {
+	errGen := errors.FromPath("composition/service.Update")
+
 	if err := s.validateSchema(c); err != nil {
 		return err
 	}
 
-	if err := s.calculateDependenciesSubvalue(c.Dependencies); err != nil {
-		return err
-	}
-	c.CalculateCost()
+	saved, err := s.repository.FindByID(c.ID.String())
 
-	errGen := errors.FromPath("composition/service.Update")
+	if err != nil {
+		return errGen("COMPOSITION_DOES_NOT_EXIST", err.Error())
+	}
+
+	new, _, old := c.CompareDependencies(saved)
+
+	if saved.Cost != c.Cost || len(new) > 0 || len(old) > 0 {
+		if err := s.calculateDependenciesSubvalue(c.Dependencies); err != nil {
+			return err
+		}
+		c.CalculateCost()
+	}
+
 	if err := s.repository.Update(c); err != nil {
 		return errGen("UPDATE", err.Error())
 	}

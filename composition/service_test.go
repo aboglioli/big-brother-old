@@ -21,7 +21,6 @@ func checkComp(t *testing.T, comps []*Composition, index int, shouldBe float64) 
 	comp := comps[index]
 	if comp.Cost != shouldBe {
 		t.Errorf("Comp %d: %.2f should be %.2f", index, comp.Cost, shouldBe)
-		t.Error(comp.Cost, shouldBe)
 		for _, dep := range comp.Dependencies {
 			t.Errorf("- dep %s subvalue %.2f", dep.Of.String(), dep.Subvalue)
 		}

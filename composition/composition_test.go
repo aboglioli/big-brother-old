@@ -102,8 +102,11 @@ func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 }
 
 func TestCompareDependencies(t *testing.T) {
-	c1 := makeMockedCompositions()[1]
+	c1, c2 := makeMockedCompositions()[1], makeMockedCompositions()[1]
 
+	c2.Dependencies[0].Of = c1.Dependencies[0].Of
+
+	// With itself
 	left, common, right := c1.CompareDependencies(c1)
 	if len(left) != 0 {
 		t.Error("Left should be empty")
@@ -115,9 +118,48 @@ func TestCompareDependencies(t *testing.T) {
 		t.Error("Right should be empty")
 	}
 
-	c2 := *c1
-	c2.Dependencies = []*Dependency{}
-	for _, d := range c1.Dependencies {
-		c2.Dependencies = append(c2.Dependencies, d)
+	// Copy
+	left, common, right = c1.CompareDependencies(c2)
+	if len(left) != 0 {
+		t.Error("Left should be empty")
+	}
+	if len(common) != 1 {
+		t.Error("Common should have 1 element")
+	}
+	if len(right) != 0 {
+		t.Error("Right should be empty")
+	}
+
+	// After changing
+	c2.Dependencies[0].Quantity = quantity.Quantity{250.0, "g"}
+
+	left, common, right = c1.CompareDependencies(c2)
+	if len(left) != 1 {
+		t.Error("Left")
+	}
+	if len(common) != 0 {
+		t.Error("There aren't common dependencies")
+	}
+	if len(right) != 1 {
+		t.Error("Right")
+	}
+
+	// Add a common dependency
+	dep := Dependency{
+		Of:       primitive.NewObjectID(),
+		Quantity: quantity.Quantity{2, "l"},
+	}
+	c1.UpsertDependency(&dep)
+	c2.UpsertDependency(&dep)
+
+	left, common, right = c1.CompareDependencies(c2)
+	if len(left) != 1 {
+		t.Error("Left")
+	}
+	if len(common) != 1 {
+		t.Error("There is a common dependency")
+	}
+	if len(right) != 1 {
+		t.Error("Right")
 	}
 }

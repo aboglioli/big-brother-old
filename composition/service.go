@@ -9,12 +9,10 @@ import (
 )
 
 type Service interface {
+	GetByID(id string) (*Composition, errors.Error)
 	Create(*Composition) errors.Error
 	Update(*Composition) errors.Error
 	Delete(id string) errors.Error
-
-	UpdateUses(c *Composition) errors.Error
-	CalculateDependenciesSubvalue([]*Dependency) errors.Error
 }
 
 type service struct {
@@ -27,12 +25,20 @@ func NewService(r Repository) Service {
 	}
 }
 
+func (s *service) GetByID(id string) (*Composition, errors.Error) {
+	comp, err := s.repository.FindByID(id)
+	if err != nil {
+		return nil, errors.New("composition/service.GetByID", "COMPOSITION_NOT_FOUND", err.Error())
+	}
+	return comp, nil
+}
+
 func (s *service) Create(c *Composition) errors.Error {
 	if err := s.validateSchema(c); err != nil {
 		return err
 	}
 
-	if err := s.CalculateDependenciesSubvalue(c.Dependencies); err != nil {
+	if err := s.calculateDependenciesSubvalue(c.Dependencies); err != nil {
 		return err
 	}
 	c.CalculateCost()
@@ -49,7 +55,7 @@ func (s *service) Update(c *Composition) errors.Error {
 		return err
 	}
 
-	if err := s.CalculateDependenciesSubvalue(c.Dependencies); err != nil {
+	if err := s.calculateDependenciesSubvalue(c.Dependencies); err != nil {
 		return err
 	}
 	c.CalculateCost()
@@ -59,7 +65,7 @@ func (s *service) Update(c *Composition) errors.Error {
 		return errGen("UPDATE", err.Error())
 	}
 
-	if err := s.UpdateUses(c); err != nil {
+	if err := s.updateUses(c); err != nil {
 		return errGen("UPDATE_USES", err.Error())
 	}
 
@@ -81,7 +87,7 @@ func (s *service) Delete(id string) errors.Error {
 	return nil
 }
 
-func (s *service) UpdateUses(c *Composition) errors.Error {
+func (s *service) updateUses(c *Composition) errors.Error {
 	uses, _ := s.repository.FindUses(c.ID.String())
 
 	for _, c := range uses {
@@ -93,8 +99,8 @@ func (s *service) UpdateUses(c *Composition) errors.Error {
 	return nil
 }
 
-func (s *service) CalculateDependenciesSubvalue(dependencies []*Dependency) errors.Error {
-	errGen := errors.FromPath("composition/service.CalculateDependenciesSubvalue")
+func (s *service) calculateDependenciesSubvalue(dependencies []*Dependency) errors.Error {
+	errGen := errors.FromPath("composition/service.calculateDependenciesSubvalue")
 	for _, dep := range dependencies {
 		comp, err := s.repository.FindByID(dep.Of.String())
 		if err != nil {
@@ -105,10 +111,8 @@ func (s *service) CalculateDependenciesSubvalue(dependencies []*Dependency) erro
 			return errGen("INCOMPATIBLE_DEPENDENCY_QUANTITY", "")
 		}
 
-		nDepQ := dep.Quantity.Normalize()
-		nCompQ := comp.Unit.Normalize()
+		subvalue := comp.CostFromQuantity(dep.Quantity)
 
-		subvalue := nDepQ * comp.Cost / nCompQ
 		dep.Subvalue = math.Round(subvalue*100) / 100
 	}
 

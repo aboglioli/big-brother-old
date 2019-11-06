@@ -24,6 +24,24 @@ func TestCalculateCostFromSubvalue(t *testing.T) {
 	}
 }
 
+func TestCalculateCostByQuantity(t *testing.T) {
+	comp := NewComposition()
+	comp.Cost = 50
+	comp.Unit = quantity.Quantity{2, "kg"}
+
+	if comp.CostFromQuantity(quantity.Quantity{1000, "g"}) != 25 {
+		t.Error("Cost should be 25")
+	}
+
+	if comp.CostFromQuantity(quantity.Quantity{500, "g"}) != 12.5 {
+		t.Error("Cost should be 12.5")
+	}
+
+	if comp.CostFromQuantity(quantity.Quantity{3, "kg"}) != 3*50/2 {
+		t.Error("Cost should be 12.5")
+	}
+}
+
 func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 	c := newComposition()
 	randID := primitive.NewObjectID()

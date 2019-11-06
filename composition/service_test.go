@@ -189,7 +189,8 @@ func TestUpdateComposition(t *testing.T) {
 	comps := makeMockedCompositions()
 	repo.InsertMany(comps)
 	for _, c := range comps {
-		if err := serv.CalculateDependenciesSubvalue(c.Dependencies); err != nil {
+		servImpl := serv.(*service)
+		if err := servImpl.calculateDependenciesSubvalue(c.Dependencies); err != nil {
 			t.Error(err)
 			continue
 		}
@@ -299,7 +300,8 @@ func TestCalculateDependenciesSubvalue(t *testing.T) {
 	comps := makeMockedCompositions()
 	repo.InsertMany(comps)
 	for _, c := range comps {
-		err := serv.CalculateDependenciesSubvalue(c.Dependencies)
+		servImpl := serv.(*service)
+		err := servImpl.calculateDependenciesSubvalue(c.Dependencies)
 		if err != nil {
 			t.Error(err)
 			continue

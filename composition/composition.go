@@ -42,6 +42,13 @@ func (c *Composition) CalculateCost() {
 	}
 }
 
+func (c *Composition) CostFromQuantity(q quantity.Quantity) float64 {
+	nQuantity := q.Normalize()
+	nUnit := c.Unit.Normalize()
+
+	return nQuantity * c.Cost / nUnit
+}
+
 func (c *Composition) UpsertDependency(d *Dependency) errors.Error {
 	if !c.dependencyExists(d.Of.String()) {
 		c.Dependencies = append(c.Dependencies, d)

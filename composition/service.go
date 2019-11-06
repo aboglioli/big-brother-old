@@ -38,9 +38,12 @@ func (s *service) Create(c *Composition) errors.Error {
 		return err
 	}
 
-	if err := s.calculateDependenciesSubvalue(c.Dependencies); err != nil {
+	deps, err := s.calculateDependenciesSubvalue(c.Dependencies)
+	if err != nil {
 		return err
 	}
+
+	c.Dependencies = deps
 	c.CalculateCost()
 
 	if err := s.repository.Insert(c); err != nil {
@@ -57,20 +60,13 @@ func (s *service) Update(c *Composition) errors.Error {
 		return err
 	}
 
-	saved, err := s.repository.FindByID(c.ID.String())
-
+	deps, err := s.calculateDependenciesSubvalue(c.Dependencies)
 	if err != nil {
-		return errGen("COMPOSITION_DOES_NOT_EXIST", err.Error())
+		return err
 	}
 
-	new, _, old := c.CompareDependencies(saved)
-
-	if saved.Cost != c.Cost || len(new) > 0 || len(old) > 0 {
-		if err := s.calculateDependenciesSubvalue(c.Dependencies); err != nil {
-			return err
-		}
-		c.CalculateCost()
-	}
+	c.Dependencies = deps
+	c.CalculateCost()
 
 	if err := s.repository.Update(c); err != nil {
 		return errGen("UPDATE", err.Error())
@@ -110,24 +106,28 @@ func (s *service) updateUses(c *Composition) errors.Error {
 	return nil
 }
 
-func (s *service) calculateDependenciesSubvalue(dependencies []*Dependency) errors.Error {
+func (s *service) calculateDependenciesSubvalue(dependencies []Dependency) ([]Dependency, errors.Error) {
+	newDependencies := make([]Dependency, len(dependencies))
+
 	errGen := errors.FromPath("composition/service.calculateDependenciesSubvalue")
-	for _, dep := range dependencies {
+	for i, dep := range dependencies {
 		comp, err := s.repository.FindByID(dep.Of.String())
 		if err != nil {
-			return errGen("DEPENDENCY_DOES_NOT_EXIST", err.Error())
+			return nil, errGen("DEPENDENCY_DOES_NOT_EXIST", err.Error())
 		}
 
 		if !dep.Quantity.Compatible(comp.Unit) {
-			return errGen("INCOMPATIBLE_DEPENDENCY_QUANTITY", "")
+			return nil, errGen("INCOMPATIBLE_DEPENDENCY_QUANTITY", "")
 		}
 
 		subvalue := comp.CostFromQuantity(dep.Quantity)
 
 		dep.Subvalue = math.Round(subvalue*100) / 100
+
+		newDependencies[i] = dep
 	}
 
-	return nil
+	return newDependencies, nil
 }
 
 func (s *service) validateSchema(c *Composition) errors.Error {

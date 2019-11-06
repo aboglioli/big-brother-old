@@ -14,7 +14,7 @@ type Composition struct {
 	Cost         float64            `bson:"cost" validate:"required"`
 	Unit         quantity.Quantity  `bson:"unit" validate:"required"`
 	Stock        quantity.Quantity  `bson:"stock" validate:"required"`
-	Dependencies []*Dependency      `bson:"dependencies" validate:"required"`
+	Dependencies []Dependency       `bson:"dependencies" validate:"required"`
 
 	AutoupdateCost bool      `bson:"autoupdate_cost"`
 	Enabled        bool      `bson:"enabled" `
@@ -49,7 +49,7 @@ func (c *Composition) CostFromQuantity(q quantity.Quantity) float64 {
 	return nQuantity * c.Cost / nUnit
 }
 
-func (c *Composition) UpsertDependency(d *Dependency) errors.Error {
+func (c *Composition) UpsertDependency(d Dependency) errors.Error {
 	if !c.dependencyExists(d.Of.String()) {
 		c.Dependencies = append(c.Dependencies, d)
 		return nil
@@ -70,7 +70,7 @@ func (c *Composition) RemoveDependency(depID string) errors.Error {
 		return errors.New("composition.Composition.RemoveDependency", "DEPENDENCY_DOES_NOT_EXIST", "")
 	}
 
-	dependencies := make([]*Dependency, 0, len(c.Dependencies))
+	dependencies := make([]Dependency, 0, len(c.Dependencies))
 	for _, dep := range c.Dependencies {
 		if dep.Of.String() != depID {
 			dependencies = append(dependencies, dep)
@@ -81,7 +81,7 @@ func (c *Composition) RemoveDependency(depID string) errors.Error {
 	return nil
 }
 
-func (c1 *Composition) CompareDependencies(c2 *Composition) (left []*Dependency, common []*Dependency, right []*Dependency) {
+func (c1 *Composition) CompareDependencies(c2 *Composition) (left []Dependency, common []Dependency, right []Dependency) {
 	for _, dep := range c1.Dependencies {
 		if !isDependencyInArray(dep, c2.Dependencies) {
 			left = append(left, dep)
@@ -108,7 +108,7 @@ func (c *Composition) dependencyExists(of string) bool {
 	return false
 }
 
-func isDependencyInArray(d *Dependency, dependencies []*Dependency) bool {
+func isDependencyInArray(d Dependency, dependencies []Dependency) bool {
 	for _, dep := range dependencies {
 		if d.Equals(dep) {
 			return true

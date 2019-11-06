@@ -28,8 +28,8 @@ func makeMockedCompositions() []*Composition {
 			Quantity: 0.2,
 			Unit:     "kg",
 		},
-		Dependencies: []*Dependency{
-			&Dependency{
+		Dependencies: []Dependency{
+			Dependency{
 				Of: p1.ID,
 				Quantity: quantity.Quantity{
 					Quantity: 200.0,
@@ -45,8 +45,8 @@ func makeMockedCompositions() []*Composition {
 			Quantity: 500.0,
 			Unit:     "g",
 		},
-		Dependencies: []*Dependency{
-			&Dependency{
+		Dependencies: []Dependency{
+			Dependency{
 				Of: p1.ID,
 				Quantity: quantity.Quantity{
 					Quantity: 100.0,
@@ -70,15 +70,15 @@ func makeMockedCompositions() []*Composition {
 			Quantity: 1.0,
 			Unit:     "u",
 		},
-		Dependencies: []*Dependency{
-			&Dependency{
+		Dependencies: []Dependency{
+			Dependency{
 				Of: p2.ID,
 				Quantity: quantity.Quantity{
 					Quantity: 400.0,
 					Unit:     "g",
 				},
 			},
-			&Dependency{
+			Dependency{
 				Of: p3.ID,
 				Quantity: quantity.Quantity{
 					Quantity: 50.0,
@@ -94,8 +94,8 @@ func makeMockedCompositions() []*Composition {
 			Quantity: 2.0,
 			Unit:     "u",
 		},
-		Dependencies: []*Dependency{
-			&Dependency{
+		Dependencies: []Dependency{
+			Dependency{
 				Of: p4.ID,
 				Quantity: quantity.Quantity{
 					Quantity: 350.0,
@@ -111,15 +111,15 @@ func makeMockedCompositions() []*Composition {
 			Quantity: 3.0,
 			Unit:     "u",
 		},
-		Dependencies: []*Dependency{
-			&Dependency{
+		Dependencies: []Dependency{
+			Dependency{
 				Of: p5.ID,
 				Quantity: quantity.Quantity{
 					Quantity: 2.0,
 					Unit:     "u",
 				},
 			},
-			&Dependency{
+			Dependency{
 				Of: p6.ID,
 				Quantity: quantity.Quantity{
 					Quantity: 1.5,

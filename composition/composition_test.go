@@ -11,10 +11,10 @@ func TestCalculateCostFromSubvalue(t *testing.T) {
 	c := newComposition()
 	c.Dependencies = append(
 		c.Dependencies,
-		&Dependency{
+		Dependency{
 			Subvalue: 100,
 		},
-		&Dependency{
+		Dependency{
 			Subvalue: 250,
 		},
 	)
@@ -47,7 +47,7 @@ func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 	randID := primitive.NewObjectID()
 
 	t.Run("New dependency", func(t *testing.T) {
-		c.UpsertDependency(&Dependency{
+		c.UpsertDependency(Dependency{
 			Of: randID,
 			Quantity: quantity.Quantity{
 				Unit:     "u",
@@ -60,7 +60,7 @@ func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 		}
 	})
 	t.Run("Add same dependency", func(t *testing.T) {
-		c.UpsertDependency(&Dependency{
+		c.UpsertDependency(Dependency{
 			Of: randID,
 			Quantity: quantity.Quantity{
 				Unit:     "u",
@@ -73,7 +73,7 @@ func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 		}
 	})
 	t.Run("Add new dependency", func(t *testing.T) {
-		c.UpsertDependency(&Dependency{
+		c.UpsertDependency(Dependency{
 			Of: primitive.NewObjectID(),
 			Quantity: quantity.Quantity{
 				Unit:     "u",
@@ -149,8 +149,8 @@ func TestCompareDependencies(t *testing.T) {
 		Of:       primitive.NewObjectID(),
 		Quantity: quantity.Quantity{2, "l"},
 	}
-	c1.UpsertDependency(&dep)
-	c2.UpsertDependency(&dep)
+	c1.UpsertDependency(dep)
+	c2.UpsertDependency(dep)
 
 	left, common, right = c1.CompareDependencies(c2)
 	if len(left) != 1 {

@@ -60,8 +60,8 @@ func TestCreateComposition(t *testing.T) {
 
 	t.Run("Non-existing dependency", func(t *testing.T) {
 		comp := newComposition()
-		comp.Dependencies = []*Dependency{
-			&Dependency{
+		comp.Dependencies = []Dependency{
+			Dependency{
 				Of: primitive.NewObjectID(),
 				Quantity: quantity.Quantity{
 					Quantity: 5,
@@ -81,8 +81,8 @@ func TestCreateComposition(t *testing.T) {
 		dep, comp := newComposition(), newComposition()
 		dep.Unit = quantity.Quantity{2, "kg"}
 		repo.Insert(dep)
-		comp.Dependencies = []*Dependency{
-			&Dependency{
+		comp.Dependencies = []Dependency{
+			Dependency{
 				Of: dep.ID,
 				Quantity: quantity.Quantity{
 					Quantity: 5,
@@ -101,8 +101,8 @@ func TestCreateComposition(t *testing.T) {
 		dep, comp := newComposition(), newComposition()
 		dep.Unit = quantity.Quantity{2, "kg"}
 		repo.Insert(dep)
-		comp.Dependencies = []*Dependency{
-			&Dependency{
+		comp.Dependencies = []Dependency{
+			Dependency{
 				Of: dep.ID,
 				Quantity: quantity.Quantity{
 					Quantity: 5,
@@ -136,8 +136,8 @@ func TestCreateComposition(t *testing.T) {
 		repo.Clean()
 		dep, comp := newComposition(), newComposition()
 		repo.Insert(dep)
-		comp.Dependencies = []*Dependency{
-			&Dependency{
+		comp.Dependencies = []Dependency{
+			Dependency{
 				Of: dep.ID,
 				Quantity: quantity.Quantity{
 					Quantity: 5,
@@ -161,8 +161,8 @@ func TestCreateComposition(t *testing.T) {
 			Quantity: 2,
 			Unit:     "kg",
 		}
-		comp.Dependencies = []*Dependency{
-			&Dependency{
+		comp.Dependencies = []Dependency{
+			Dependency{
 				Of: dep.ID,
 				Quantity: quantity.Quantity{
 					Quantity: 750,
@@ -189,10 +189,12 @@ func TestUpdateComposition(t *testing.T) {
 	repo.InsertMany(comps)
 	for _, c := range comps {
 		servImpl := serv.(*service)
-		if err := servImpl.calculateDependenciesSubvalue(c.Dependencies); err != nil {
+		deps, err := servImpl.calculateDependenciesSubvalue(c.Dependencies)
+		if err != nil {
 			t.Error(err)
 			continue
 		}
+		c.Dependencies = deps
 		c.CalculateCost()
 		if err := repo.Update(c); err != nil {
 			t.Error(err)
@@ -276,8 +278,8 @@ func TestDeleteComposition(t *testing.T) {
 	dep.Cost = 10
 	dep.Unit = quantity.Quantity{1, "u"}
 	repo.Insert(dep)
-	comp.Dependencies = []*Dependency{
-		&Dependency{
+	comp.Dependencies = []Dependency{
+		Dependency{
 			Of:       dep.ID,
 			Quantity: quantity.Quantity{2, "u"},
 		},
@@ -300,12 +302,14 @@ func TestCalculateDependenciesSubvalue(t *testing.T) {
 	repo.InsertMany(comps)
 	for _, c := range comps {
 		servImpl := serv.(*service)
-		err := servImpl.calculateDependenciesSubvalue(c.Dependencies)
+		deps, err := servImpl.calculateDependenciesSubvalue(c.Dependencies)
 		if err != nil {
 			t.Error(err)
 			continue
 		}
+		c.Dependencies = deps
 		c.CalculateCost()
+		repo.Update(c)
 	}
 
 	c1 := 200.0

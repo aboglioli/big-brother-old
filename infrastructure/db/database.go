@@ -17,14 +17,14 @@ func init() {
 }
 
 func connect() (*mongo.Client, error) {
-	c := config.Get()
+	conf := config.Get()
 	ctx := context.TODO()
 
-	options := options.Client().ApplyURI(c.MongoURL).SetAuth(
+	options := options.Client().ApplyURI(conf.MongoURL).SetAuth(
 		options.Credential{
-			AuthSource: "admin",
-			Username:   "admin",
-			Password:   "admin",
+			AuthSource: conf.MongoAuthSource,
+			Username:   conf.MongoUsername,
+			Password:   conf.MongoPassword,
 		})
 
 	client, err := mongo.Connect(ctx, options)

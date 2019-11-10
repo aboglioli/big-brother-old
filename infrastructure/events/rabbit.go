@@ -39,21 +39,29 @@ func GetManager() Manager {
 			consumers: make(map[string]*amqp.Channel),
 		}
 		mgr.Connect()
+		go func() {
+			for {
+				<-mgr.connection.NotifyClose(make(chan *amqp.Error))
+				mgr.Connect()
+			}
+		}()
 	}
 
 	return mgr
 }
 
 func (m *manager) Connect() (*amqp.Connection, errors.Error) {
-	if m.connection == nil {
-		conf := config.Get()
-		conn, err := amqp.Dial(conf.RabbitURL)
-		if err != nil {
-			return nil, errors.New("infrastructure/events/manager.Connect", "FAILED_TO_CONNECT", err.Error())
-		}
-
-		m.connection = conn
+	if m.connection != nil {
+		m.connection.Close()
 	}
+
+	conf := config.Get()
+	conn, err := amqp.Dial(conf.RabbitURL)
+	if err != nil {
+		return nil, errors.New("infrastructure/events/manager.Connect", "FAILED_TO_CONNECT", err.Error())
+	}
+
+	m.connection = conn
 
 	return m.connection, nil
 }

@@ -10,18 +10,18 @@ import (
 )
 
 type Composition struct {
-	ID           primitive.ObjectID `bson:"_id" validate:"required"`
-	Name         string             `bson:"name"`
-	Cost         float64            `bson:"cost" validate:"required"`
-	Unit         quantity.Quantity  `bson:"unit" validate:"required"`
-	Stock        quantity.Quantity  `bson:"stock" validate:"required"`
-	Dependencies []Dependency       `bson:"dependencies" validate:"required"`
+	ID           primitive.ObjectID `json:"id" bson:"_id" validate:"required"`
+	Name         string             `json:"name" bson:"name"`
+	Cost         float64            `json:"cost" bson:"cost" validate:"required"`
+	Unit         quantity.Quantity  `json:"unit" bson:"unit" validate:"required"`
+	Stock        quantity.Quantity  `json:"stock" bson:"stock" validate:"required"`
+	Dependencies []Dependency       `json:"dependencies" bson:"dependencies" validate:"required"`
 
-	AutoupdateCost bool      `bson:"autoupdate_cost"`
-	Enabled        bool      `bson:"enabled" `
-	Validated      bool      `bson:"validated"`
-	CreatedAt      time.Time `bson:"createdAt"`
-	UpdatedAt      time.Time `bson:"updatedAt"`
+	AutoupdateCost bool      `json:"autoupdateCost" bson:"autoupdate_cost"`
+	Enabled        bool      `json:"enabled" bson:"enabled" `
+	Validated      bool      `json:"validated" bson:"validated"`
+	CreatedAt      time.Time `json:"createdAt" bson:"createdAt"`
+	UpdatedAt      time.Time `json:"updatedAt" bson:"updatedAt"`
 }
 
 func NewComposition() *Composition {

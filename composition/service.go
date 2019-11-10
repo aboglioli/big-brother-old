@@ -1,7 +1,6 @@
 package composition
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
 
@@ -89,9 +88,10 @@ func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
 	}
 
 	// Publish event: composition.created
-	body, mErr := json.Marshal(c)
-	if mErr != nil {
-		return nil, errGen("MARSHAL_TO_JSON", mErr.Error())
+	evt := NewEvent("CompositionCreated", c)
+	body, err := evt.ToBytes()
+	if err != nil {
+		return nil, err
 	}
 	if err := s.eventMgr.Publish("composition", "fanout", "composition.created", body); err != nil {
 		return nil, err
@@ -118,9 +118,9 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 		return nil, errGen("ID_DOES_NOT_MATCH", fmt.Sprintf("%s != %s", req.ID, id))
 	}
 
-	c, err := s.repository.FindByID(id)
-	if err != nil {
-		return nil, errGen("COMPOSITION_DOES_NOT_EXIST", err.Error())
+	c, rawErr := s.repository.FindByID(id)
+	if rawErr != nil {
+		return nil, errGen("COMPOSITION_DOES_NOT_EXIST", rawErr.Error())
 	}
 
 	if !c.Unit.Compatible(req.Unit) {
@@ -168,6 +168,17 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 		return nil, errGen("UPDATE", err.Error())
 	}
 
+	// Publish event: composition.updated
+	evt := NewEvent("CompositionUpdatedManually", c)
+	body, err := evt.ToBytes()
+	if err != nil {
+		return nil, err
+	}
+	if err := s.eventMgr.Publish("composition", "fanout", "composition.updated", body); err != nil {
+		return nil, err
+	}
+
+	// Update uses
 	if err := s.updateUses(c); err != nil {
 		return nil, errGen("UPDATE_USES", err.Error())
 	}
@@ -178,6 +189,11 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 func (s *service) Delete(id string) errors.Error {
 	errGen := errors.FromPath("composition/service.Delete")
 
+	c, rawErr := s.repository.FindByID(id)
+	if rawErr != nil {
+		return errGen("DELETE", rawErr.Error())
+	}
+
 	uses, _ := s.repository.FindUses(id)
 	if len(uses) > 0 {
 		return errGen("COMPOSITION_USED_AS_DEPENDENCY", "")
@@ -185,6 +201,16 @@ func (s *service) Delete(id string) errors.Error {
 
 	if err := s.repository.Delete(id); err != nil {
 		return errGen("NOT_FOUND", err.Error())
+	}
+
+	// Publish event
+	evt := NewEvent("CompositionDeleted", c)
+	body, err := evt.ToBytes()
+	if err != nil {
+		return err
+	}
+	if err := s.eventMgr.Publish("composition", "fanout", "composition.deleted", body); err != nil {
+		return err
 	}
 
 	return nil
@@ -197,7 +223,7 @@ func (s *service) updateUses(c *Composition) errors.Error {
 		dep := u.FindDependencyByID(c.ID.Hex())
 
 		subvalue := c.CostFromQuantity(dep.Quantity)
-		dep.Subvalue = math.Round(subvalue*100) / 100
+		dep.Subvalue = math.Round(subvalue*1000) / 1000
 
 		u.UpsertDependency(*dep)
 
@@ -205,6 +231,17 @@ func (s *service) updateUses(c *Composition) errors.Error {
 			return errors.New("composition/service.updateUses", "UPDATE_USES", err.Error())
 		}
 
+		// Publish event
+		evt := NewEvent("CompositionUpdatedAutomatically", c)
+		body, err := evt.ToBytes()
+		if err != nil {
+			return err
+		}
+		if err := s.eventMgr.Publish("composition", "fanout", "composition.updated", body); err != nil {
+			return err
+		}
+
+		// Update uses
 		if err := s.updateUses(u); err != nil {
 			return err
 		}

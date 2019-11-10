@@ -39,10 +39,10 @@ type CreateRequest struct {
 	Name         string            `json:"name"`
 	Cost         float64           `json:"cost" binding:"required"`
 	Unit         quantity.Quantity `json:"unit" binding:"required"`
-	Stock        quantity.Quantity `bson:"stock" binding:"required"`
-	Dependencies []Dependency      `bson:"dependencies" binding:"required"`
+	Stock        quantity.Quantity `json:"stock" binding:"required"`
+	Dependencies []Dependency      `json:"dependencies" binding:"required"`
 
-	AutoupdateCost bool `bson:"autoupdate_cost" binding:"required"`
+	AutoupdateCost bool `json:"autoupdate_cost" binding:"required"`
 }
 
 func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
@@ -95,7 +95,7 @@ type UpdateRequest struct {
 	Stock        quantity.Quantity `json:"stock" binding:"required"`
 	Dependencies []Dependency      `json:"dependencies" binding:"required"`
 
-	AutoupdateCost bool `bson:"autoupdate_cost" binding:"required"`
+	AutoupdateCost bool `json:"autoupdate_cost" binding:"required"`
 }
 
 func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Error) {

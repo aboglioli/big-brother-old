@@ -6,27 +6,32 @@ import (
 	"github.com/streadway/amqp"
 )
 
-var manager *Manager
+type Manager interface {
+	Publish(exchange string, eType string, key string, body []byte) errors.Error
+	Consume(exchange string, eType string, key string) (<-chan amqp.Delivery, errors.Error)
+}
 
-type Manager struct {
+var mgr *manager
+
+type manager struct {
 	connection *amqp.Connection
 	emitters   map[string]*amqp.Channel
 	consumers  map[string]*amqp.Channel
 }
 
-func GetManager() *Manager {
-	if manager == nil {
-		manager = &Manager{
+func GetManager() Manager {
+	if mgr == nil {
+		mgr = &manager{
 			emitters:  make(map[string]*amqp.Channel),
 			consumers: make(map[string]*amqp.Channel),
 		}
-		manager.Connect()
+		mgr.Connect()
 	}
 
-	return manager
+	return mgr
 }
 
-func (m *Manager) Connect() (*amqp.Connection, errors.Error) {
+func (m *manager) Connect() (*amqp.Connection, errors.Error) {
 	if m.connection == nil {
 		conf := config.Get()
 		conn, err := amqp.Dial(conf.RabbitURL)
@@ -40,16 +45,16 @@ func (m *Manager) Connect() (*amqp.Connection, errors.Error) {
 	return m.connection, nil
 }
 
-func (m *Manager) Disconnect() {
+func (m *manager) Disconnect() {
 	if m.connection != nil {
 		m.connection.Close()
 		m.connection = nil
 	}
 }
 
-func (m *Manager) FanoutSend(exchange string, body []byte) errors.Error {
+func (m *manager) Publish(exchange string, eType string, key string, body []byte) errors.Error {
 	if m.emitters[exchange] == nil {
-		ch, err := m.createChannelWithExchange(exchange)
+		ch, err := m.createChannelWithExchange(exchange, eType)
 		if err != nil {
 			return err
 		}
@@ -61,7 +66,7 @@ func (m *Manager) FanoutSend(exchange string, body []byte) errors.Error {
 
 	err := ch.Publish(
 		exchange,
-		"",
+		key,
 		false,
 		false,
 		amqp.Publishing{
@@ -69,17 +74,17 @@ func (m *Manager) FanoutSend(exchange string, body []byte) errors.Error {
 		},
 	)
 	if err != nil {
-		return errors.New("infrastructure/events/manager.FanoutSend", "FAILED_TO_PUBLISH_MESSAGE", err.Error())
+		return errors.New("infrastructure/events/manager.Send", "FAILED_TO_PUBLISH_MESSAGE", err.Error())
 	}
 
 	return nil
 }
 
-func (m *Manager) Consume(exchange string) (<-chan amqp.Delivery, errors.Error) {
+func (m *manager) Consume(exchange string, eType string, key string) (<-chan amqp.Delivery, errors.Error) {
 	errGen := errors.FromPath("infrastructure/events/manager.Consume")
 
 	if m.emitters[exchange] == nil {
-		ch, err := m.createChannelWithExchange(exchange)
+		ch, err := m.createChannelWithExchange(exchange, eType)
 		if err != nil {
 			return nil, err
 		}
@@ -103,7 +108,7 @@ func (m *Manager) Consume(exchange string) (<-chan amqp.Delivery, errors.Error) 
 
 	err = ch.QueueBind(
 		q.Name,
-		"",
+		key,
 		exchange,
 		false,
 		nil,
@@ -128,8 +133,8 @@ func (m *Manager) Consume(exchange string) (<-chan amqp.Delivery, errors.Error) 
 	return msgs, nil
 }
 
-func (m *Manager) createChannelWithExchange(exchange string) (*amqp.Channel, errors.Error) {
-	errGen := errors.FromPath("infrastructure/events/manager.FanoutSend")
+func (m *manager) createChannelWithExchange(exchange string, eType string) (*amqp.Channel, errors.Error) {
+	errGen := errors.FromPath("infrastructure/events/manager.createChannelWithExchange")
 
 	ch, err := m.connection.Channel()
 	if err != nil {
@@ -138,7 +143,7 @@ func (m *Manager) createChannelWithExchange(exchange string) (*amqp.Channel, err
 
 	err = ch.ExchangeDeclare(
 		exchange,
-		"fanout",
+		eType,
 		true,
 		false,
 		false,

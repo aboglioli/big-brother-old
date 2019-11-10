@@ -1,10 +1,12 @@
 package composition
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 
 	"github.com/aboglioli/big-brother/errors"
+	"github.com/aboglioli/big-brother/infrastructure/events"
 	"github.com/aboglioli/big-brother/quantity"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -18,11 +20,13 @@ type Service interface {
 
 type service struct {
 	repository Repository
+	eventMgr   events.Manager
 }
 
-func NewService(r Repository) Service {
+func NewService(r Repository, e events.Manager) Service {
 	return &service{
 		repository: r,
+		eventMgr:   e,
 	}
 }
 
@@ -81,7 +85,16 @@ func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
 	c.SetDependencies(deps)
 
 	if err := s.repository.Insert(c); err != nil {
-		return nil, errors.New("composition/service.Create", "INSERT", err.Error())
+		return nil, errGen("INSERT", err.Error())
+	}
+
+	// Publish event: composition.created
+	body, mErr := json.Marshal(c)
+	if mErr != nil {
+		return nil, errGen("MARSHAL_TO_JSON", mErr.Error())
+	}
+	if err := s.eventMgr.Publish("composition", "fanout", "composition.created", body); err != nil {
+		return nil, err
 	}
 
 	return c, nil
@@ -206,7 +219,7 @@ func (s *service) calculateDependenciesSubvalues(dependencies []Dependency) ([]D
 	newDependencies := make([]Dependency, len(dependencies))
 	for i, dep := range dependencies {
 		comp, err := s.repository.FindByID(dep.Of.Hex())
-		if err != nil {
+		if err != nil || comp == nil {
 			return nil, errGen("DEPENDENCY_DOES_NOT_EXIST", err.Error())
 		}
 
@@ -215,7 +228,7 @@ func (s *service) calculateDependenciesSubvalues(dependencies []Dependency) ([]D
 		}
 
 		subvalue := comp.CostFromQuantity(dep.Quantity)
-		dep.Subvalue = math.Round(subvalue*100) / 100
+		dep.Subvalue = math.Round(subvalue*1000) / 1000
 		newDependencies[i] = dep
 	}
 

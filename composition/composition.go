@@ -39,6 +39,10 @@ func (c *Composition) CostFromQuantity(q quantity.Quantity) float64 {
 	nQuantity := q.Normalize()
 	nUnit := c.Unit.Normalize()
 
+	if nUnit == 0 {
+		return 0
+	}
+
 	return nQuantity * c.Cost / nUnit
 }
 
@@ -86,7 +90,7 @@ func (c *Composition) RemoveDependency(depID string) errors.Error {
 	c.Dependencies = dependencies
 
 	if !removed {
-		return errors.New("composition.Composition.RemoveDependency", "DEPENDENCY_DOES_NOT_EXIST", "")
+		return errors.New("composition/composition.RemoveDependency", "DEPENDENCY_DOES_NOT_EXIST", "")
 	}
 
 	c.calculateCostFromDependencies()

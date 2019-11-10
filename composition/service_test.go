@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aboglioli/big-brother/errors"
+	"github.com/aboglioli/big-brother/infrastructure/events"
 	"github.com/aboglioli/big-brother/quantity"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -52,8 +53,8 @@ func compToUpdateRequest(c *Composition) *UpdateRequest {
 }
 
 func TestCreateComposition(t *testing.T) {
-	repo := newMockRepository()
-	serv := NewService(repo)
+	repo, eventMgr := newMockRepository(), events.GetMockManager()
+	serv := NewService(repo, eventMgr)
 
 	// Errors
 	t.Run("Negative cost", func(t *testing.T) {
@@ -173,6 +174,7 @@ func TestCreateComposition(t *testing.T) {
 		_, err := serv.Create(compToCreateRequest(comp))
 
 		if err != nil || repo.Count() != 2 {
+			t.Error(err)
 			t.Error("Composition with single dependency should be created")
 		}
 	})
@@ -209,8 +211,9 @@ func TestCreateComposition(t *testing.T) {
 }
 
 func TestUpdateComposition(t *testing.T) {
-	repo := newMockRepository()
-	serv := NewService(repo)
+	repo, eventMgr := newMockRepository(), events.GetMockManager()
+	serv := NewService(repo, eventMgr)
+
 	comps := makeMockedCompositions()
 	repo.InsertMany(comps)
 	for _, c := range comps {
@@ -264,8 +267,9 @@ func TestUpdateComposition(t *testing.T) {
 }
 
 func TestDeleteComposition(t *testing.T) {
-	repo := newMockRepository()
-	serv := NewService(repo)
+	repo, eventMgr := newMockRepository(), events.GetMockManager()
+	serv := NewService(repo, eventMgr)
+
 	comp, dep := newComposition(), newComposition()
 	dep.Cost = 10
 	dep.Unit = quantity.Quantity{1, "u"}
@@ -288,8 +292,9 @@ func TestDeleteComposition(t *testing.T) {
 }
 
 func TestCalculateDependenciesSubvalues(t *testing.T) {
-	repo := newMockRepository()
-	serv := NewService(repo)
+	repo, eventMgr := newMockRepository(), events.GetMockManager()
+	serv := NewService(repo, eventMgr)
+
 	comps := makeMockedCompositions()
 	repo.InsertMany(comps)
 	for _, c := range comps {

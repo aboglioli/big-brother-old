@@ -40,6 +40,12 @@ func TestCalculateCostByQuantity(t *testing.T) {
 	if comp.CostFromQuantity(quantity.Quantity{3, "kg"}) != 3*50/2 {
 		t.Error("Cost should be 12.5")
 	}
+
+	comp.Unit = quantity.Quantity{0, "kg"}
+
+	if comp.CostFromQuantity(quantity.Quantity{1, "kg"}) != 0 {
+		t.Error("Division by zero")
+	}
 }
 
 func TestAddAndRemoveCompositionDependencies(t *testing.T) {

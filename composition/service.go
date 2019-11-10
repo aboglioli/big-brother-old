@@ -118,6 +118,8 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 	c.Cost = req.Cost
 	c.Unit = req.Unit
 	c.Stock = req.Stock
+	c.AutoupdateCost = req.AutoupdateCost
+	c.Validated = true
 
 	if err := s.validateSchema(c); err != nil {
 		return nil, err

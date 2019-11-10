@@ -99,6 +99,44 @@ func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 			t.Error("Should throw an error")
 		}
 	})
+	t.Run("Add dependencies and calculate cost from subvalues", func(t *testing.T) {
+		c.Dependencies = []Dependency{}
+		c.UpsertDependency(Dependency{
+			Of: primitive.NewObjectID(),
+			Quantity: quantity.Quantity{
+				Unit:     "u",
+				Quantity: 1.5,
+			},
+			Subvalue: 20.5,
+		})
+		id := primitive.NewObjectID()
+		c.UpsertDependency(Dependency{
+			Of: id,
+			Quantity: quantity.Quantity{
+				Unit:     "u",
+				Quantity: 2.5,
+			},
+			Subvalue: 30,
+		})
+		c.UpsertDependency(Dependency{
+			Of: primitive.NewObjectID(),
+			Quantity: quantity.Quantity{
+				Unit:     "u",
+				Quantity: 2.5,
+			},
+			Subvalue: 10.5,
+		})
+
+		if len(c.Dependencies) != 3 || c.Cost != 61 {
+			t.Error("Cost must be calculate after upserting")
+		}
+
+		c.RemoveDependency(id.Hex())
+
+		if len(c.Dependencies) != 2 || c.Cost != 31 {
+			t.Error("Cost must be calculate after removing")
+		}
+	})
 }
 
 func TestCompareDependencies(t *testing.T) {

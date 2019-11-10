@@ -34,7 +34,7 @@ func NewRepository() (Repository, error) {
 	}
 
 	return &repository{
-		collection: db.Collection("stock"),
+		collection: db.Collection("composition"),
 	}, nil
 }
 
@@ -142,6 +142,8 @@ func (r *repository) InsertMany(comps []*Composition) error {
 
 	rawComps := make([]interface{}, len(comps))
 	for i, c := range comps {
+		c.CreatedAt = time.Now()
+		c.UpdatedAt = time.Now()
 		rawComps[i] = c
 	}
 
@@ -186,13 +188,10 @@ func (r *repository) Delete(id string) error {
 	}
 
 	update := bson.D{
-		{
-			Key: "$set",
-			Value: bson.D{
-				{Key: "updatedAt", Value: time.Now},
-				{Key: "enabled", Value: false},
-			},
-		},
+		{"$set", bson.D{
+			{"updatedAt", time.Now},
+			{"enabled", false},
+		}},
 	}
 
 	_, err = r.collection.UpdateOne(ctx, filter, update)

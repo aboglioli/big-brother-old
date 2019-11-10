@@ -17,7 +17,7 @@ type Manager struct {
 func GetManager() *Manager {
 	if manager == nil {
 		manager = &Manager{
-			emitters: make(map[string]*amqp.Channel),
+			emitters:  make(map[string]*amqp.Channel),
 			consumers: make(map[string]*amqp.Channel),
 		}
 		manager.Connect()

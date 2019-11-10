@@ -6,11 +6,11 @@ import (
 )
 
 type Dependency struct {
-	Of       primitive.ObjectID `bson:"of" validate:"required"`
-	Quantity quantity.Quantity  `bson:"quantity" validate:"required"`
-	Subvalue float64            `bson:"subvalue"`
+	Of       primitive.ObjectID `bson:"of" json:"of" validate:"required" binding:"required"`
+	Quantity quantity.Quantity  `bson:"quantity" json:"quantity" validate:"required" binding:"required"`
+	Subvalue float64            `bson:"subvalue" json:"subvalue"`
 }
 
 func (d1 Dependency) Equals(d2 Dependency) bool {
-	return d1.Of.String() == d2.Of.String() && d1.Quantity.Equals(d2.Quantity) && d1.Subvalue == d2.Subvalue
+	return d1.Of.Hex() == d2.Of.Hex() && d1.Quantity.Equals(d2.Quantity)
 }

@@ -23,7 +23,7 @@ func init() {
 
 func TestAddSuccessful(t *testing.T) {
 	t.Run("Successful", func(t *testing.T) {
-		qTotal, _ := q1.Op(q2, OP_ADD)
+		qTotal, _ := q1.Add(q2)
 
 		if qTotal.Quantity != 2.5 {
 			t.Errorf("Result value: %f", qTotal.Quantity)
@@ -35,7 +35,7 @@ func TestAddSuccessful(t *testing.T) {
 	})
 
 	t.Run("Incompatible units", func(t *testing.T) {
-		_, err := q1.Op(q3, OP_ADD)
+		_, err := q1.Add(q3)
 
 		if err == nil {
 			t.Errorf("Should return error")
@@ -43,9 +43,9 @@ func TestAddSuccessful(t *testing.T) {
 	})
 }
 
-func TestSubstract(t *testing.T) {
+func TestSubtract(t *testing.T) {
 	t.Run("Successful", func(t *testing.T) {
-		qTotal, _ := q1.Op(q2, OP_SUBSTRACT)
+		qTotal, _ := q1.Subtract(q2)
 
 		if qTotal.Quantity != 1.5 {
 			t.Errorf("Result value: %f", qTotal.Quantity)
@@ -57,7 +57,7 @@ func TestSubstract(t *testing.T) {
 	})
 
 	t.Run("Incompatible units", func(t *testing.T) {
-		_, err := q1.Op(q3, OP_ADD)
+		_, err := q1.Subtract(q3)
 
 		if err == nil {
 			t.Errorf("Should return error")

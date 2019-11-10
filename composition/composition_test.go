@@ -18,7 +18,7 @@ func TestCalculateCostFromSubvalue(t *testing.T) {
 			Subvalue: 250,
 		},
 	)
-	c.CalculateCost()
+	c.calculateCostFromDependencies()
 	if c.Cost != 350 {
 		t.Error("Cost should be 350")
 	}
@@ -86,7 +86,7 @@ func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 		}
 	})
 	t.Run("Remove existing dependency", func(t *testing.T) {
-		err := c.RemoveDependency(randID.String())
+		err := c.RemoveDependency(randID.Hex())
 
 		if err != nil || len(c.Dependencies) != 1 {
 			t.Error("Dependency should be removed")
@@ -96,7 +96,7 @@ func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 		err := c.RemoveDependency(primitive.NewObjectID().String())
 
 		if err == nil {
-			t.Error("Shouldn't be removed")
+			t.Error("Should throw an error")
 		}
 	})
 }
@@ -107,7 +107,7 @@ func TestCompareDependencies(t *testing.T) {
 	c2.Dependencies[0].Of = c1.Dependencies[0].Of
 
 	// With itself
-	left, common, right := c1.CompareDependencies(c1)
+	left, common, right := c1.CompareDependencies(c1.Dependencies)
 	if len(left) != 0 {
 		t.Error("Left should be empty")
 	}
@@ -119,7 +119,7 @@ func TestCompareDependencies(t *testing.T) {
 	}
 
 	// Copy
-	left, common, right = c1.CompareDependencies(c2)
+	left, common, right = c1.CompareDependencies(c2.Dependencies)
 	if len(left) != 0 {
 		t.Error("Left should be empty")
 	}
@@ -133,7 +133,7 @@ func TestCompareDependencies(t *testing.T) {
 	// After changing
 	c2.Dependencies[0].Quantity = quantity.Quantity{250.0, "g"}
 
-	left, common, right = c1.CompareDependencies(c2)
+	left, common, right = c1.CompareDependencies(c2.Dependencies)
 	if len(left) != 1 {
 		t.Error("Left")
 	}
@@ -152,7 +152,7 @@ func TestCompareDependencies(t *testing.T) {
 	c1.UpsertDependency(dep)
 	c2.UpsertDependency(dep)
 
-	left, common, right = c1.CompareDependencies(c2)
+	left, common, right = c1.CompareDependencies(c2.Dependencies)
 	if len(left) != 1 {
 		t.Error("Left")
 	}

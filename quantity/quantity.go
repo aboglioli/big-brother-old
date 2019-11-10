@@ -13,8 +13,8 @@ const (
 )
 
 type Quantity struct {
-	Quantity float64 `bson:"quantity" json:"value" binding:"required"`
-	Unit     string  `bson:"unit" json:"unit" binding:"required"`
+	Quantity float64 `bson:"quantity" json:"quantity" binding:"required" validate:"required"`
+	Unit     string  `bson:"unit" json:"unit" binding:"required" validate:"required"`
 }
 
 func IsValid(q Quantity) bool {
@@ -25,35 +25,35 @@ func IsValid(q Quantity) bool {
 	return false
 }
 
-func (q1 Quantity) Op(q2 Quantity, op Op) (*Quantity, error) {
-	errGen := errors.FromPath("quantity/quantity.Add")
-	repo := unit.GetRepository()
-	u1 := repo.FindByName(q1.Unit)
-	if u1 == nil {
-		return nil, errGen("UNIT_DOES_NOT_EXIST", "")
-	}
-
-	u2 := repo.FindByName(q2.Unit)
-	if u2 == nil {
-		return nil, errGen("UNIT_DOES_NOT_EXIST", "")
-	}
-
-	if !u1.SameType(u2) {
-		return nil, errGen("INCOMPATIBLE_UNITS", "")
+func (q1 Quantity) Add(q2 Quantity) (Quantity, errors.Error) {
+	u1, err := referenceUnit(q1, q2)
+	if err != nil {
+		return Quantity{}, err
 	}
 
 	nQ1 := q1.Normalize()
 	nQ2 := q2.Normalize()
-
-	var total float64
-	if op == OP_ADD {
-		total = nQ1 + nQ2
-	} else {
-		total = nQ1 - nQ2
-	}
+	total := nQ1 + nQ2
 	total = total / u1.Modifier
 
-	return &Quantity{
+	return Quantity{
+		Unit:     q1.Unit,
+		Quantity: total,
+	}, nil
+}
+
+func (q1 Quantity) Subtract(q2 Quantity) (Quantity, errors.Error) {
+	u1, err := referenceUnit(q1, q2)
+	if err != nil {
+		return Quantity{}, err
+	}
+
+	nQ1 := q1.Normalize()
+	nQ2 := q2.Normalize()
+	total := nQ1 - nQ2
+	total = total / u1.Modifier
+
+	return Quantity{
 		Unit:     q1.Unit,
 		Quantity: total,
 	}, nil
@@ -80,4 +80,25 @@ func (q Quantity) Normalize() float64 {
 	repo := unit.GetRepository()
 	u := repo.FindByName(q.Unit)
 	return q.Quantity * u.Modifier
+}
+
+func referenceUnit(q1, q2 Quantity) (*unit.Unit, errors.Error) {
+	errGen := errors.FromPath("quantity/quantity.Add")
+	repo := unit.GetRepository()
+
+	u1 := repo.FindByName(q1.Unit)
+	if u1 == nil {
+		return nil, errGen("UNIT_DOES_NOT_EXIST", "")
+	}
+
+	u2 := repo.FindByName(q2.Unit)
+	if u2 == nil {
+		return nil, errGen("UNIT_DOES_NOT_EXIST", "")
+	}
+
+	if !u1.SameType(u2) {
+		return nil, errGen("INCOMPATIBLE_UNITS", "")
+	}
+
+	return u1, nil
 }

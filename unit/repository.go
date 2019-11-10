@@ -1,5 +1,7 @@
 package unit
 
+import "sync"
+
 type Repository interface {
 	FindAll() []*Unit
 	FindByName(u string) *Unit
@@ -12,29 +14,32 @@ type repository struct {
 }
 
 var repo Repository
+var once sync.Once
 
 func GetRepository() Repository {
 	if repo == nil {
-		repo = &repository{
-			units: map[string]*Unit{
-				"u": &Unit{"unit", "u", 1},
+		once.Do(func() {
+			repo = &repository{
+				units: map[string]*Unit{
+					"u": &Unit{"unit", "u", 1},
 
-				"mg": &Unit{"mass", "mg", 0.001},
-				"cg": &Unit{"mass", "cg", 0.01},
-				"g":  &Unit{"mass", "g", 1},
-				"kg": &Unit{"mass", "kg", 1000},
+					"mg": &Unit{"mass", "mg", 0.001},
+					"cg": &Unit{"mass", "cg", 0.01},
+					"g":  &Unit{"mass", "g", 1},
+					"kg": &Unit{"mass", "kg", 1000},
 
-				"ml": &Unit{"volume", "ml", 0.001},
-				"cl": &Unit{"volume", "cl", 0.01},
-				"l":  &Unit{"volume", "l", 1},
-				"kl": &Unit{"volume", "kl", 1000},
+					"ml": &Unit{"volume", "ml", 0.001},
+					"cl": &Unit{"volume", "cl", 0.01},
+					"l":  &Unit{"volume", "l", 1},
+					"kl": &Unit{"volume", "kl", 1000},
 
-				"mm": &Unit{"length", "mm", 0.001},
-				"cm": &Unit{"length", "cm", 0.01},
-				"m":  &Unit{"length", "m", 1},
-				"km": &Unit{"length", "km", 1000},
-			},
-		}
+					"mm": &Unit{"length", "mm", 0.001},
+					"cm": &Unit{"length", "cm", 0.01},
+					"m":  &Unit{"length", "m", 1},
+					"km": &Unit{"length", "km", 1000},
+				},
+			}
+		})
 	}
 	return repo
 }

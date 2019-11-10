@@ -55,7 +55,7 @@ func (r *mockRepository) FindByID(id string) (*Composition, error) {
 	r.sleep()
 
 	for _, c := range r.compositions {
-		if c.ID.String() == id && c.Enabled {
+		if c.ID.Hex() == id && c.Enabled {
 			return copyComposition(c), nil
 		}
 	}
@@ -77,7 +77,7 @@ func (r *mockRepository) FindUses(id string) ([]*Composition, error) {
 		}
 
 		for _, d := range c.Dependencies {
-			if d.Of.String() == id {
+			if d.Of.Hex() == id {
 				comps = append(comps, copyComposition(c))
 				break
 			}
@@ -94,6 +94,7 @@ func (r *mockRepository) FindUses(id string) ([]*Composition, error) {
 func (r *mockRepository) Insert(c *Composition) error {
 	r.sleep()
 
+	c.UpdatedAt = time.Now()
 	r.compositions = append(r.compositions, copyComposition(c))
 
 	if r.CountRequests {
@@ -108,6 +109,7 @@ func (r *mockRepository) InsertMany(comps []*Composition) error {
 
 	newComps := make([]*Composition, len(comps))
 	for i, c := range comps {
+		c.UpdatedAt = time.Now()
 		newComps[i] = copyComposition(c)
 	}
 	r.compositions = append(r.compositions, newComps...)
@@ -123,11 +125,12 @@ func (r *mockRepository) Update(c *Composition) error {
 	r.sleep()
 
 	for _, comp := range r.compositions {
-		if comp.ID.String() == c.ID.String() {
+		if comp.ID.Hex() == c.ID.Hex() {
 			if !comp.Enabled {
 				return errors.New("Disabled")
 			}
 			*comp = *copyComposition(c)
+			comp.UpdatedAt = time.Now()
 			break
 		}
 	}
@@ -143,7 +146,8 @@ func (r *mockRepository) Delete(id string) error {
 	r.sleep()
 
 	for _, comp := range r.compositions {
-		if comp.ID.String() == id && comp.Enabled {
+		if comp.ID.Hex() == id && comp.Enabled {
+			comp.UpdatedAt = time.Now()
 			comp.Enabled = false
 			return nil
 		}

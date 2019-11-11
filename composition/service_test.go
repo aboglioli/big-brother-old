@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aboglioli/big-brother/errors"
-	"github.com/aboglioli/big-brother/infrastructure/events"
+	"github.com/aboglioli/big-brother/events"
 	"github.com/aboglioli/big-brother/quantity"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )

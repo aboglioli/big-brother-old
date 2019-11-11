@@ -3,6 +3,7 @@ package events
 import (
 	"github.com/aboglioli/big-brother/config"
 	"github.com/aboglioli/big-brother/errors"
+	"github.com/aboglioli/big-brother/events"
 	"github.com/streadway/amqp"
 )
 
@@ -11,7 +12,7 @@ type message struct {
 	amqp.Delivery
 }
 
-func newMessage(d amqp.Delivery) Message {
+func newMessage(d amqp.Delivery) events.Message {
 	return message{d}
 }
 
@@ -32,7 +33,7 @@ type manager struct {
 	consumers  map[string]*amqp.Channel
 }
 
-func GetManager() (Manager, errors.Error) {
+func GetManager() (events.Manager, errors.Error) {
 	if mgr == nil {
 		mgr = &manager{
 			emitters:  make(map[string]*amqp.Channel),
@@ -104,7 +105,7 @@ func (m *manager) Publish(exchange string, eType string, key string, body []byte
 	return nil
 }
 
-func (m *manager) Consume(exchange string, eType string, key string) (<-chan Message, errors.Error) {
+func (m *manager) Consume(exchange string, eType string, key string) (<-chan events.Message, errors.Error) {
 	errGen := errors.FromPath("infrastructure/events/manager.Consume")
 
 	if m.emitters[exchange] == nil {
@@ -154,7 +155,7 @@ func (m *manager) Consume(exchange string, eType string, key string) (<-chan Mes
 		return nil, errGen("FAILED_TO_CONSUME", err.Error())
 	}
 
-	msg := make(chan Message)
+	msg := make(chan events.Message)
 	go func() {
 		for d := range delivery {
 			msg <- newMessage(d)
@@ -163,8 +164,6 @@ func (m *manager) Consume(exchange string, eType string, key string) (<-chan Mes
 	}()
 
 	return msg, nil
-
-	// return msg, nil
 }
 
 func (m *manager) createChannelWithExchange(exchange string, eType string) (*amqp.Channel, errors.Error) {

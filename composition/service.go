@@ -5,7 +5,7 @@ import (
 	"math"
 
 	"github.com/aboglioli/big-brother/errors"
-	"github.com/aboglioli/big-brother/infrastructure/events"
+	"github.com/aboglioli/big-brother/events"
 	"github.com/aboglioli/big-brother/quantity"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -191,10 +191,11 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 		return nil, err
 	}
 
+	// Uses are updated asynchronously in another service reacting to the above sent event
 	// Update uses
-	if err := s.UpdateUses(c); err != nil {
-		return nil, errGen("UPDATE_USES", err.Error())
-	}
+	// if err := s.UpdateUses(c); err != nil {
+	// 	return nil, errGen("UPDATE_USES", err.Error())
+	// }
 
 	return c, nil
 }

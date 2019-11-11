@@ -23,7 +23,7 @@ func main() {
 			return
 		}
 
-		fmt.Println("[Waiting for events]")
+		fmt.Println("[Waiting for events on topic: 'composition.*']")
 		for msg := range msgs {
 			evt, err := composition.EventFromBytes(msg.Body())
 			if err != nil {
@@ -32,7 +32,9 @@ func main() {
 			}
 
 			fmt.Println("# New event:")
-			fmt.Println(evt)
+			fmt.Println("- Type:", evt.Type)
+			fmt.Printf("- Composition: %+v\n", evt.Composition)
+			fmt.Println()
 
 			msg.Ack()
 		}

@@ -143,6 +143,24 @@ func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 			t.Error("Cost must be calculate after removing")
 		}
 	})
+
+	t.Run("Add new dependency to a non-autoupdated composition", func(t *testing.T) {
+		c := newComposition()
+		c.Cost = 45
+		c.Unit = quantity.Quantity{2, "kg"}
+		c.Stock = c.Unit
+		c.AutoupdateCost = false
+
+		c.UpsertDependency(Dependency{
+			Of:       primitive.NewObjectID(),
+			Quantity: quantity.Quantity{1.5, "u"},
+			Subvalue: 30,
+		})
+
+		if c.Cost != 45 {
+			t.Error("Cost should not be updated automatically")
+		}
+	})
 }
 
 func TestCompareDependencies(t *testing.T) {

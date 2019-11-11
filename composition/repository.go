@@ -193,7 +193,7 @@ func (r *repository) Delete(id string) error {
 
 	update := bson.D{
 		{"$set", bson.D{
-			{"updatedAt", time.Now},
+			{"updatedAt", time.Now()},
 			{"enabled", false},
 		}},
 	}

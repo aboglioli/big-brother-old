@@ -17,11 +17,11 @@ func hasErrCode(err errors.Error, code string) bool {
 	return err.Code() == code
 }
 
-func checkComp(t *testing.T, comps []*Composition, index int, shouldBe float64) {
-	shouldBe = math.Round(shouldBe*100) / 100
+func checkCompCost(t *testing.T, comps []*Composition, index int, costShouldBe float64) {
+	costShouldBe = math.Round(costShouldBe*1000) / 1000
 	comp := comps[index]
-	if comp.Cost != shouldBe {
-		t.Errorf("Comp %d: %.2f should be %.2f", index, comp.Cost, shouldBe)
+	if comp.Cost != costShouldBe {
+		t.Errorf("Comp %d: %.2f should be %.2f", index, comp.Cost, costShouldBe)
 		for _, dep := range comp.Dependencies {
 			t.Errorf("- dep %s subvalue %.2f", dep.Of.Hex(), dep.Subvalue)
 		}
@@ -263,13 +263,13 @@ func TestUpdateComposition(t *testing.T) {
 		c6 := 0.35 * c4 / 0.1          // 525
 		c7 := 2*c5/1 + 1.5*c6/2        // 492.75
 
-		checkComp(t, comps, 0, c1)
-		checkComp(t, comps, 1, c2)
-		checkComp(t, comps, 2, c3)
-		checkComp(t, comps, 3, c4)
-		checkComp(t, comps, 4, c5)
-		checkComp(t, comps, 5, c6)
-		checkComp(t, comps, 6, c7)
+		checkCompCost(t, comps, 0, c1)
+		checkCompCost(t, comps, 1, c2)
+		checkCompCost(t, comps, 2, c3)
+		checkCompCost(t, comps, 3, c4)
+		checkCompCost(t, comps, 4, c5)
+		checkCompCost(t, comps, 5, c6)
+		checkCompCost(t, comps, 6, c7)
 	})
 
 	t.Run("Creating and updating", func(t *testing.T) {
@@ -376,11 +376,11 @@ func TestCalculateDependenciesSubvalues(t *testing.T) {
 	c6 := 0.35 * c4 / 0.1          // 525
 	c7 := 2*c5/1 + 1.5*c6/2        // 475.75
 
-	checkComp(t, comps, 0, c1)
-	checkComp(t, comps, 1, c2)
-	checkComp(t, comps, 2, c3)
-	checkComp(t, comps, 3, c4)
-	checkComp(t, comps, 4, c5)
-	checkComp(t, comps, 5, c6)
-	checkComp(t, comps, 6, c7)
+	checkCompCost(t, comps, 0, c1)
+	checkCompCost(t, comps, 1, c2)
+	checkCompCost(t, comps, 2, c3)
+	checkCompCost(t, comps, 3, c4)
+	checkCompCost(t, comps, 4, c5)
+	checkCompCost(t, comps, 5, c6)
+	checkCompCost(t, comps, 6, c7)
 }

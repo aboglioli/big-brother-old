@@ -57,8 +57,8 @@ func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
 		if err != nil {
 			return nil, errGen("INVALID_ID", err.Error())
 		}
-		if _, err := s.repository.FindByID(req.ID); err == nil {
-			return nil, errGen("COMPOSITION_ALREADY_EXISTS", err.Error())
+		if existingComp, err := s.repository.FindByID(req.ID); existingComp != nil || err == nil {
+			return nil, errGen("COMPOSITION_ALREADY_EXISTS", fmt.Sprintf("Composition with ID %s exists", req.ID))
 		}
 		c.ID = id
 	}
@@ -121,6 +121,10 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 	c, rawErr := s.repository.FindByID(id)
 	if rawErr != nil {
 		return nil, errGen("COMPOSITION_DOES_NOT_EXIST", rawErr.Error())
+	}
+
+	if !c.Enabled {
+		return nil, errGen("COMPOSITION_IS_DELETED", "")
 	}
 
 	savedUnit := c.Unit

@@ -43,9 +43,9 @@ type CreateRequest struct {
 	Cost         float64           `json:"cost" binding:"required"`
 	Unit         quantity.Quantity `json:"unit" binding:"required"`
 	Stock        quantity.Quantity `json:"stock" binding:"required"`
-	Dependencies []Dependency      `json:"dependencies" binding:"required"`
+	Dependencies []Dependency      `json:"dependencies"`
 
-	AutoupdateCost bool `json:"autoupdate_cost" binding:"required"`
+	AutoupdateCost bool `json:"autoupdateCost" binding:"required"`
 }
 
 func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {

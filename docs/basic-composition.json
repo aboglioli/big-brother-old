@@ -1,0 +1,13 @@
+{
+	"name": "Comp 1",
+	"cost": 35,
+	"unit": {
+		"quantity": 1,
+		"unit": "u"
+	},
+	"stock": {
+		"quantity": 1,
+		"unit": "u"
+	},
+	"autoupdateCost": true
+}

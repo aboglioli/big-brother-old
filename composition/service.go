@@ -93,7 +93,7 @@ func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := s.eventMgr.Publish("composition", "fanout", "composition.created", body); err != nil {
+	if err := s.eventMgr.Publish("composition", "topic", "composition.created", body); err != nil {
 		return nil, err
 	}
 
@@ -174,7 +174,7 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 	if err != nil {
 		return nil, err
 	}
-	if err := s.eventMgr.Publish("composition", "fanout", "composition.updated", body); err != nil {
+	if err := s.eventMgr.Publish("composition", "topic", "composition.updated", body); err != nil {
 		return nil, err
 	}
 
@@ -209,7 +209,7 @@ func (s *service) Delete(id string) errors.Error {
 	if err != nil {
 		return err
 	}
-	if err := s.eventMgr.Publish("composition", "fanout", "composition.deleted", body); err != nil {
+	if err := s.eventMgr.Publish("composition", "topic", "composition.deleted", body); err != nil {
 		return err
 	}
 
@@ -237,7 +237,7 @@ func (s *service) updateUses(c *Composition) errors.Error {
 		if err != nil {
 			return err
 		}
-		if err := s.eventMgr.Publish("composition", "fanout", "composition.updated", body); err != nil {
+		if err := s.eventMgr.Publish("composition", "topic", "composition.updated", body); err != nil {
 			return err
 		}
 

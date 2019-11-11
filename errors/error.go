@@ -31,9 +31,9 @@ func FromPath(p string) func(c string, m string) Error {
 
 func (e *CustomError) Error() string {
 	if e.message == "" {
-		return fmt.Sprintf("[%s]<%s>", e.path, e.code)
+		return fmt.Sprintf("%s#[%s]", e.path, e.code)
 	}
-	return fmt.Sprintf("[%s]<%s>: %s", e.path, e.code, e.message)
+	return fmt.Sprintf("%s#[%s]: %s", e.path, e.code, e.message)
 }
 
 func (e *CustomError) Path() string {

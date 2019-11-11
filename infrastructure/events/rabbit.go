@@ -32,13 +32,16 @@ type manager struct {
 	consumers  map[string]*amqp.Channel
 }
 
-func GetManager() Manager {
+func GetManager() (Manager, errors.Error) {
 	if mgr == nil {
 		mgr = &manager{
 			emitters:  make(map[string]*amqp.Channel),
 			consumers: make(map[string]*amqp.Channel),
 		}
-		mgr.Connect()
+		_, err := mgr.Connect()
+		if err != nil {
+			return nil, err
+		}
 		go func() {
 			for {
 				<-mgr.connection.NotifyClose(make(chan *amqp.Error))
@@ -47,7 +50,7 @@ func GetManager() Manager {
 		}()
 	}
 
-	return mgr
+	return mgr, nil
 }
 
 func (m *manager) Connect() (*amqp.Connection, errors.Error) {

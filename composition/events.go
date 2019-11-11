@@ -7,8 +7,8 @@ import (
 )
 
 type Event struct {
-	Type        string       `json:"type"`
-	Composition *Composition `json:"composition"`
+	Type        string       `json:"type" validate:"required" binding:"required"`
+	Composition *Composition `json:"composition" validate:"required" binding:"required"`
 }
 
 func NewEvent(t string, c *Composition) *Event {
@@ -18,7 +18,7 @@ func NewEvent(t string, c *Composition) *Event {
 	}
 }
 
-func FromBytes(b []byte) (*Event, errors.Error) {
+func EventFromBytes(b []byte) (*Event, errors.Error) {
 	var e Event
 	if err := json.Unmarshal(b, &e); err != nil {
 		return nil, errors.New("composition/events.FromBytes", "UNMARSHAL", err.Error())

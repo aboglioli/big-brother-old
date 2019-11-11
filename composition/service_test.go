@@ -69,17 +69,22 @@ func TestCreateComposition(t *testing.T) {
 
 	t.Run("Invalid units", func(t *testing.T) {
 		comp := newComposition()
-		comp.Unit.Unit = ""
-		_, err := serv.Create(compToCreateRequest(comp))
-		if !hasErrCode(err, "INVALID_UNIT") {
-			t.Error("Unit shuld exist")
+		comp.Unit.Unit = "asd"
+
+		if _, err := serv.Create(compToCreateRequest(comp)); !hasErrCode(err, "INVALID_UNIT") {
+			t.Error("Unit should exist")
 		}
 
 		comp.Unit.Unit = "u"
-		comp.Stock.Unit = ""
-		_, err = serv.Create(compToCreateRequest(comp))
-		if !hasErrCode(err, "INVALID_STOCK") {
+		comp.Stock.Unit = "asd"
+		if _, err := serv.Create(compToCreateRequest(comp)); !hasErrCode(err, "INVALID_STOCK") {
 			t.Error("Stock unit should exist")
+		}
+
+		comp.Unit.Unit = "kg"
+		comp.Stock.Unit = "l"
+		if _, err := serv.Create(compToCreateRequest(comp)); !hasErrCode(err, "INCOMPATIBLE_STOCK_AND_UNIT") {
+			t.Error("Stock and unit should be compatible")
 		}
 	})
 
@@ -198,15 +203,15 @@ func TestCreateComposition(t *testing.T) {
 		}
 		repo.Insert(dep)
 
-		_, err := serv.Create(compToCreateRequest(comp))
+		c, err := serv.Create(compToCreateRequest(comp))
 
 		if err != nil {
 			t.Error("Composition should be created")
 		}
 
-		// if c.Cost != 37.5 {
-		// 	t.Error("Cost wrong calculated")
-		// }
+		if c.Cost != 37.5 {
+			t.Error("Cost wrong calculated")
+		}
 	})
 }
 
@@ -214,23 +219,25 @@ func TestUpdateComposition(t *testing.T) {
 	repo, eventMgr := newMockRepository(), events.GetMockManager()
 	serv := NewService(repo, eventMgr)
 
-	comps := makeMockedCompositions()
-	repo.InsertMany(comps)
-	for _, c := range comps {
-		servImpl := serv.(*service)
-		deps, err := servImpl.calculateDependenciesSubvalues(c.Dependencies)
-		if err != nil {
-			t.Error(err)
-			continue
-		}
-		c.SetDependencies(deps)
-		if err := repo.Update(c); err != nil {
-			t.Error(err)
-			continue
-		}
-	}
-
 	t.Run("Update dependency", func(t *testing.T) {
+		repo.Clean()
+
+		comps := makeMockedCompositions()
+		repo.InsertMany(comps)
+		for _, c := range comps {
+			servImpl := serv.(*service)
+			deps, err := servImpl.calculateDependenciesSubvalues(c.Dependencies)
+			if err != nil {
+				t.Error(err)
+				continue
+			}
+			c.SetDependencies(deps)
+			if err := repo.Update(c); err != nil {
+				t.Error(err)
+				continue
+			}
+		}
+
 		c := comps[0]
 		c.Cost = 300
 		c.Unit = quantity.Quantity{
@@ -263,6 +270,58 @@ func TestUpdateComposition(t *testing.T) {
 		checkComp(t, comps, 4, c5)
 		checkComp(t, comps, 5, c6)
 		checkComp(t, comps, 6, c7)
+	})
+
+	t.Run("Creating and updating", func(t *testing.T) {
+		repo.Clean()
+		comp := newComposition()
+		comp.Cost = 30
+		comp.Unit = quantity.Quantity{1, "u"}
+		comp.Stock = quantity.Quantity{1, "u"}
+
+		createdComp, err := serv.Create(compToCreateRequest(comp))
+		if err != nil {
+			t.Error(err)
+		}
+
+		updatedComp, err := serv.Update(createdComp.ID.Hex(), compToUpdateRequest(createdComp))
+		if err != nil {
+			t.Error(err)
+		}
+
+		if createdComp.ID.Hex() != updatedComp.ID.Hex() {
+			t.Error("Composition ID has changed")
+		}
+	})
+
+	t.Run("Invalid units", func(t *testing.T) {
+		repo.Clean()
+		comp := newComposition()
+		comp.Cost = 30
+		comp.Unit = quantity.Quantity{1, "u"}
+		comp.Stock = quantity.Quantity{1, "u"}
+
+		createdComp, err := serv.Create(compToCreateRequest(comp))
+		if err != nil {
+			t.Error(err)
+		}
+
+		createdComp.Unit = quantity.Quantity{1, "asd"}
+		if _, err := serv.Update(createdComp.ID.Hex(), compToUpdateRequest(createdComp)); !hasErrCode(err, "INVALID_UNIT") {
+			t.Error("Should return error due to invalid unit")
+		}
+
+		createdComp.Unit = quantity.Quantity{1, "u"}
+		createdComp.Stock = quantity.Quantity{1, "asd"}
+		if _, err := serv.Update(createdComp.ID.Hex(), compToUpdateRequest(createdComp)); !hasErrCode(err, "INVALID_STOCK") {
+			t.Error("Should return error due to invalid unit in stock")
+		}
+
+		createdComp.Unit = quantity.Quantity{1, "kg"}
+		createdComp.Stock = quantity.Quantity{1, "l"}
+		if _, err := serv.Update(createdComp.ID.Hex(), compToUpdateRequest(createdComp)); !hasErrCode(err, "INCOMPATIBLE_STOCK_AND_UNIT") {
+			t.Error("Stock and unit should be compatible")
+		}
 	})
 }
 

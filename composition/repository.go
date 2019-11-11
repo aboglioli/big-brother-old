@@ -162,13 +162,17 @@ func (r *repository) Update(c *Composition) error {
 		return errors.New("Invalid ObjectID")
 	}
 
+	c.UpdatedAt = time.Now()
+
 	filter := bson.M{
 		"_id": c.ID,
 	}
 
-	c.UpdatedAt = time.Now()
+	update := bson.D{
+		{"$set", c},
+	}
 
-	_, err := r.collection.UpdateOne(ctx, filter, c)
+	_, err := r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err
 	}

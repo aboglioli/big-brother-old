@@ -106,9 +106,9 @@ type UpdateRequest struct {
 	Cost         float64           `json:"cost" binding:"required"`
 	Unit         quantity.Quantity `json:"unit" binding:"required"`
 	Stock        quantity.Quantity `json:"stock" binding:"required"`
-	Dependencies []Dependency      `json:"dependencies" binding:"required"`
+	Dependencies []Dependency      `json:"dependencies"`
 
-	AutoupdateCost bool `json:"autoupdate_cost" binding:"required"`
+	AutoupdateCost bool `json:"autoupdateCost" binding:"required"`
 }
 
 func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Error) {
@@ -123,9 +123,7 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 		return nil, errGen("COMPOSITION_DOES_NOT_EXIST", rawErr.Error())
 	}
 
-	if !c.Unit.Compatible(req.Unit) {
-		return nil, errGen("CANNOT_CHANGE_UNIT_TYPE", fmt.Sprintf("%s != %s", c.Unit.Unit, req.Unit.Unit))
-	}
+	savedUnit := c.Unit
 
 	c.Name = req.Name
 	c.Cost = req.Cost
@@ -136,6 +134,10 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 
 	if err := s.validateSchema(c); err != nil {
 		return nil, err
+	}
+
+	if !savedUnit.Compatible(c.Unit) {
+		return nil, errGen("CANNOT_CHANGE_UNIT_TYPE", fmt.Sprintf("%s != %s", c.Unit.Unit, req.Unit.Unit))
 	}
 
 	removed, _, added := c.CompareDependencies(req.Dependencies)
@@ -285,7 +287,7 @@ func (s *service) validateSchema(c *Composition) errors.Error {
 	}
 
 	if !c.Stock.Compatible(c.Unit) {
-		return errGen("STOCK_IS_INCOMPATIBLE_WITH_UNIT", fmt.Sprintf("%s != %s", c.Stock.Unit, c.Unit.Unit))
+		return errGen("INCOMPATIBLE_STOCK_AND_UNIT", fmt.Sprintf("%s != %s", c.Stock.Unit, c.Unit.Unit))
 	}
 
 	for i, d := range c.Dependencies {

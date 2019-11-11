@@ -262,7 +262,7 @@ func TestUpdateComposition(t *testing.T) {
 			Unit:     "g",
 		}
 
-		if _, err := serv.Update(c.ID.Hex(), compToUpdateRequest((c))); err != nil {
+		if _, err := serv.Update(c.ID.Hex(), compToUpdateRequest(c)); err != nil {
 			t.Error(err)
 		}
 

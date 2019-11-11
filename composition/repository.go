@@ -98,9 +98,7 @@ func (r *repository) FindUses(id string) ([]*Composition, error) {
 		return nil, err
 	}
 	filter := bson.M{
-		"dependencies": bson.M{
-			"of": objID,
-		},
+		"dependencies.of": objID,
 	}
 
 	cur, err := r.collection.Find(ctx, filter)

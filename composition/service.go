@@ -15,6 +15,8 @@ type Service interface {
 	Create(req *CreateRequest) (*Composition, errors.Error)
 	Update(compID string, req *UpdateRequest) (*Composition, errors.Error)
 	Delete(id string) errors.Error
+
+	UpdateUses(c *Composition) errors.Error
 }
 
 type service struct {
@@ -190,7 +192,7 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 	}
 
 	// Update uses
-	if err := s.updateUses(c); err != nil {
+	if err := s.UpdateUses(c); err != nil {
 		return nil, errGen("UPDATE_USES", err.Error())
 	}
 
@@ -227,7 +229,7 @@ func (s *service) Delete(id string) errors.Error {
 	return nil
 }
 
-func (s *service) updateUses(c *Composition) errors.Error {
+func (s *service) UpdateUses(c *Composition) errors.Error {
 	uses, _ := s.repository.FindUses(c.ID.Hex())
 
 	for _, u := range uses {
@@ -253,7 +255,7 @@ func (s *service) updateUses(c *Composition) errors.Error {
 		}
 
 		// Update uses
-		if err := s.updateUses(u); err != nil {
+		if err := s.UpdateUses(u); err != nil {
 			return err
 		}
 	}

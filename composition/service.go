@@ -16,7 +16,7 @@ type Service interface {
 	Update(compID string, req *UpdateRequest) (*Composition, errors.Error)
 	Delete(id string) errors.Error
 
-	UpdateUses(c *Composition) errors.Error
+	UpdateUses(c *Composition) (int, errors.Error)
 }
 
 type service struct {
@@ -230,8 +230,9 @@ func (s *service) Delete(id string) errors.Error {
 	return nil
 }
 
-func (s *service) UpdateUses(c *Composition) errors.Error {
+func (s *service) UpdateUses(c *Composition) (int, errors.Error) {
 	uses, _ := s.repository.FindUses(c.ID.Hex())
+	count := 0
 
 	for _, u := range uses {
 		dep := u.FindDependencyByID(c.ID.Hex())
@@ -242,26 +243,31 @@ func (s *service) UpdateUses(c *Composition) errors.Error {
 		u.UpsertDependency(*dep)
 
 		if err := s.repository.Update(u); err != nil {
-			return errors.New("composition/service.updateUses", "UPDATE_USES", err.Error())
+			return count, errors.New("composition/service.updateUses", "UPDATE_USES", err.Error())
 		}
+
+		count++
 
 		// Publish event
 		evt := NewEvent("CompositionUpdatedAutomatically", c)
 		body, err := evt.ToBytes()
 		if err != nil {
-			return err
+			return count, err
 		}
 		if err := s.eventMgr.Publish("composition", "topic", "composition.updated", body); err != nil {
-			return err
+			return count, err
 		}
 
 		// Update uses
-		if err := s.UpdateUses(u); err != nil {
-			return err
+		subcount, err := s.UpdateUses(u)
+		if err != nil {
+			return count + subcount, err
 		}
+
+		count = count + subcount
 	}
 
-	return nil
+	return count, nil
 }
 
 func (s *service) calculateDependenciesSubvalues(dependencies []Dependency) ([]Dependency, errors.Error) {

@@ -40,16 +40,15 @@ func main() {
 			}
 
 			if evt.Type == "CompositionUpdatedManually" {
-				fmt.Printf("Updating uses of %s (%s)\n", evt.Composition.Name, evt.Composition.ID.Hex())
+				fmt.Printf("Updating uses of %s (%s): ", evt.Composition.Name, evt.Composition.ID.Hex())
 
-				err := compositionService.UpdateUses(evt.Composition)
+				count, err := compositionService.UpdateUses(evt.Composition)
 				if err != nil {
-					fmt.Println("# ERROR #")
-					fmt.Println(err)
+					fmt.Printf("[ERROR] %s\n", err)
 					continue
 				}
 
-				fmt.Println("Updated")
+				fmt.Printf("updated %d dependencies\n", count)
 			}
 
 			msg.Ack()

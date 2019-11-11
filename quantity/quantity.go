@@ -82,6 +82,18 @@ func (q Quantity) Normalize() float64 {
 	return q.Quantity * u.Modifier
 }
 
+func (q Quantity) IsValid() bool {
+	repo := unit.GetRepository()
+	if repo.Exists(q.Unit) && q.Quantity >= 0 {
+		return true
+	}
+	return false
+}
+
+func (q Quantity) IsEmpty() bool {
+	return q.Quantity == 0 && q.Unit == ""
+}
+
 func referenceUnit(q1, q2 Quantity) (*unit.Unit, errors.Error) {
 	errGen := errors.FromPath("quantity/quantity.Add")
 	repo := unit.GetRepository()

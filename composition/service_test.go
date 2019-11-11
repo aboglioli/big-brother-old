@@ -162,6 +162,21 @@ func TestCreateComposition(t *testing.T) {
 		}
 	})
 
+	t.Run("Assign stock automatically from unit", func(t *testing.T) {
+		repo.Clean()
+		comp := newComposition()
+		createReq := compToCreateRequest(comp)
+		createReq.Stock = quantity.Quantity{} // empty quantity
+		c, err := serv.Create(createReq)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if !c.Stock.Equals(quantity.Quantity{0, c.Unit.Unit}) {
+			t.Error("Stock should be auto-assigned")
+		}
+	})
+
 	t.Run("Valid dependency", func(t *testing.T) {
 		repo.Clean()
 		dep, comp := newComposition(), newComposition()
@@ -206,7 +221,8 @@ func TestCreateComposition(t *testing.T) {
 		c, err := serv.Create(compToCreateRequest(comp))
 
 		if err != nil {
-			t.Error("Composition should be created")
+			t.Error(err)
+			return
 		}
 
 		if c.Cost != 37.5 {

@@ -165,6 +165,7 @@ func TestCreateComposition(t *testing.T) {
 	t.Run("Assign stock automatically from unit", func(t *testing.T) {
 		repo.Clean()
 		comp := newComposition()
+		comp.Unit = quantity.Quantity{2, "kg"}
 		createReq := compToCreateRequest(comp)
 		createReq.Stock = quantity.Quantity{} // empty quantity
 		c, err := serv.Create(createReq)
@@ -337,6 +338,36 @@ func TestUpdateComposition(t *testing.T) {
 		createdComp.Stock = quantity.Quantity{1, "l"}
 		if _, err := serv.Update(createdComp.ID.Hex(), compToUpdateRequest(createdComp)); !hasErrCode(err, "INCOMPATIBLE_STOCK_AND_UNIT") {
 			t.Error("Stock and unit should be compatible")
+		}
+	})
+
+	t.Run("Empty stock ignored on updating", func(t *testing.T) {
+		repo.Clean()
+		comp := newComposition()
+		comp.Unit = quantity.Quantity{5, "l"}
+		comp.Stock = quantity.Quantity{25, "l"}
+		repo.Insert(comp)
+
+		updateReq := compToUpdateRequest(comp)
+		updateReq.Stock = quantity.Quantity{}
+
+		c, err := serv.Update(comp.ID.Hex(), updateReq)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if !c.Stock.Equals(quantity.Quantity{25, "l"}) {
+			t.Error("Empty stock should be ignored")
+		}
+
+		updateReq.Stock = quantity.Quantity{4000, "ml"}
+		c, err = serv.Update(comp.ID.Hex(), updateReq)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if !c.Stock.Equals(quantity.Quantity{4000, "ml"}) {
+			t.Error("Non-empty stock should be assigned")
 		}
 	})
 }

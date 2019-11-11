@@ -106,9 +106,9 @@ func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
 type UpdateRequest struct {
 	ID           string            `json:"id"`
 	Name         string            `json:"name"`
-	Cost         float64           `json:"cost" binding:"required"`
+	Cost         float64           `json:"cost"`
 	Unit         quantity.Quantity `json:"unit" binding:"required"`
-	Stock        quantity.Quantity `json:"stock" binding:"required"`
+	Stock        quantity.Quantity `json:"stock"`
 	Dependencies []Dependency      `json:"dependencies"`
 
 	AutoupdateCost bool `json:"autoupdateCost" binding:"required"`
@@ -135,7 +135,9 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 	c.Name = req.Name
 	c.Cost = req.Cost
 	c.Unit = req.Unit
-	c.Stock = req.Stock
+	if !req.Stock.IsEmpty() {
+		c.Stock = req.Stock
+	}
 	c.AutoupdateCost = req.AutoupdateCost
 	c.Validated = true
 

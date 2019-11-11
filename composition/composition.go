@@ -17,7 +17,7 @@ type Composition struct {
 	Stock        quantity.Quantity  `json:"stock" bson:"stock" validate:"required"`
 	Dependencies []Dependency       `json:"dependencies" bson:"dependencies" validate:"required"`
 
-	AutoupdateCost bool      `json:"autoupdateCost" bson:"autoupdate_cost"`
+	AutoupdateCost bool      `json:"autoupdateCost" bson:"autoupdateCost"`
 	Enabled        bool      `json:"enabled" bson:"enabled" `
 	Validated      bool      `json:"validated" bson:"validated"`
 	CreatedAt      time.Time `json:"createdAt" bson:"createdAt"`

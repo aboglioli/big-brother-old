@@ -13,8 +13,8 @@ const (
 )
 
 type Quantity struct {
-	Quantity float64 `bson:"quantity" json:"quantity" binding:"required" validate:"required"`
-	Unit     string  `bson:"unit" json:"unit" binding:"required" validate:"required"`
+	Quantity float64 `bson:"quantity" json:"quantity" validate:"required"`
+	Unit     string  `bson:"unit" json:"unit" validate:"required"`
 }
 
 func IsValid(q Quantity) bool {

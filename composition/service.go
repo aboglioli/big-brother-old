@@ -249,7 +249,7 @@ func (s *service) UpdateUses(c *Composition) (int, errors.Error) {
 		count++
 
 		// Publish event
-		evt := NewEvent("CompositionUpdatedAutomatically", c)
+		evt := NewEvent("CompositionUpdatedAutomatically", u)
 		body, err := evt.ToBytes()
 		if err != nil {
 			return count, err

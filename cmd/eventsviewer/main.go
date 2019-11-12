@@ -32,9 +32,7 @@ func main() {
 			}
 
 			fmt.Println("# New event:")
-			fmt.Println("- Type:", evt.Type)
-			fmt.Printf("- Composition: %+v\n", evt.Composition)
-			fmt.Println()
+			fmt.Printf("- Type: %s; - Composition %s (%s)\n", evt.Type, evt.Composition.Name, evt.Composition.ID.Hex())
 
 			msg.Ack()
 		}

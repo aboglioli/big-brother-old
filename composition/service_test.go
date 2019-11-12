@@ -29,26 +29,28 @@ func checkCompCost(t *testing.T, comps []*Composition, index int, costShouldBe f
 }
 
 func compToCreateRequest(c *Composition) *CreateRequest {
+	id := c.ID.Hex()
 	return &CreateRequest{
-		ID:             c.ID.Hex(),
+		ID:             &id,
 		Name:           c.Name,
 		Cost:           c.Cost,
 		Unit:           c.Unit,
-		Stock:          c.Stock,
+		Stock:          &c.Stock,
 		Dependencies:   c.Dependencies,
-		AutoupdateCost: c.AutoupdateCost,
+		AutoupdateCost: &c.AutoupdateCost,
 	}
 }
 
 func compToUpdateRequest(c *Composition) *UpdateRequest {
+	id := c.ID.Hex()
 	return &UpdateRequest{
-		ID:             c.ID.Hex(),
-		Name:           c.Name,
-		Cost:           c.Cost,
-		Unit:           c.Unit,
-		Stock:          c.Stock,
+		ID:             &id,
+		Name:           &c.Name,
+		Cost:           &c.Cost,
+		Unit:           &c.Unit,
+		Stock:          &c.Stock,
 		Dependencies:   c.Dependencies,
-		AutoupdateCost: c.AutoupdateCost,
+		AutoupdateCost: &c.AutoupdateCost,
 	}
 }
 
@@ -167,7 +169,7 @@ func TestCreateComposition(t *testing.T) {
 		comp := newComposition()
 		comp.Unit = quantity.Quantity{2, "kg"}
 		createReq := compToCreateRequest(comp)
-		createReq.Stock = quantity.Quantity{} // empty quantity
+		createReq.Stock = nil
 		c, err := serv.Create(createReq)
 		if err != nil {
 			t.Error(err)
@@ -262,8 +264,17 @@ func TestUpdateComposition(t *testing.T) {
 			Unit:     "g",
 		}
 
-		if _, err := serv.Update(c.ID.Hex(), compToUpdateRequest(c)); err != nil {
+		c, err := serv.Update(c.ID.Hex(), compToUpdateRequest(c))
+		if err != nil {
 			t.Error(err)
+		}
+		count, err := serv.UpdateUses(c)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if count != 6 {
+			t.Error("Uses weren't updated")
 		}
 
 		comps, _ = repo.FindAll()
@@ -349,7 +360,7 @@ func TestUpdateComposition(t *testing.T) {
 		repo.Insert(comp)
 
 		updateReq := compToUpdateRequest(comp)
-		updateReq.Stock = quantity.Quantity{}
+		updateReq.Stock = nil
 
 		c, err := serv.Update(comp.ID.Hex(), updateReq)
 		if err != nil {
@@ -360,7 +371,7 @@ func TestUpdateComposition(t *testing.T) {
 			t.Error("Empty stock should be ignored")
 		}
 
-		updateReq.Stock = quantity.Quantity{4000, "ml"}
+		updateReq.Stock = &quantity.Quantity{4000, "ml"}
 		c, err = serv.Update(comp.ID.Hex(), updateReq)
 		if err != nil {
 			t.Error(err)

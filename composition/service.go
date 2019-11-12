@@ -40,27 +40,27 @@ func (s *service) GetByID(id string) (*Composition, errors.Error) {
 }
 
 type CreateRequest struct {
-	ID           string            `json:"id"`
-	Name         string            `json:"name"`
-	Cost         float64           `json:"cost"`
-	Unit         quantity.Quantity `json:"unit" binding:"required"`
-	Stock        quantity.Quantity `json:"stock"`
-	Dependencies []Dependency      `json:"dependencies"`
+	ID           *string            `json:"id"`
+	Name         string             `json:"name"`
+	Cost         float64            `json:"cost"`
+	Unit         quantity.Quantity  `json:"unit" binding:"required"`
+	Stock        *quantity.Quantity `json:"stock"`
+	Dependencies []Dependency       `json:"dependencies"`
 
-	AutoupdateCost bool `json:"autoupdateCost" binding:"required"`
+	AutoupdateCost *bool `json:"autoupdateCost"`
 }
 
 func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
 	errGen := errors.FromPath("composition/service.Create")
 	c := NewComposition()
 
-	if req.ID != "" {
-		id, err := primitive.ObjectIDFromHex(req.ID)
+	if req.ID != nil {
+		id, err := primitive.ObjectIDFromHex(*req.ID)
 		if err != nil {
 			return nil, errGen("INVALID_ID", err.Error())
 		}
-		if existingComp, err := s.repository.FindByID(req.ID); existingComp != nil || err == nil {
-			return nil, errGen("COMPOSITION_ALREADY_EXISTS", fmt.Sprintf("Composition with ID %s exists", req.ID))
+		if existingComp, err := s.repository.FindByID(*req.ID); existingComp != nil || err == nil {
+			return nil, errGen("COMPOSITION_ALREADY_EXISTS", fmt.Sprintf("Composition with ID %s exists", *req.ID))
 		}
 		c.ID = id
 	}
@@ -68,11 +68,14 @@ func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
 	c.Name = req.Name
 	c.Cost = req.Cost
 	c.Unit = req.Unit
-	c.Stock = req.Stock
-	if c.Stock.IsEmpty() {
+	if req.Stock != nil {
+		c.Stock = *req.Stock
+	} else {
 		c.Stock = quantity.Quantity{0, c.Unit.Unit}
 	}
-	c.AutoupdateCost = req.AutoupdateCost
+	if req.AutoupdateCost != nil {
+		c.AutoupdateCost = *req.AutoupdateCost
+	}
 
 	c.SetDependencies(req.Dependencies)
 
@@ -105,21 +108,21 @@ func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
 }
 
 type UpdateRequest struct {
-	ID           string            `json:"id"`
-	Name         string            `json:"name"`
-	Cost         float64           `json:"cost"`
-	Unit         quantity.Quantity `json:"unit" binding:"required"`
-	Stock        quantity.Quantity `json:"stock"`
-	Dependencies []Dependency      `json:"dependencies"`
+	ID           *string            `json:"id"`
+	Name         *string            `json:"name"`
+	Cost         *float64           `json:"cost"`
+	Unit         *quantity.Quantity `json:"unit"`
+	Stock        *quantity.Quantity `json:"stock"`
+	Dependencies []Dependency       `json:"dependencies"`
 
-	AutoupdateCost bool `json:"autoupdateCost" binding:"required"`
+	AutoupdateCost *bool `json:"autoupdateCost"`
 }
 
 func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Error) {
 	errGen := errors.FromPath("composition/service.Update")
 
-	if req.ID != "" && req.ID != id {
-		return nil, errGen("ID_DOES_NOT_MATCH", fmt.Sprintf("%s != %s", req.ID, id))
+	if req.ID != nil && *req.ID != id {
+		return nil, errGen("ID_DOES_NOT_MATCH", fmt.Sprintf("%s != %s", *req.ID, id))
 	}
 
 	c, rawErr := s.repository.FindByID(id)
@@ -133,13 +136,21 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 
 	savedUnit := c.Unit
 
-	c.Name = req.Name
-	c.Cost = req.Cost
-	c.Unit = req.Unit
-	if !req.Stock.IsEmpty() {
-		c.Stock = req.Stock
+	if req.Name != nil {
+		c.Name = *req.Name
 	}
-	c.AutoupdateCost = req.AutoupdateCost
+	if req.Cost != nil {
+		c.Cost = *req.Cost
+	}
+	if req.Unit != nil {
+		c.Unit = *req.Unit
+	}
+	if req.Stock != nil {
+		c.Stock = *req.Stock
+	}
+	if req.AutoupdateCost != nil {
+		c.AutoupdateCost = *req.AutoupdateCost
+	}
 
 	if err := s.validateSchema(c); err != nil {
 		return nil, err

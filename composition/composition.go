@@ -18,8 +18,8 @@ type Composition struct {
 	Dependencies []Dependency       `json:"dependencies" bson:"dependencies" validate:"required"`
 
 	AutoupdateCost bool      `json:"autoupdateCost" bson:"autoupdateCost"`
-	Enabled        bool      `json:"enabled" bson:"enabled" `
-	Validated      bool      `json:"validated" bson:"validated"`
+	Enabled        bool      `json:"-" bson:"enabled" `
+	Validated      bool      `json:"-" bson:"validated"`
 	CreatedAt      time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt      time.Time `json:"updatedAt" bson:"updatedAt"`
 }

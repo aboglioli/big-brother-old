@@ -29,7 +29,7 @@ func NewComposition() *Composition {
 		ID:             primitive.NewObjectID(),
 		AutoupdateCost: true,
 		Enabled:        true,
-		Validated:      false,
+		Validated:      false, // TODO: should be validated asynchronously
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
 	}

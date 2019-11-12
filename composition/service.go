@@ -73,7 +73,6 @@ func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
 		c.Stock = quantity.Quantity{0, c.Unit.Unit}
 	}
 	c.AutoupdateCost = req.AutoupdateCost
-	c.Validated = true // TODO: should be validated asynchronously
 
 	c.SetDependencies(req.Dependencies)
 
@@ -141,7 +140,6 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 		c.Stock = req.Stock
 	}
 	c.AutoupdateCost = req.AutoupdateCost
-	c.Validated = true
 
 	if err := s.validateSchema(c); err != nil {
 		return nil, err

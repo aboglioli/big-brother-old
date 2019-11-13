@@ -3,34 +3,30 @@ package errors
 import "fmt"
 
 type InternalError struct {
-	path    string
-	code    string
-	message string
+	kind      string
+	path      string
+	code      string
+	message   string
+	reference Error
 }
 
 func NewInternal(p string, c string, m string) Error {
 	return &InternalError{
+		kind:    "internal",
 		path:    p,
 		code:    c,
 		message: m,
 	}
 }
 
-func InternalFromPath(p string) func(c string, m string) Error {
+func InternalFromPath(p string) func(string, string) Error {
 	return func(c string, m string) Error {
-		return &InternalError{
-			path:    p,
-			code:    c,
-			message: m,
-		}
+		return NewInternal(p, c, m)
 	}
 }
 
-func (e *InternalError) Error() string {
-	if e.message == "" {
-		return fmt.Sprintf("[!] %s#[%s]", e.path, e.code)
-	}
-	return fmt.Sprintf("[!] %s#[%s]: %s", e.path, e.code, e.message)
+func (e *InternalError) Kind() string {
+	return e.kind
 }
 
 func (e *InternalError) Path() string {
@@ -43,4 +39,19 @@ func (e *InternalError) Message() string {
 
 func (e *InternalError) Code() string {
 	return e.code
+}
+
+func (e *InternalError) Error() string {
+	if e.message == "" {
+		return fmt.Sprintf("[!] %s#[%s]", e.path, e.code)
+	}
+	return fmt.Sprintf("[!] %s#[%s]: %s", e.path, e.code, e.message)
+}
+
+func (e *InternalError) String() string {
+	return e.Error()
+}
+
+func (e *InternalError) Reference() Error {
+	return e.reference
 }

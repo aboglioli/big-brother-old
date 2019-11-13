@@ -5,8 +5,13 @@ package errors
 // - Validation: can be displayed to the user
 // - Internal: contains sensitive data
 type Error interface {
-	Error() string
+	Kind() string
 	Path() string
 	Code() string
 	Message() string
+
+	Reference() Error
+
+	Error() string
+	String() string
 }

@@ -90,7 +90,7 @@ func (c *Composition) RemoveDependency(depID string) errors.Error {
 	c.Dependencies = dependencies
 
 	if !removed {
-		return errors.New("composition/composition.RemoveDependency", "DEPENDENCY_DOES_NOT_EXIST", "")
+		return errors.NewValidation("composition/composition.RemoveDependency", "DEPENDENCY_DOES_NOT_EXIST", "")
 	}
 
 	c.calculateCostFromDependencies()

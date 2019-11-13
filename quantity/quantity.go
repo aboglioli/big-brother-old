@@ -95,7 +95,7 @@ func (q Quantity) IsEmpty() bool {
 }
 
 func referenceUnit(q1, q2 Quantity) (*unit.Unit, errors.Error) {
-	errGen := errors.FromPath("quantity/quantity.Add")
+	errGen := errors.ValidationFromPath("quantity/quantity.Add")
 	repo := unit.GetRepository()
 
 	u1 := repo.FindByName(q1.Unit)

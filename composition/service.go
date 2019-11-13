@@ -34,7 +34,7 @@ func NewService(r Repository, e events.Manager) Service {
 func (s *service) GetByID(id string) (*Composition, errors.Error) {
 	comp, err := s.repository.FindByID(id)
 	if err != nil {
-		return nil, errors.New("composition/service.GetByID", "COMPOSITION_NOT_FOUND", err.Error())
+		return nil, errors.NewValidation("composition/service.GetByID", "COMPOSITION_NOT_FOUND", err.Error())
 	}
 	return comp, nil
 }
@@ -51,7 +51,7 @@ type CreateRequest struct {
 }
 
 func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
-	errGen := errors.FromPath("composition/service.Create")
+	errGen := errors.ValidationFromPath("composition/service.Create")
 	c := NewComposition()
 
 	if req.ID != nil {
@@ -119,7 +119,7 @@ type UpdateRequest struct {
 }
 
 func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Error) {
-	errGen := errors.FromPath("composition/service.Update")
+	errGen := errors.ValidationFromPath("composition/service.Update")
 
 	if req.ID != nil && *req.ID != id {
 		return nil, errGen("ID_DOES_NOT_MATCH", fmt.Sprintf("%s != %s", *req.ID, id))
@@ -210,11 +210,11 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 }
 
 func (s *service) Delete(id string) errors.Error {
-	errGen := errors.FromPath("composition/service.Delete")
+	errGen := errors.ValidationFromPath("composition/service.Delete")
 
-	c, rawErr := s.repository.FindByID(id)
-	if rawErr != nil {
-		return errGen("DELETE", rawErr.Error())
+	c, err := s.repository.FindByID(id)
+	if err != nil {
+		return errGen("DELETE", err.Error())
 	}
 
 	uses, _ := s.repository.FindUses(id)
@@ -252,7 +252,7 @@ func (s *service) UpdateUses(c *Composition) (int, errors.Error) {
 		u.UpsertDependency(*dep)
 
 		if err := s.repository.Update(u); err != nil {
-			return count, errors.New("composition/service.updateUses", "UPDATE_USES", err.Error())
+			return count, errors.NewValidation("composition/service.updateUses", "UPDATE_USES", err.Error())
 		}
 
 		count++
@@ -280,7 +280,7 @@ func (s *service) UpdateUses(c *Composition) (int, errors.Error) {
 }
 
 func (s *service) calculateDependenciesSubvalues(dependencies []Dependency) ([]Dependency, errors.Error) {
-	errGen := errors.FromPath("composition/service.calculateDependenciesSubvalue")
+	errGen := errors.ValidationFromPath("composition/service.calculateDependenciesSubvalue")
 
 	newDependencies := make([]Dependency, len(dependencies))
 	for i, dep := range dependencies {
@@ -302,7 +302,7 @@ func (s *service) calculateDependenciesSubvalues(dependencies []Dependency) ([]D
 }
 
 func (s *service) validateSchema(c *Composition) errors.Error {
-	errGen := errors.FromPath("composition/service.validateSchema")
+	errGen := errors.ValidationFromPath("composition/service.validateSchema")
 	if c.Cost < 0 {
 		return errGen("NEGATIVE_COST", fmt.Sprintf("%v", c.Cost))
 	}

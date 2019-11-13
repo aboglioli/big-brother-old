@@ -2,9 +2,9 @@ package db
 
 import (
 	"context"
-	"log"
 
 	"github.com/aboglioli/big-brother/config"
+	"github.com/aboglioli/big-brother/errors"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -29,25 +29,23 @@ func connect() (*mongo.Client, error) {
 
 	client, err := mongo.Connect(ctx, options)
 	if err != nil {
-		log.Fatal(err)
 		return nil, err
 	}
 
 	err = client.Ping(ctx, nil)
 
 	if err != nil {
-		log.Fatal(err)
 		return nil, err
 	}
 
 	return client, nil
 }
 
-func Get(database string) (*mongo.Database, error) {
+func Get(database string) (*mongo.Database, errors.Error) {
 	if client == nil {
 		c, err := connect()
 		if err != nil {
-			return nil, err
+			return nil, errors.NewInternal("infrastructure/db/database.Get", "FAILED_TO_CONNECT_TO_DB", err.Error())
 		}
 		client = c
 	}

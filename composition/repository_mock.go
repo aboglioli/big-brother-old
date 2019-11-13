@@ -1,8 +1,9 @@
 package composition
 
 import (
-	"errors"
 	"time"
+
+	"github.com/aboglioli/big-brother/errors"
 )
 
 type mockRepository struct {
@@ -34,7 +35,7 @@ func (r *mockRepository) sleep() {
 }
 
 // Implementation
-func (r *mockRepository) FindAll() ([]*Composition, error) {
+func (r *mockRepository) FindAll() ([]*Composition, errors.Error) {
 	r.sleep()
 
 	comps := make([]*Composition, 0)
@@ -51,7 +52,7 @@ func (r *mockRepository) FindAll() ([]*Composition, error) {
 	return comps, nil
 }
 
-func (r *mockRepository) FindByID(id string) (*Composition, error) {
+func (r *mockRepository) FindByID(id string) (*Composition, errors.Error) {
 	r.sleep()
 
 	for _, c := range r.compositions {
@@ -64,10 +65,10 @@ func (r *mockRepository) FindByID(id string) (*Composition, error) {
 		r.Requests++
 	}
 
-	return nil, errors.New("Not found")
+	return nil, errors.NewInternal("composition/repository_mock.FindById", "NOT_FOUND", "")
 }
 
-func (r *mockRepository) FindUses(id string) ([]*Composition, error) {
+func (r *mockRepository) FindUses(id string) ([]*Composition, errors.Error) {
 	r.sleep()
 
 	comps := make([]*Composition, 0)
@@ -91,7 +92,7 @@ func (r *mockRepository) FindUses(id string) ([]*Composition, error) {
 	return comps, nil
 }
 
-func (r *mockRepository) Insert(c *Composition) error {
+func (r *mockRepository) Insert(c *Composition) errors.Error {
 	r.sleep()
 
 	c.UpdatedAt = time.Now()
@@ -104,7 +105,7 @@ func (r *mockRepository) Insert(c *Composition) error {
 	return nil
 }
 
-func (r *mockRepository) InsertMany(comps []*Composition) error {
+func (r *mockRepository) InsertMany(comps []*Composition) errors.Error {
 	r.sleep()
 
 	newComps := make([]*Composition, len(comps))
@@ -121,13 +122,13 @@ func (r *mockRepository) InsertMany(comps []*Composition) error {
 	return nil
 }
 
-func (r *mockRepository) Update(c *Composition) error {
+func (r *mockRepository) Update(c *Composition) errors.Error {
 	r.sleep()
 
 	for _, comp := range r.compositions {
 		if comp.ID.Hex() == c.ID.Hex() {
 			if !comp.Enabled {
-				return errors.New("Disabled")
+				return errors.NewInternal("composition/repository_mock.Update", "DISABLED", "")
 			}
 			*comp = *copyComposition(c)
 			comp.UpdatedAt = time.Now()
@@ -142,7 +143,7 @@ func (r *mockRepository) Update(c *Composition) error {
 	return nil
 }
 
-func (r *mockRepository) Delete(id string) error {
+func (r *mockRepository) Delete(id string) errors.Error {
 	r.sleep()
 
 	for _, comp := range r.compositions {
@@ -157,7 +158,7 @@ func (r *mockRepository) Delete(id string) error {
 		r.Requests++
 	}
 
-	return errors.New("Not found")
+	return errors.NewInternal("composition/repository_mock.Delete", "NOT_FOUND", "")
 }
 
 func (r *mockRepository) Count() int {

@@ -62,7 +62,7 @@ func (m *manager) Connect() (*amqp.Connection, errors.Error) {
 	conf := config.Get()
 	conn, err := amqp.Dial(conf.RabbitURL)
 	if err != nil {
-		return nil, errors.New("infrastructure/events/manager.Connect", "FAILED_TO_CONNECT", err.Error())
+		return nil, errors.NewInternal("infrastructure/events/manager.Connect", "FAILED_TO_CONNECT", err.Error())
 	}
 
 	m.connection = conn
@@ -99,14 +99,14 @@ func (m *manager) Publish(exchange string, eType string, key string, body []byte
 		},
 	)
 	if err != nil {
-		return errors.New("infrastructure/events/manager.Send", "FAILED_TO_PUBLISH_MESSAGE", err.Error())
+		return errors.NewInternal("infrastructure/events/manager.Send", "FAILED_TO_PUBLISH_MESSAGE", err.Error())
 	}
 
 	return nil
 }
 
 func (m *manager) Consume(exchange string, eType string, key string) (<-chan events.Message, errors.Error) {
-	errGen := errors.FromPath("infrastructure/events/manager.Consume")
+	errGen := errors.InternalFromPath("infrastructure/events/manager.Consume")
 
 	if m.emitters[exchange] == nil {
 		ch, err := m.createChannelWithExchange(exchange, eType)
@@ -167,7 +167,7 @@ func (m *manager) Consume(exchange string, eType string, key string) (<-chan eve
 }
 
 func (m *manager) createChannelWithExchange(exchange string, eType string) (*amqp.Channel, errors.Error) {
-	errGen := errors.FromPath("infrastructure/events/manager.createChannelWithExchange")
+	errGen := errors.InternalFromPath("infrastructure/events/manager.createChannelWithExchange")
 
 	ch, err := m.connection.Channel()
 	if err != nil {

@@ -21,7 +21,7 @@ func NewEvent(t string, c *Composition) *Event {
 func EventFromBytes(b []byte) (*Event, errors.Error) {
 	var e Event
 	if err := json.Unmarshal(b, &e); err != nil {
-		return nil, errors.New("composition/events.FromBytes", "UNMARSHAL", err.Error())
+		return nil, errors.NewInternal("composition/events.FromBytes", "UNMARSHAL", err.Error())
 	}
 
 	return &e, nil
@@ -31,7 +31,7 @@ func EventFromBytes(b []byte) (*Event, errors.Error) {
 func (e *Event) ToBytes() ([]byte, errors.Error) {
 	b, err := json.Marshal(e)
 	if err != nil {
-		return nil, errors.New("composition/events.ToBytes", "MARSHAL", err.Error())
+		return nil, errors.NewInternal("composition/events.ToBytes", "MARSHAL", err.Error())
 	}
 	return b, nil
 }

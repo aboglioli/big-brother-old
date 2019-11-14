@@ -95,7 +95,7 @@ func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
 	}
 
 	// Publish event: composition.created
-	evt := NewEvent("CompositionCreated", c)
+	evt := events.NewEvent("CompositionCreated", c)
 	body, err := evt.ToBytes()
 	if err != nil {
 		return nil, err
@@ -191,13 +191,13 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 	}
 
 	// Publish event: composition.updated
-	evt := NewEvent("CompositionUpdatedManually", c)
+	evt := events.NewEvent("CompositionUpdatedManually", c)
 	body, err := evt.ToBytes()
 	if err != nil {
-		return nil, err
+		return nil, errGen.SetCode("CONVERT_EVENT_TO_BYTES").SetReference(err)
 	}
 	if err := s.eventMgr.Publish("composition", "topic", "composition.updated", body); err != nil {
-		return nil, err
+		return nil, errGen.SetCode("FAILED_TO_PUBLISH").SetReference(err)
 	}
 
 	// Uses are updated asynchronously in another service reacting to the above sent event
@@ -227,7 +227,7 @@ func (s *service) Delete(id string) errors.Error {
 	}
 
 	// Publish event
-	evt := NewEvent("CompositionDeleted", c)
+	evt := events.NewEvent("CompositionDeleted", c)
 	body, err := evt.ToBytes()
 	if err != nil {
 		return err
@@ -240,6 +240,8 @@ func (s *service) Delete(id string) errors.Error {
 }
 
 func (s *service) UpdateUses(c *Composition) (int, errors.Error) {
+	errGen := errors.NewValidation().SetPath("composition/service.updateUses")
+
 	uses, _ := s.repository.FindUses(c.ID.Hex())
 	count := 0
 
@@ -252,13 +254,13 @@ func (s *service) UpdateUses(c *Composition) (int, errors.Error) {
 		u.UpsertDependency(*dep)
 
 		if err := s.repository.Update(u); err != nil {
-			return count, errors.NewValidation().SetPath("composition/service.updateUses").SetCode("UPDATE_USES").SetReference(err)
+			return count, errGen.SetCode("UPDATE_USES").SetReference(err)
 		}
 
 		count++
 
 		// Publish event
-		evt := NewEvent("CompositionUpdatedAutomatically", u)
+		evt := events.NewEvent("CompositionsUpdatedAutomatically", u)
 		body, err := evt.ToBytes()
 		if err != nil {
 			return count, err

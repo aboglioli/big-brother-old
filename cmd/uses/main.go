@@ -1,16 +1,18 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 
 	"github.com/aboglioli/big-brother/composition"
-	"github.com/aboglioli/big-brother/infrastructure/events"
+	"github.com/aboglioli/big-brother/events"
+	infrEvents "github.com/aboglioli/big-brother/infrastructure/events"
 )
 
 func main() {
 	// Dendencies resolution
-	eventMgr, err := events.GetManager()
+	eventMgr, err := infrEvents.GetManager()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,16 +35,22 @@ func main() {
 
 		fmt.Println("[Listening for composition updates]")
 		for msg := range msgs {
-			evt, err := composition.EventFromBytes(msg.Body())
+			evt, err := events.FromBytes(msg.Body())
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
 
 			if evt.Type == "CompositionUpdatedManually" {
-				fmt.Printf("Updating uses of %s (%s): ", evt.Composition.Name, evt.Composition.ID.Hex())
+				comp, err := payloadToComposition(evt.Payload)
+				if err != nil {
+					fmt.Println(err)
+					continue
+				}
 
-				count, err := compositionService.UpdateUses(evt.Composition)
+				fmt.Printf("Updating uses of %s (%s): ", comp.Name, comp.ID.Hex())
+
+				count, err := compositionService.UpdateUses(comp)
 				if err != nil {
 					fmt.Printf("[ERROR] %s\n", err)
 					continue
@@ -56,4 +64,19 @@ func main() {
 	}()
 
 	<-forever
+}
+
+func payloadToComposition(payload interface{}) (*composition.Composition, error) {
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	var comp composition.Composition
+	err = json.Unmarshal(b, &comp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &comp, nil
 }

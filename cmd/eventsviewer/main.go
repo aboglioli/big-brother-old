@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 
-	"github.com/aboglioli/big-brother/composition"
-	"github.com/aboglioli/big-brother/infrastructure/events"
+	"github.com/aboglioli/big-brother/events"
+	infrEvents "github.com/aboglioli/big-brother/infrastructure/events"
 )
 
 func main() {
-	eventMgr, err := events.GetManager()
+	eventMgr, err := infrEvents.GetManager()
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -25,14 +25,14 @@ func main() {
 
 		fmt.Println("[Waiting for events on topic: 'composition.*']")
 		for msg := range msgs {
-			evt, err := composition.EventFromBytes(msg.Body())
+			evt, err := events.FromBytes(msg.Body())
 			if err != nil {
 				fmt.Println(err)
 				continue
 			}
 
 			fmt.Println("# New event:")
-			fmt.Printf("- Type: %s; - Composition %s (%s)\n", evt.Type, evt.Composition.Name, evt.Composition.ID.Hex())
+			fmt.Printf("- Type: %s\n- Payload %s\n", evt.Type, evt.Payload)
 
 			msg.Ack()
 		}

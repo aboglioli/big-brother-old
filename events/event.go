@@ -1,4 +1,4 @@
-package composition
+package events
 
 import (
 	"encoding/json"
@@ -7,18 +7,18 @@ import (
 )
 
 type Event struct {
-	Type        string       `json:"type" validate:"required" binding:"required"`
-	Composition *Composition `json:"composition" validate:"required" binding:"required"`
+	Type    string      `json:"type" binding:"required" validate:"required"`
+	Payload interface{} `json:"payload" binding:"required" validate:"required"`
 }
 
-func NewEvent(t string, c *Composition) *Event {
+func NewEvent(t string, p interface{}) *Event {
 	return &Event{
-		Type:        t,
-		Composition: c,
+		Type:    t,
+		Payload: p,
 	}
 }
 
-func EventFromBytes(b []byte) (*Event, errors.Error) {
+func FromBytes(b []byte) (*Event, errors.Error) {
 	var e Event
 	if err := json.Unmarshal(b, &e); err != nil {
 		return nil, errors.NewInternal().SetPath("composition/events.FromBytes").SetCode("UNMARSHAL").SetMessage(err.Error())

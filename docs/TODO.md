@@ -1,6 +1,6 @@
 # TODO
 
-- Improve Error handling: validation and internal errors
+x Improve Error handling: validation and internal errors
 - Update uses asynchronously:
     - Add 'usesUpdated' property to Composition, default: false
     x Emit event of 'CompositionUpdatedManually' after updating a Composition

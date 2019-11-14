@@ -36,20 +36,23 @@ func main() {
 			fmt.Println("# New event:")
 
 			switch evt.Type {
-			case "CompositionUpdatedManually":
+			case "CompositionUpdatedManually", "CompositionUsesUpdatedSinceLastChange":
 				comp, err := payloadToComposition(evt.Payload)
 				if err != nil {
 					fmt.Println(err)
 					continue
 				}
-				fmt.Printf("- Type: %s\n- Payload %+v\n", evt.Type, comp)
+				fmt.Printf("- Type: %s\n- Composition: %s (%s)\n", evt.Type, comp.Name, comp.ID.Hex())
 			case "CompositionsUpdatedAutomatically":
 				comps, err := payloadToCompositions(evt.Payload)
 				if err != nil {
 					fmt.Println(err)
 					continue
 				}
-				fmt.Printf("- Type: %s\n- Payload %+v\n", evt.Type, comps)
+				fmt.Printf("- Type %s\n- Compositions:\n", evt.Type)
+				for _, c := range comps {
+					fmt.Printf("-- %s (%s)\n", c.Name, c.ID.Hex())
+				}
 			default:
 				fmt.Printf("- Type: %s\n- Payload %s\n", evt.Type, evt.Payload)
 			}

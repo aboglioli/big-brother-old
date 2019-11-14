@@ -17,8 +17,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	compositionRepository, rawErr := composition.NewRepository()
-	if rawErr != nil {
+	compositionRepository, err := composition.NewRepository()
+	if err != nil {
 		log.Fatal(err)
 	}
 
@@ -38,14 +38,12 @@ func main() {
 			evt, err := events.FromBytes(msg.Body())
 			if err != nil {
 				fmt.Println(err)
-				continue
 			}
 
 			if evt.Type == "CompositionUpdatedManually" {
 				comp, err := payloadToComposition(evt.Payload)
 				if err != nil {
 					fmt.Println(err)
-					continue
 				}
 
 				fmt.Printf("# Updating uses of %s (%s): ", comp.Name, comp.ID.Hex())
@@ -53,15 +51,28 @@ func main() {
 				comps, err := compositionService.UpdateUses(comp)
 				if err != nil {
 					fmt.Printf("[ERROR] %s\n", err)
-					continue
 				}
 				fmt.Printf("updated %d dependencies\n", len(comps))
 
 				for _, c := range comps {
-					fmt.Printf("> %+v\n", c)
+					fmt.Printf("- %s (%s)\n", c.Name, c.ID.Hex())
+				}
+
+				// Update composition to set UsesUpdatedSinceLastChange
+				comp.UsesUpdatedSinceLastChange = true
+				if err := compositionRepository.Update(comp); err != nil {
+					fmt.Println(err)
+				}
+
+				evt := events.NewEvent("CompositionUsesUpdatedSinceLastChange", comp)
+				body, err := evt.ToBytes()
+				if err != nil {
+					fmt.Println(err)
+				}
+				if err := eventMgr.Publish("composition", "topic", "composition.updated", body); err != nil {
+					fmt.Println(err)
 				}
 			}
-
 			msg.Ack()
 		}
 	}()

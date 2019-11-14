@@ -17,21 +17,23 @@ type Composition struct {
 	Stock        quantity.Quantity  `json:"stock" bson:"stock" validate:"required"`
 	Dependencies []Dependency       `json:"dependencies" bson:"dependencies" validate:"required"`
 
-	AutoupdateCost bool      `json:"autoupdateCost" bson:"autoupdateCost"`
-	Enabled        bool      `json:"-" bson:"enabled" `
-	Validated      bool      `json:"-" bson:"validated"`
-	CreatedAt      time.Time `json:"createdAt" bson:"createdAt"`
-	UpdatedAt      time.Time `json:"updatedAt" bson:"updatedAt"`
+	AutoupdateCost             bool      `json:"autoupdateCost" bson:"autoupdateCost"`
+	Enabled                    bool      `json:"enabled" bson:"enabled" `
+	Validated                  bool      `json:"validated" bson:"validated"`
+	UsesUpdatedSinceLastChange bool      `json:"usesUpdatedSinceLastChange" bson:"usesUpdatedSinceLastChange"`
+	CreatedAt                  time.Time `json:"createdAt" bson:"createdAt"`
+	UpdatedAt                  time.Time `json:"updatedAt" bson:"updatedAt"`
 }
 
 func NewComposition() *Composition {
 	return &Composition{
-		ID:             primitive.NewObjectID(),
-		AutoupdateCost: true,
-		Enabled:        true,
-		Validated:      false, // TODO: should be validated asynchronously
-		CreatedAt:      time.Now(),
-		UpdatedAt:      time.Now(),
+		ID:                         primitive.NewObjectID(),
+		AutoupdateCost:             true,
+		Enabled:                    true,
+		Validated:                  false, // TODO: should be validated asynchronously
+		UsesUpdatedSinceLastChange: true,
+		CreatedAt:                  time.Now(),
+		UpdatedAt:                  time.Now(),
 	}
 }
 

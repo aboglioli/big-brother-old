@@ -36,6 +36,9 @@ func (s *service) GetByID(id string) (*Composition, errors.Error) {
 	if err != nil {
 		return nil, errors.NewValidation().SetPath("composition/service.GetByID").SetCode("COMPOSITION_NOT_FOUND").SetReference(err)
 	}
+	if !comp.Enabled {
+		return nil, errors.NewValidation().SetPath("composition/service.GetByID").SetCode("COMPOSITION_IS_DELETED")
+	}
 	return comp, nil
 }
 
@@ -185,6 +188,8 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 
 		c.UpsertDependency(dep)
 	}
+
+	c.UsesUpdatedSinceLastChange = false
 
 	if err := s.repository.Update(c); err != nil {
 		return nil, errGen.SetCode("UPDATE").SetReference(err)

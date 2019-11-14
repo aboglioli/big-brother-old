@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 
+	"github.com/aboglioli/big-brother/composition"
 	"github.com/aboglioli/big-brother/events"
 	infrEvents "github.com/aboglioli/big-brother/infrastructure/events"
 )
@@ -32,11 +34,59 @@ func main() {
 			}
 
 			fmt.Println("# New event:")
-			fmt.Printf("- Type: %s\n- Payload %s\n", evt.Type, evt.Payload)
+
+			switch evt.Type {
+			case "CompositionUpdatedManually":
+				comp, err := payloadToComposition(evt.Payload)
+				if err != nil {
+					fmt.Println(err)
+					continue
+				}
+				fmt.Printf("- Type: %s\n- Payload %+v\n", evt.Type, comp)
+			case "CompositionsUpdatedAutomatically":
+				comps, err := payloadToCompositions(evt.Payload)
+				if err != nil {
+					fmt.Println(err)
+					continue
+				}
+				fmt.Printf("- Type: %s\n- Payload %+v\n", evt.Type, comps)
+			default:
+				fmt.Printf("- Type: %s\n- Payload %s\n", evt.Type, evt.Payload)
+			}
 
 			msg.Ack()
 		}
 	}()
 
 	<-forever
+}
+
+func payloadToComposition(payload interface{}) (*composition.Composition, error) {
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	var comp composition.Composition
+	err = json.Unmarshal(b, &comp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &comp, nil
+}
+
+func payloadToCompositions(payload interface{}) ([]*composition.Composition, error) {
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	var comps []*composition.Composition
+	err = json.Unmarshal(b, &comps)
+	if err != nil {
+		return nil, err
+	}
+
+	return comps, nil
 }

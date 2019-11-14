@@ -16,7 +16,7 @@ type Service interface {
 	Update(compID string, req *UpdateRequest) (*Composition, errors.Error)
 	Delete(id string) errors.Error
 
-	UpdateUses(c *Composition) (int, errors.Error)
+	UpdateUses(c *Composition) ([]*Composition, errors.Error)
 }
 
 type service struct {
@@ -239,13 +239,47 @@ func (s *service) Delete(id string) errors.Error {
 	return nil
 }
 
-func (s *service) UpdateUses(c *Composition) (int, errors.Error) {
+func (s *service) UpdateUses(c *Composition) ([]*Composition, errors.Error) {
+	errGen := errors.NewValidation().SetPath("composition/service.UpdateUses")
+
+	cache := make(map[string]*Composition)
+
+	err := s.updateUses(c, cache)
+	if err != nil {
+		return nil, errGen.SetCode("UPDATE_USES").SetReference(err)
+	}
+
+	comps := make([]*Composition, 0)
+	for _, u := range cache {
+		if err := s.repository.Update(u); err != nil {
+			return nil, errGen.SetCode("UPDATE_USES").SetReference(err)
+		}
+		comps = append(comps, u)
+	}
+
+	evt := events.NewEvent("CompositionsUpdatedAutomatically", comps)
+	body, err := evt.ToBytes()
+	if err != nil {
+		return nil, err
+	}
+	if err := s.eventMgr.Publish("composition", "topic", "composition.updated", body); err != nil {
+		return nil, err
+	}
+
+	return comps, nil
+}
+
+func (s *service) updateUses(c *Composition, cache map[string]*Composition) errors.Error {
 	errGen := errors.NewValidation().SetPath("composition/service.updateUses")
 
 	uses, _ := s.repository.FindUses(c.ID.Hex())
-	count := 0
 
 	for _, u := range uses {
+		cachedUse, ok := cache[u.ID.Hex()]
+		if ok {
+			u = cachedUse
+		}
+
 		dep := u.FindDependencyByID(c.ID.Hex())
 
 		subvalue := c.CostFromQuantity(dep.Quantity)
@@ -253,32 +287,15 @@ func (s *service) UpdateUses(c *Composition) (int, errors.Error) {
 
 		u.UpsertDependency(*dep)
 
-		if err := s.repository.Update(u); err != nil {
-			return count, errGen.SetCode("UPDATE_USES").SetReference(err)
-		}
-
-		count++
-
-		// Publish event
-		evt := events.NewEvent("CompositionsUpdatedAutomatically", u)
-		body, err := evt.ToBytes()
-		if err != nil {
-			return count, err
-		}
-		if err := s.eventMgr.Publish("composition", "topic", "composition.updated", body); err != nil {
-			return count, err
-		}
+		cache[u.ID.Hex()] = u
 
 		// Update uses
-		subcount, err := s.UpdateUses(u)
-		if err != nil {
-			return count + subcount, err
+		if err := s.updateUses(u, cache); err != nil {
+			return errGen.SetCode("UPDATE_USES").SetReference(err)
 		}
-
-		count = count + subcount
 	}
 
-	return count, nil
+	return nil
 }
 
 func (s *service) calculateDependenciesSubvalues(dependencies []Dependency) ([]Dependency, errors.Error) {

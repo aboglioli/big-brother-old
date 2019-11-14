@@ -48,15 +48,18 @@ func main() {
 					continue
 				}
 
-				fmt.Printf("Updating uses of %s (%s): ", comp.Name, comp.ID.Hex())
+				fmt.Printf("# Updating uses of %s (%s): ", comp.Name, comp.ID.Hex())
 
-				count, err := compositionService.UpdateUses(comp)
+				comps, err := compositionService.UpdateUses(comp)
 				if err != nil {
 					fmt.Printf("[ERROR] %s\n", err)
 					continue
 				}
+				fmt.Printf("updated %d dependencies\n", len(comps))
 
-				fmt.Printf("updated %d dependencies\n", count)
+				for _, c := range comps {
+					fmt.Printf("> %+v\n", c)
+				}
 			}
 
 			msg.Ack()

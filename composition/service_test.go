@@ -268,13 +268,13 @@ func TestUpdateComposition(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		count, err := serv.UpdateUses(c)
+		updatedUses, err := serv.UpdateUses(c)
 		if err != nil {
 			t.Error(err)
 		}
 
-		if count != 6 {
-			t.Error("Uses weren't updated")
+		if len(updatedUses) != 4 {
+			t.Errorf("Uses weren't updated: %d updated instead of %d\n", len(updatedUses), 4)
 		}
 
 		comps, _ = repo.FindAll()

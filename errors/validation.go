@@ -10,19 +10,30 @@ type ValidationError struct {
 	reference Error // TODO: not used yet
 }
 
-func NewValidation(p string, c string, m string) Error {
+func NewValidation() *ValidationError {
 	return &ValidationError{
-		kind:    "validation",
-		path:    p,
-		code:    c,
-		message: m,
+		kind: "validation",
 	}
 }
 
-func ValidationFromPath(p string) func(string, string) Error {
-	return func(c string, m string) Error {
-		return NewValidation(p, c, m)
-	}
+func (e *ValidationError) SetPath(p string) *ValidationError {
+	e.path = p
+	return e
+}
+
+func (e *ValidationError) SetCode(c string) *ValidationError {
+	e.code = c
+	return e
+}
+
+func (e *ValidationError) SetMessage(m string) *ValidationError {
+	e.message = m
+	return e
+}
+
+func (e *ValidationError) SetReference(ref Error) *ValidationError {
+	e.reference = ref
+	return e
 }
 
 func (e *ValidationError) Kind() string {

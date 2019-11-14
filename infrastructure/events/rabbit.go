@@ -62,7 +62,7 @@ func (m *manager) Connect() (*amqp.Connection, errors.Error) {
 	conf := config.Get()
 	conn, err := amqp.Dial(conf.RabbitURL)
 	if err != nil {
-		return nil, errors.NewInternal("infrastructure/events/manager.Connect", "FAILED_TO_CONNECT", err.Error())
+		return nil, errors.NewInternal().SetPath("infrastructure/events/manager.Connect").SetCode("FAILED_TO_CONNECT").SetMessage(err.Error())
 	}
 
 	m.connection = conn
@@ -99,14 +99,14 @@ func (m *manager) Publish(exchange string, eType string, key string, body []byte
 		},
 	)
 	if err != nil {
-		return errors.NewInternal("infrastructure/events/manager.Send", "FAILED_TO_PUBLISH_MESSAGE", err.Error())
+		return errors.NewInternal().SetPath("infrastructure/events/manager.Send").SetCode("FAILED_TO_PUBLISH_MESSAGE").SetMessage(err.Error())
 	}
 
 	return nil
 }
 
 func (m *manager) Consume(exchange string, eType string, key string) (<-chan events.Message, errors.Error) {
-	errGen := errors.InternalFromPath("infrastructure/events/manager.Consume")
+	errGen := errors.NewInternal().SetPath("infrastructure/events/manager.Consume")
 
 	if m.emitters[exchange] == nil {
 		ch, err := m.createChannelWithExchange(exchange, eType)
@@ -128,7 +128,7 @@ func (m *manager) Consume(exchange string, eType string, key string) (<-chan eve
 		nil,
 	)
 	if err != nil {
-		return nil, errGen("FAILED_TO_DECLARE_QUEUE", err.Error())
+		return nil, errGen.SetCode("FAILED_TO_DECLARE_QUEUE").SetMessage(err.Error())
 	}
 
 	err = ch.QueueBind(
@@ -139,7 +139,7 @@ func (m *manager) Consume(exchange string, eType string, key string) (<-chan eve
 		nil,
 	)
 	if err != nil {
-		return nil, errGen("FAILED_TO_BIND_QUEUE", err.Error())
+		return nil, errGen.SetCode("FAILED_TO_BIND_QUEUE").SetMessage(err.Error())
 	}
 
 	delivery, err := ch.Consume(
@@ -152,7 +152,7 @@ func (m *manager) Consume(exchange string, eType string, key string) (<-chan eve
 		nil,
 	)
 	if err != nil {
-		return nil, errGen("FAILED_TO_CONSUME", err.Error())
+		return nil, errGen.SetCode("FAILED_TO_CONSUME").SetMessage(err.Error())
 	}
 
 	msg := make(chan events.Message)
@@ -167,11 +167,11 @@ func (m *manager) Consume(exchange string, eType string, key string) (<-chan eve
 }
 
 func (m *manager) createChannelWithExchange(exchange string, eType string) (*amqp.Channel, errors.Error) {
-	errGen := errors.InternalFromPath("infrastructure/events/manager.createChannelWithExchange")
+	errGen := errors.NewInternal().SetPath("infrastructure/events/manager.createChannelWithExchange")
 
 	ch, err := m.connection.Channel()
 	if err != nil {
-		return nil, errGen("FAILED_TO_CREATE_CHANNEL", err.Error())
+		return nil, errGen.SetCode("FAILED_TO_CREATE_CHANNEL").SetMessage(err.Error())
 	}
 
 	err = ch.ExchangeDeclare(
@@ -184,7 +184,7 @@ func (m *manager) createChannelWithExchange(exchange string, eType string) (*amq
 		nil,
 	)
 	if err != nil {
-		return nil, errGen("FAILED_TO_DECLARE_EXCHANGE", err.Error())
+		return nil, errGen.SetCode("FAILED_TO_DECLARE_EXCHANGE").SetMessage(err.Error())
 	}
 
 	return ch, nil

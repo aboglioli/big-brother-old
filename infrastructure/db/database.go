@@ -45,7 +45,7 @@ func Get(database string) (*mongo.Database, errors.Error) {
 	if client == nil {
 		c, err := connect()
 		if err != nil {
-			return nil, errors.NewInternal("infrastructure/db/database.Get", "FAILED_TO_CONNECT_TO_DB", err.Error())
+			return nil, errors.NewInternal().SetPath("infrastructure/db/database.Get").SetCode("FAILED_TO_CONNECT_TO_DB").SetMessage(err.Error())
 		}
 		client = c
 	}

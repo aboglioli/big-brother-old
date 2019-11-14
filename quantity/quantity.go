@@ -95,21 +95,21 @@ func (q Quantity) IsEmpty() bool {
 }
 
 func referenceUnit(q1, q2 Quantity) (*unit.Unit, errors.Error) {
-	errGen := errors.ValidationFromPath("quantity/quantity.Add")
+	errGen := errors.NewValidation().SetPath("quantity/quantity.referenceUnit")
 	repo := unit.GetRepository()
 
 	u1 := repo.FindByName(q1.Unit)
 	if u1 == nil {
-		return nil, errGen("UNIT_DOES_NOT_EXIST", "")
+		return nil, errGen.SetCode("UNIT_DOES_NOT_EXIST")
 	}
 
 	u2 := repo.FindByName(q2.Unit)
 	if u2 == nil {
-		return nil, errGen("UNIT_DOES_NOT_EXIST", "")
+		return nil, errGen.SetCode("UNIT_DOES_NOT_EXIST")
 	}
 
 	if !u1.SameType(u2) {
-		return nil, errGen("INCOMPATIBLE_UNITS", "")
+		return nil, errGen.SetCode("INCOMPATIBLE_UNITS")
 	}
 
 	return u1, nil

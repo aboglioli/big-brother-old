@@ -10,19 +10,30 @@ type InternalError struct {
 	reference Error
 }
 
-func NewInternal(p string, c string, m string) Error {
+func NewInternal() *InternalError {
 	return &InternalError{
-		kind:    "internal",
-		path:    p,
-		code:    c,
-		message: m,
+		kind: "internal",
 	}
 }
 
-func InternalFromPath(p string) func(string, string) Error {
-	return func(c string, m string) Error {
-		return NewInternal(p, c, m)
-	}
+func (e *InternalError) SetPath(p string) *InternalError {
+	e.path = p
+	return e
+}
+
+func (e *InternalError) SetCode(c string) *InternalError {
+	e.code = c
+	return e
+}
+
+func (e *InternalError) SetMessage(m string) *InternalError {
+	e.message = m
+	return e
+}
+
+func (e *InternalError) SetReference(ref Error) *InternalError {
+	e.reference = ref
+	return e
 }
 
 func (e *InternalError) Kind() string {

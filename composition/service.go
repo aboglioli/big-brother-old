@@ -34,7 +34,7 @@ func NewService(r Repository, e events.Manager) Service {
 func (s *service) GetByID(id string) (*Composition, errors.Error) {
 	comp, err := s.repository.FindByID(id)
 	if err != nil {
-		return nil, errors.NewValidation("composition/service.GetByID", "COMPOSITION_NOT_FOUND", err.Error())
+		return nil, errors.NewValidation().SetPath("composition/service.GetByID").SetCode("COMPOSITION_NOT_FOUND").SetReference(err)
 	}
 	return comp, nil
 }
@@ -51,16 +51,16 @@ type CreateRequest struct {
 }
 
 func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
-	errGen := errors.ValidationFromPath("composition/service.Create")
+	errGen := errors.NewValidation().SetPath("composition/service.Create")
 	c := NewComposition()
 
 	if req.ID != nil {
 		id, err := primitive.ObjectIDFromHex(*req.ID)
 		if err != nil {
-			return nil, errGen("INVALID_ID", err.Error())
+			return nil, errGen.SetCode("INVALID_ID").SetMessage(err.Error())
 		}
 		if existingComp, err := s.repository.FindByID(*req.ID); existingComp != nil || err == nil {
-			return nil, errGen("COMPOSITION_ALREADY_EXISTS", fmt.Sprintf("Composition with ID %s exists", *req.ID))
+			return nil, errGen.SetCode("COMPOSITION_ALREADY_EXISTS").SetMessage(fmt.Sprintf("Composition with ID %s exists", *req.ID)).SetReference(err)
 		}
 		c.ID = id
 	}
@@ -91,7 +91,7 @@ func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
 	c.SetDependencies(deps)
 
 	if err := s.repository.Insert(c); err != nil {
-		return nil, errGen("INSERT", err.Error())
+		return nil, errGen.SetCode("INSERT").SetReference(err)
 	}
 
 	// Publish event: composition.created
@@ -119,19 +119,19 @@ type UpdateRequest struct {
 }
 
 func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Error) {
-	errGen := errors.ValidationFromPath("composition/service.Update")
+	errGen := errors.NewValidation().SetPath("composition/service.Update")
 
 	if req.ID != nil && *req.ID != id {
-		return nil, errGen("ID_DOES_NOT_MATCH", fmt.Sprintf("%s != %s", *req.ID, id))
+		return nil, errGen.SetCode("ID_DOES_NOT_MATCH").SetMessage(fmt.Sprintf("%s != %s", *req.ID, id))
 	}
 
-	c, rawErr := s.repository.FindByID(id)
-	if rawErr != nil {
-		return nil, errGen("COMPOSITION_DOES_NOT_EXIST", rawErr.Error())
+	c, err := s.repository.FindByID(id)
+	if err != nil {
+		return nil, errGen.SetCode("COMPOSITION_DOES_NOT_EXIST").SetReference(err)
 	}
 
 	if !c.Enabled {
-		return nil, errGen("COMPOSITION_IS_DELETED", "")
+		return nil, errGen.SetCode("COMPOSITION_IS_DELETED")
 	}
 
 	savedUnit := c.Unit
@@ -157,7 +157,7 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 	}
 
 	if !savedUnit.Compatible(c.Unit) {
-		return nil, errGen("CANNOT_CHANGE_UNIT_TYPE", fmt.Sprintf("%s != %s", c.Unit.Unit, req.Unit.Unit))
+		return nil, errGen.SetCode("CANNOT_CHANGE_UNIT_TYPE").SetMessage(fmt.Sprintf("%v != %v", c.Unit, req.Unit))
 	}
 
 	removed, _, added := c.CompareDependencies(req.Dependencies)
@@ -166,18 +166,18 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 		c.RemoveDependency(dep.Of.Hex())
 	}
 
-	for _, dep := range added {
+	for i, dep := range added {
 		depComp, err := s.repository.FindByID(dep.Of.Hex())
 		if err != nil {
-			return nil, errGen("DEPENDENCY_DOES_NOT_EXIST", err.Error())
+			return nil, errGen.SetCode("DEPENDENCY_DOES_NOT_EXIST").SetReference(err)
 		}
 
 		if !quantity.IsValid(dep.Quantity) {
-			return nil, errGen("INVALID_DEPENDENCY_QUANTITY", "")
+			return nil, errGen.SetCode("INVALID_DEPENDENCY_QUANTITY").SetMessage(fmt.Sprintf("Dependency nro %d: %s", i, dep.Of.Hex()))
 		}
 
 		if !dep.Quantity.Compatible(depComp.Unit) {
-			return nil, errGen("INCOMPATIBLE_DEPENDENCY_QUANTITY", "")
+			return nil, errGen.SetCode("INCOMPATIBLE_DEPENDENCY_QUANTITY").SetMessage(fmt.Sprintf("Dependency nro %d (%s): %v != %v", i, dep.Of.Hex(), dep.Quantity, depComp.Unit))
 		}
 
 		subvalue := depComp.CostFromQuantity(dep.Quantity)
@@ -187,7 +187,7 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 	}
 
 	if err := s.repository.Update(c); err != nil {
-		return nil, errGen("UPDATE", err.Error())
+		return nil, errGen.SetCode("UPDATE").SetReference(err)
 	}
 
 	// Publish event: composition.updated
@@ -210,20 +210,20 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 }
 
 func (s *service) Delete(id string) errors.Error {
-	errGen := errors.ValidationFromPath("composition/service.Delete")
+	errGen := errors.NewValidation().SetPath("composition/service.Delete")
 
 	c, err := s.repository.FindByID(id)
 	if err != nil {
-		return errGen("DELETE", err.Error())
+		return errGen.SetCode("DELETE").SetReference(err)
 	}
 
 	uses, _ := s.repository.FindUses(id)
 	if len(uses) > 0 {
-		return errGen("COMPOSITION_USED_AS_DEPENDENCY", "")
+		return errGen.SetCode("COMPOSITION_USED_AS_DEPENDENCY").SetMessage(fmt.Sprintf("Composition used as dependecy in %d compositions", len(uses)))
 	}
 
 	if err := s.repository.Delete(id); err != nil {
-		return errGen("NOT_FOUND", err.Error())
+		return errGen.SetCode("NOT_FOUND").SetReference(err)
 	}
 
 	// Publish event
@@ -252,7 +252,7 @@ func (s *service) UpdateUses(c *Composition) (int, errors.Error) {
 		u.UpsertDependency(*dep)
 
 		if err := s.repository.Update(u); err != nil {
-			return count, errors.NewValidation("composition/service.updateUses", "UPDATE_USES", err.Error())
+			return count, errors.NewValidation().SetPath("composition/service.updateUses").SetCode("UPDATE_USES").SetReference(err)
 		}
 
 		count++
@@ -280,17 +280,17 @@ func (s *service) UpdateUses(c *Composition) (int, errors.Error) {
 }
 
 func (s *service) calculateDependenciesSubvalues(dependencies []Dependency) ([]Dependency, errors.Error) {
-	errGen := errors.ValidationFromPath("composition/service.calculateDependenciesSubvalue")
+	errGen := errors.NewValidation().SetPath("composition/service.calculateDependenciesSubvalue")
 
 	newDependencies := make([]Dependency, len(dependencies))
 	for i, dep := range dependencies {
 		comp, err := s.repository.FindByID(dep.Of.Hex())
 		if err != nil || comp == nil {
-			return nil, errGen("DEPENDENCY_DOES_NOT_EXIST", err.Error())
+			return nil, errGen.SetCode("DEPENDENCY_DOES_NOT_EXIST").SetReference(err)
 		}
 
 		if !dep.Quantity.Compatible(comp.Unit) {
-			return nil, errGen("INCOMPATIBLE_DEPENDENCY_QUANTITY", "")
+			return nil, errGen.SetCode("INCOMPATIBLE_DEPENDENCY_QUANTITY").SetMessage(fmt.Sprintf("Dependency %d: %v != %v", i, dep.Quantity, comp.Unit))
 		}
 
 		subvalue := comp.CostFromQuantity(dep.Quantity)
@@ -302,29 +302,30 @@ func (s *service) calculateDependenciesSubvalues(dependencies []Dependency) ([]D
 }
 
 func (s *service) validateSchema(c *Composition) errors.Error {
-	errGen := errors.ValidationFromPath("composition/service.validateSchema")
+	errGen := errors.NewValidation().SetPath("composition/service.validateSchema")
+
 	if c.Cost < 0 {
-		return errGen("NEGATIVE_COST", fmt.Sprintf("%v", c.Cost))
+		return errGen.SetCode("NEGATIVE_COST").SetMessage(fmt.Sprintf("%v", c.Cost))
 	}
 	if !quantity.IsValid(c.Unit) {
-		return errGen("INVALID_UNIT", fmt.Sprintf("%v", c.Unit))
+		return errGen.SetCode("INVALID_UNIT").SetMessage(fmt.Sprintf("%v", c.Unit))
 	}
 	if !quantity.IsValid(c.Stock) {
-		return errGen("INVALID_STOCK", fmt.Sprintf("%v", c.Stock))
+		return errGen.SetCode("INVALID_STOCK").SetMessage(fmt.Sprintf("%v", c.Stock))
 	}
 
 	if !c.Stock.Compatible(c.Unit) {
-		return errGen("INCOMPATIBLE_STOCK_AND_UNIT", fmt.Sprintf("%s != %s", c.Stock.Unit, c.Unit.Unit))
+		return errGen.SetCode("INCOMPATIBLE_STOCK_AND_UNIT").SetMessage(fmt.Sprintf("%s != %s", c.Stock.Unit, c.Unit.Unit))
 	}
 
 	for i, d := range c.Dependencies {
 		_, err := s.repository.FindByID(d.Of.Hex())
 		if err != nil {
-			return errGen("DEPENDENCY_DOES_NOT_EXIST", err.Error())
+			return errGen.SetCode("DEPENDENCY_DOES_NOT_EXIST").SetReference(err)
 		}
 
 		if !quantity.IsValid(d.Quantity) {
-			return errGen("INVALID_DEPENDENCY_QUANTITY", fmt.Sprintf("%d> %v", i, d.Quantity))
+			return errGen.SetCode("INVALID_DEPENDENCY_QUANTITY").SetMessage(fmt.Sprintf("Dependency %d: %v", i, d.Quantity))
 		}
 	}
 

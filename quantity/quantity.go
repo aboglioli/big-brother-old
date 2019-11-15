@@ -5,13 +5,6 @@ import (
 	"github.com/aboglioli/big-brother/unit"
 )
 
-type Op int
-
-const (
-	OP_ADD Op = iota
-	OP_SUBSTRACT
-)
-
 type Quantity struct {
 	Quantity float64 `bson:"quantity" json:"quantity" validate:"required"`
 	Unit     string  `bson:"unit" json:"unit" validate:"required"`

@@ -36,10 +36,10 @@ func StartREST() {
 	r := gin.Default()
 
 	// Routes
-	r.GET("/composition/:compositionId", rest.GetByID)
-	r.POST("/composition", rest.Post)
-	r.PUT("/composition/:compositionId", rest.Put)
-	r.DELETE("/composition/:compositionId", rest.Delete)
+	r.GET("/v1/composition/:compositionId", rest.GetByID)
+	r.POST("/v1/composition", rest.Post)
+	r.PUT("/v1/composition/:compositionId", rest.Put)
+	r.DELETE("/v1/composition/:compositionId", rest.Delete)
 
 	r.Run(fmt.Sprintf(":%d", c.Port))
 }
@@ -48,6 +48,58 @@ type RESTContext struct {
 	compositionService composition.Service
 }
 
+// GetByID finds a Composition by ID
+/**
+* @api {get} /v1/comosition/:compositionId
+* @apiName GetByID
+* @apiGroup Composition
+*
+* @apiParam {String} compositionId Composition ID
+*
+* @apiDescription Gets a composition by ID
+*
+* @apiSuccessExample {json} Response
+* HTTP/1.1 200 OK
+* {
+*   "composition": {
+*     "id": "9dc9c429b9aa2a3c82801007",
+*     "name": "Comp 7",
+*     "cost": 475.75,
+*     "unit": {
+*       "quantity": 3,
+*       "unit": "u"
+*     },
+*     "stock": {
+*       "quantity": 1,
+*       "unit": "u"
+*     },
+*     "dependencies": [
+*       {
+*         "of": "9dc9c429b9aa2a3c82801005",
+*         "quantity": {
+*           "quantity": 2,
+*           "unit": "u"
+*         },
+*         "subvalue": 82
+*       },
+*       {
+*         "of": "9dc9c429b9aa2a3c82801006",
+*         "quantity": {
+*           "quantity": 1.5,
+*           "unit": "u"
+*         },
+*         "subvalue": 393.75
+*       }
+*     ],
+*     "autoupdateCost": true,
+*     "enabled": true,
+*     "validated": true,
+*     "usesUpdatedSinceLastChange": true,
+*     "createdAt": "2019-11-11T22:15:59.301Z",
+*     "updatedAt": "2019-11-15T01:35:19.024Z"
+*  }
+* }
+ */
 func (r *RESTContext) GetByID(c *gin.Context) {
 	compID := c.Param("compositionId")
 
@@ -64,6 +116,106 @@ func (r *RESTContext) GetByID(c *gin.Context) {
 	})
 }
 
+// Post creates a new Composition
+/**
+* @api {post} /v1/composition
+* @apiName Post
+* @apiGroup Composition
+*
+* @apiParam {String} [name=""] Name
+* @apiParam {String} [cost=0] Initial cost
+* @apiParam {Quantity} unit Composition base unit
+* @apiParam {Quantity} [stock] Stock quantity. Same units as "unit".
+* @apiParam {[]Dependency} [dependencies] Dependencies: foreign key "of", and "quantity".
+* @apiParam {Boolean} [autoupdateCost=true] Auto update cost based on dependencies.
+*
+* @apiDescription Creates a new Composition. "id" is optional but it can be
+* specified. In case "id" was not specified, a new ObjectID would be assigned.
+* The only required field in body is "unit". "cost" can be set to any value
+* greater than 0 (default: 0). If "dependencies" are added, "cost" will be
+* calculated automatically based on these, unless "autoupdateCost" is set to
+* "false".
+*
+* @apiExample {json} Body
+* {
+*   "composition": {
+*     "id": "9dc9c429b9aa2a3c82801007",
+*     "name": "Comp 7",
+*     "cost": 0,
+*     "unit": {
+*       "quantity": 3,
+*       "unit": "u"
+*     },
+*     "stock": {
+*       "quantity": 1,
+*       "unit": "u"
+*     },
+*     "dependencies": [
+*       {
+*         "of": "9dc9c429b9aa2a3c82801005",
+*         "quantity": {
+*           "quantity": 2,
+*           "unit": "u"
+*         },
+*         "subvalue": 82
+*       },
+*       {
+*         "of": "9dc9c429b9aa2a3c82801006",
+*         "quantity": {
+*           "quantity": 1.5,
+*           "unit": "u"
+*         },
+*         "subvalue": 393.75
+*       }
+*     ],
+*     "autoupdateCost": true,
+*   }
+* }
+*
+* @apiSuccessExample {json} Response
+* HTTP/1.1 200 OK
+*
+* {
+*   "composition": {
+*     "id": "9dc9c429b9aa2a3c82801007",
+*     "name": "Comp 7",
+*     "cost": 475.75,
+*     "unit": {
+*       "quantity": 3,
+*       "unit": "u"
+*     },
+*     "stock": {
+*       "quantity": 1,
+*       "unit": "u"
+*     },
+*     "dependencies": [
+*       {
+*         "of": "9dc9c429b9aa2a3c82801005",
+*         "quantity": {
+*           "quantity": 2,
+*           "unit": "u"
+*         },
+*         "subvalue": 82
+*       },
+*       {
+*         "of": "9dc9c429b9aa2a3c82801006",
+*         "quantity": {
+*           "quantity": 1.5,
+*           "unit": "u"
+*         },
+*         "subvalue": 393.75
+*       }
+*     ],
+*     "autoupdateCost": true,
+*     "enabled": true,
+*     "validated": false,
+*     "usesUpdatedSinceLastChange": true,
+*     "createdAt": "2019-11-11T22:15:59.301Z",
+*     "updatedAt": "2019-11-15T01:35:19.024Z"
+*   },
+*	"status": "CREATED"
+* }
+ */
 func (r *RESTContext) Post(c *gin.Context) {
 	var body composition.CreateRequest
 
@@ -88,6 +240,98 @@ func (r *RESTContext) Post(c *gin.Context) {
 	})
 }
 
+// Put updates a new Composition
+/**
+* @api {put} /v1/composition/:compositionId
+* @apiName Put
+* @apiGroup Composition
+*
+* @apiParam {String} compositionId Composition ID
+*
+* @apiParam {String} [name] Name
+* @apiParam {String} [cost] Initial cost
+* @apiParam {Quantity} [unit] Composition base unit. Cannot be changed.
+* @apiParam {Quantity} [stock] Stock quantity. Same units as "unit".
+* @apiParam {[]Dependency} [dependencies] Dependencies: foreign key "of", and "quantity".
+* @apiParam {Boolean} [autoupdateCost] Auto update cost based on dependencies.
+*
+* @apiDescription Updates an existing Composition based on its ID. "cost" can
+* be set to any value greater than 0 (default: 0). If "dependencies" are added,
+* "cost" will be calculated automatically based on these, unless
+* "autoupdateCost" is set to "false". All fields are optional. "unit" unit
+* cannot be changed of type.
+*
+* @apiExample {json} Body
+* {
+*   "composition": {
+*     "name": "Comp 8",
+*     "cost": 125,
+*     "unit": {
+*       "quantity": 2,
+*       "unit": "u"
+*     },
+*     "stock": {
+*       "quantity": 0,
+*       "unit": "u"
+*     },
+*     "dependencies": [
+*       {
+*         "of": "9dc9c429b9aa2a3c82801005",
+*         "quantity": {
+*           "quantity": 2,
+*           "unit": "u"
+*         },
+*         "subvalue": 82
+*       },
+*     ],
+*     "autoupdateCost": true,
+*   }
+* }
+*
+* @apiSuccessExample {json} Response
+* HTTP/1.1 200 OK
+*
+* {
+*   "composition": {
+*     "id": "9dc9c429b9aa2a3c82801007",
+*     "name": "Comp 8",
+*     "cost": 475.75,
+*     "unit": {
+*       "quantity": 3,
+*       "unit": "u"
+*     },
+*     "stock": {
+*       "quantity": 1,
+*       "unit": "u"
+*     },
+*     "dependencies": [
+*       {
+*         "of": "9dc9c429b9aa2a3c82801005",
+*         "quantity": {
+*           "quantity": 2,
+*           "unit": "u"
+*         },
+*         "subvalue": 82
+*       },
+*       {
+*         "of": "9dc9c429b9aa2a3c82801006",
+*         "quantity": {
+*           "quantity": 1.5,
+*           "unit": "u"
+*         },
+*         "subvalue": 393.75
+*       }
+*     ],
+*     "autoupdateCost": true,
+*     "enabled": true,
+*     "validated": true,
+*     "usesUpdatedSinceLastChange": false,
+*     "createdAt": "2019-11-11T22:15:59.301Z",
+*     "updatedAt": "2019-11-15T01:35:19.024Z"
+*   },
+*	"status": "UPDATED"
+* }
+ */
 func (r *RESTContext) Put(c *gin.Context) {
 	compID := c.Param("compositionId")
 	var body composition.UpdateRequest
@@ -113,6 +357,24 @@ func (r *RESTContext) Put(c *gin.Context) {
 	})
 }
 
+// Delete deletes an existing Composition
+/**
+* @api {delete} /v1/composition/:compositionId
+* @apiName Delete
+* @apiGroup Composition
+*
+* @apiParam {String} compositionId Composition ID
+*
+* @apiDescription Deletes an existing Composition by ID. To be deleted it
+* doesn't have to be used as dependency in another Composition.
+*
+* @apiSuccessExample {json} Response
+* HTTP/1.1 200 OK
+*
+* {
+*	"status": "DELETED"
+* }
+ */
 func (r *RESTContext) Delete(c *gin.Context) {
 	compID := c.Param("compositionId")
 

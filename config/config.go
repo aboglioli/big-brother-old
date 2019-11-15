@@ -1,10 +1,5 @@
 package config
 
-type Auth struct {
-	Username string
-	Password string
-}
-
 type Configuration struct {
 	Port            int16
 	MongoURL        string
@@ -12,6 +7,8 @@ type Configuration struct {
 	MongoUsername   string
 	MongoPassword   string
 	RabbitURL       string
+	AuthEnabled     bool
+	AuthURL         string
 }
 
 var config *Configuration
@@ -25,6 +22,8 @@ func Get() Configuration {
 			MongoUsername:   "admin",
 			MongoPassword:   "admin",
 			RabbitURL:       "amqp://guest:guest@localhost:5672",
+			AuthEnabled:     false,
+			AuthURL:         "http://localhost:3000/v1/users/current",
 		}
 	}
 

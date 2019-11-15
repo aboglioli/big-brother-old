@@ -28,13 +28,8 @@ func StartREST() {
 
 	compositionService := composition.NewService(compositionRepository, eventManager)
 
-	// Create context
-	rest := &RESTContext{
-		compositionService: compositionService,
-	}
-
 	// Start Gin server
-	c := config.Get()
+	conf := config.Get()
 	server := gin.Default()
 
 	// CORS
@@ -45,17 +40,23 @@ func StartREST() {
 	// Static server
 	server.Use(static.Serve("/", static.LocalFile("www", false)))
 
-	// Routes
+	// Create context and define router
+	rest := &RESTContext{
+		compositionService: compositionService,
+		conf:               conf,
+	}
+
 	server.GET("/v1/composition/:compositionId", rest.GetByID)
 	server.POST("/v1/composition", rest.Post)
 	server.PUT("/v1/composition/:compositionId", rest.Put)
 	server.DELETE("/v1/composition/:compositionId", rest.Delete)
 
-	server.Run(fmt.Sprintf(":%d", c.Port))
+	server.Run(fmt.Sprintf(":%d", conf.Port))
 }
 
 type RESTContext struct {
 	compositionService composition.Service
+	conf               config.Configuration
 }
 
 // GetByID finds a Composition by ID
@@ -112,6 +113,13 @@ type RESTContext struct {
  */
 func (r *RESTContext) GetByID(c *gin.Context) {
 	compID := c.Param("compositionId")
+
+	if r.conf.AuthEnabled {
+		if err := validateAuthAndPermission(c, "composition"); err != nil {
+			handleError(c, err)
+			return
+		}
+	}
 
 	comp, err := r.compositionService.GetByID(compID)
 	if err != nil {
@@ -225,6 +233,13 @@ func (r *RESTContext) GetByID(c *gin.Context) {
 * }
  */
 func (r *RESTContext) Post(c *gin.Context) {
+	if r.conf.AuthEnabled {
+		if err := validateAuthAndPermission(c, "composition"); err != nil {
+			handleError(c, err)
+			return
+		}
+	}
+
 	var body composition.CreateRequest
 
 	if err := c.ShouldBindJSON(&body); err != nil {
@@ -339,6 +354,13 @@ func (r *RESTContext) Post(c *gin.Context) {
 * }
  */
 func (r *RESTContext) Put(c *gin.Context) {
+	if r.conf.AuthEnabled {
+		if err := validateAuthAndPermission(c, "composition"); err != nil {
+			handleError(c, err)
+			return
+		}
+	}
+
 	compID := c.Param("compositionId")
 	var body composition.UpdateRequest
 
@@ -381,6 +403,13 @@ func (r *RESTContext) Put(c *gin.Context) {
 * }
  */
 func (r *RESTContext) Delete(c *gin.Context) {
+	if r.conf.AuthEnabled {
+		if err := validateAuthAndPermission(c, "composition"); err != nil {
+			handleError(c, err)
+			return
+		}
+	}
+
 	compID := c.Param("compositionId")
 
 	if err := r.compositionService.Delete(compID); err != nil {

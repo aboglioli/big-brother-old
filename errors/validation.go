@@ -54,9 +54,9 @@ func (e *ValidationError) Code() string {
 
 func (e *ValidationError) Error() string {
 	if e.message == "" {
-		return fmt.Sprintf("%s#[%s]", e.path, e.code)
+		return fmt.Sprintf("%s: %s", e.path, e.code)
 	}
-	return fmt.Sprintf("%s#[%s]: %s", e.path, e.code, e.message)
+	return fmt.Sprintf("%s: %s\n\t%s", e.path, e.code, e.message)
 }
 
 func (e *ValidationError) String() string {

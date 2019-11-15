@@ -54,9 +54,9 @@ func (e *InternalError) Code() string {
 
 func (e *InternalError) Error() string {
 	if e.message == "" {
-		return fmt.Sprintf("[!] %s#[%s]", e.path, e.code)
+		return fmt.Sprintf("[!] %s: %s", e.path, e.code)
 	}
-	return fmt.Sprintf("[!] %s#[%s]: %s", e.path, e.code, e.message)
+	return fmt.Sprintf("[!] %s: %s\n\t%s", e.path, e.code, e.message)
 }
 
 func (e *InternalError) String() string {

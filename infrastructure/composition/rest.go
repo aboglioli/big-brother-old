@@ -8,6 +8,8 @@ import (
 	"github.com/aboglioli/big-brother/composition"
 	"github.com/aboglioli/big-brother/config"
 	"github.com/aboglioli/big-brother/infrastructure/events"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 )
 
@@ -33,15 +35,23 @@ func StartREST() {
 
 	// Start Gin server
 	c := config.Get()
-	r := gin.Default()
+	server := gin.Default()
+
+	// CORS
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowAllOrigins = true
+	server.Use(cors.New(corsConfig))
+
+	// Static server
+	server.Use(static.Serve("/", static.LocalFile("www", false)))
 
 	// Routes
-	r.GET("/v1/composition/:compositionId", rest.GetByID)
-	r.POST("/v1/composition", rest.Post)
-	r.PUT("/v1/composition/:compositionId", rest.Put)
-	r.DELETE("/v1/composition/:compositionId", rest.Delete)
+	server.GET("/v1/composition/:compositionId", rest.GetByID)
+	server.POST("/v1/composition", rest.Post)
+	server.PUT("/v1/composition/:compositionId", rest.Put)
+	server.DELETE("/v1/composition/:compositionId", rest.Delete)
 
-	r.Run(fmt.Sprintf(":%d", c.Port))
+	server.Run(fmt.Sprintf(":%d", c.Port))
 }
 
 type RESTContext struct {

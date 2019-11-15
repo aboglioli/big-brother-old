@@ -383,6 +383,91 @@ func TestUpdateComposition(t *testing.T) {
 	})
 }
 
+func TestCreateAndUpdateDependencies(t *testing.T) {
+	repo, eventMgr := newMockRepository(), events.GetMockManager()
+	serv := NewService(repo, eventMgr)
+
+	repo.Clean()
+	comp, dep1, dep2, dep3 := newComposition(), newComposition(), newComposition(), newComposition()
+	dep1.Cost = 100
+	dep1.Unit = quantity.Quantity{1, "kg"}
+	dep2.Cost = 200
+	dep2.Unit = quantity.Quantity{4000, "g"}
+	dep3.Cost = 75
+	dep3.Unit = quantity.Quantity{0.6, "kg"}
+	comp.Dependencies = []Dependency{
+		Dependency{dep1.ID, quantity.Quantity{500, "g"}, 0}, // 50
+		Dependency{dep2.ID, quantity.Quantity{1, "kg"}, 0},  // 50
+		Dependency{dep3.ID, quantity.Quantity{200, "g"}, 0}, // 25
+	}
+
+	repo.InsertMany([]*Composition{dep1, dep2, dep3})
+
+	createReq := compToCreateRequest(comp)
+	comp, err := serv.Create(createReq)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if comp.Cost != 125 {
+		t.Errorf("Cost %f should be %f\n", comp.Cost, 125.0)
+	}
+
+	if comp.Dependencies[0].Subvalue != 50 || comp.Dependencies[1].Subvalue != 50 || comp.Dependencies[2].Subvalue != 25 {
+		t.Errorf("Dependency subvalue wrong")
+	}
+
+	t.Run("Add dependency", func(t *testing.T) {
+		dep4 := newComposition()
+		dep4.Cost = 25
+		dep4.Unit = quantity.Quantity{0.5, "u"}
+		repo.Insert(dep4)
+
+		q := quantity.Quantity{1, "u"}
+		comp.Dependencies = append(comp.Dependencies, Dependency{dep4.ID, q, 0}) // 50
+
+		updateReq := compToUpdateRequest(comp)
+		comp, err := serv.Update(comp.ID.Hex(), updateReq)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if comp.Cost != 175 {
+			t.Errorf("Cost %f should be 175\n", comp.Cost)
+		}
+	})
+
+	t.Run("Remove dependency", func(t *testing.T) {
+		// Remove first dependencuy
+		comp.Dependencies = comp.Dependencies[1:]
+
+		updateReq := compToUpdateRequest(comp)
+		comp, err := serv.Update(comp.ID.Hex(), updateReq)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if comp.Cost != 125 {
+			t.Errorf("Cost %f should be 125\n", comp.Cost)
+		}
+	})
+
+	t.Run("Change dependency", func(t *testing.T) {
+		// Change 1 kg to 8 kg = $400
+		comp.Dependencies[0].Quantity = quantity.Quantity{8, "kg"}
+
+		updateReq := compToUpdateRequest(comp)
+		comp, err := serv.Update(comp.ID.Hex(), updateReq)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if comp.Cost != 475 {
+			t.Errorf("Cost %f should be 125\n", comp.Cost)
+		}
+	})
+}
+
 func TestDeleteComposition(t *testing.T) {
 	repo, eventMgr := newMockRepository(), events.GetMockManager()
 	serv := NewService(repo, eventMgr)

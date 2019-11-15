@@ -19,7 +19,7 @@ func main() {
 	forever := make(chan bool)
 
 	go func() {
-		msgs, err := eventMgr.Consume("composition", "topic", "composition.*")
+		msgs, err := eventMgr.Consume("composition", "topic", "", "composition.*")
 		if err != nil {
 			fmt.Println(err)
 			return

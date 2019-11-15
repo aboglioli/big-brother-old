@@ -10,6 +10,58 @@ import (
 	infrEvents "github.com/aboglioli/big-brother/infrastructure/events"
 )
 
+type Context struct {
+	eventMgr events.Manager
+	repo     composition.Repository
+	serv     composition.Service
+}
+
+func (c *Context) UpdateUses(comp *composition.Composition) {
+	fmt.Printf("# Updating uses of %s (%s): ", comp.Name, comp.ID.Hex())
+
+	uses, err := c.serv.UpdateUses(comp)
+	if err != nil {
+		fmt.Printf("[ERROR] %s\n", err)
+	}
+	fmt.Printf("updated %d dependencies\n", len(uses))
+
+	for _, u := range uses {
+		fmt.Printf("- %s (%s)\n", u.Name, u.ID.Hex())
+	}
+
+	// Update composition to set UsesUpdatedSinceLastChange
+	comp.UsesUpdatedSinceLastChange = true
+	if err := c.repo.Update(comp); err != nil {
+		fmt.Println(err)
+	}
+
+	c.Publish("CompositionUsesUpdatedSinceLastChange", comp)
+}
+
+func (c *Context) UpdateUsesSinceLastChange() {
+	// Update dependencies from last changes
+	comps, err := c.repo.FindByUsesUpdatedSinceLastChange(false)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	for _, comp := range comps {
+		c.UpdateUses(comp)
+	}
+}
+
+func (c *Context) Publish(event string, comp *composition.Composition) {
+	evt := events.NewEvent(event, comp)
+	body, err := evt.ToBytes()
+	if err != nil {
+		fmt.Println(err)
+	}
+	if err := c.eventMgr.Publish("composition", "topic", "composition.updated", body); err != nil {
+		fmt.Println(err)
+	}
+}
+
 func main() {
 	// Dendencies resolution
 	eventMgr, err := infrEvents.GetManager()
@@ -24,10 +76,16 @@ func main() {
 
 	compositionService := composition.NewService(compositionRepository, eventMgr)
 
+	ctx := &Context{
+		eventMgr: eventMgr,
+		repo:     compositionRepository,
+		serv:     compositionService,
+	}
+
 	forever := make(chan bool)
 
 	go func() {
-		msgs, err := eventMgr.Consume("composition", "topic", "composition.updated")
+		msgs, err := eventMgr.Consume("composition", "topic", "uses", "composition.updated")
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -46,32 +104,7 @@ func main() {
 					fmt.Println(err)
 				}
 
-				fmt.Printf("# Updating uses of %s (%s): ", comp.Name, comp.ID.Hex())
-
-				comps, err := compositionService.UpdateUses(comp)
-				if err != nil {
-					fmt.Printf("[ERROR] %s\n", err)
-				}
-				fmt.Printf("updated %d dependencies\n", len(comps))
-
-				for _, c := range comps {
-					fmt.Printf("- %s (%s)\n", c.Name, c.ID.Hex())
-				}
-
-				// Update composition to set UsesUpdatedSinceLastChange
-				comp.UsesUpdatedSinceLastChange = true
-				if err := compositionRepository.Update(comp); err != nil {
-					fmt.Println(err)
-				}
-
-				evt := events.NewEvent("CompositionUsesUpdatedSinceLastChange", comp)
-				body, err := evt.ToBytes()
-				if err != nil {
-					fmt.Println(err)
-				}
-				if err := eventMgr.Publish("composition", "topic", "composition.updated", body); err != nil {
-					fmt.Println(err)
-				}
+				ctx.UpdateUses(comp)
 			}
 			msg.Ack()
 		}

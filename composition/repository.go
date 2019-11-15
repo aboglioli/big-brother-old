@@ -15,6 +15,7 @@ type Repository interface {
 	FindAll() ([]*Composition, errors.Error)
 	FindByID(id string) (*Composition, errors.Error)
 	FindUses(id string) ([]*Composition, errors.Error)
+	FindByUsesUpdatedSinceLastChange(usesUpdated bool) ([]*Composition, errors.Error)
 
 	Insert(*Composition) errors.Error
 	InsertMany([]*Composition) errors.Error
@@ -117,6 +118,38 @@ func (r *repository) FindUses(id string) ([]*Composition, errors.Error) {
 
 		if err := cur.Decode(&comp); err != nil {
 			return nil, errGen.SetCode("DECODE").SetMessage(err.Error())
+		}
+
+		comps = append(comps, &comp)
+	}
+
+	if err := cur.Err(); err != nil {
+		return nil, errGen.SetCode("CUR").SetMessage(err.Error())
+	}
+
+	return comps, nil
+}
+
+func (r *repository) FindByUsesUpdatedSinceLastChange(usesUpdated bool) ([]*Composition, errors.Error) {
+	errGen := errors.NewInternal().SetPath("composition/repository.FindByUsesUpdatedSinceLastChange")
+	ctx := context.Background()
+
+	filter := bson.M{
+		"usesUpdatedSinceLastChange": usesUpdated,
+	}
+
+	cur, err := r.collection.Find(ctx, filter)
+	defer cur.Close(ctx)
+	if err != nil {
+		return nil, errGen.SetCode("FIND").SetMessage(err.Error())
+	}
+
+	var comps []*Composition
+	for cur.Next(ctx) {
+		var comp Composition
+
+		if err := cur.Decode(&comp); err != nil {
+			return nil, errGen.SetCode("CUR_DECODE").SetMessage(err.Error())
 		}
 
 		comps = append(comps, &comp)

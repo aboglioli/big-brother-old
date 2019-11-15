@@ -262,13 +262,15 @@ func (s *service) UpdateUses(c *Composition) ([]*Composition, errors.Error) {
 		comps = append(comps, u)
 	}
 
-	evt := events.NewEvent("CompositionsUpdatedAutomatically", comps)
-	body, err := evt.ToBytes()
-	if err != nil {
-		return nil, err
-	}
-	if err := s.eventMgr.Publish("composition", "topic", "composition.updated", body); err != nil {
-		return nil, err
+	if len(comps) > 0 {
+		evt := events.NewEvent("CompositionsUpdatedAutomatically", comps)
+		body, err := evt.ToBytes()
+		if err != nil {
+			return nil, err
+		}
+		if err := s.eventMgr.Publish("composition", "topic", "composition.updated", body); err != nil {
+			return nil, err
+		}
 	}
 
 	return comps, nil

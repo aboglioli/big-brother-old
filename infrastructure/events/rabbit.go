@@ -77,9 +77,9 @@ func (m *manager) Disconnect() {
 	}
 }
 
-func (m *manager) Publish(exchange string, eType string, key string, body []byte) errors.Error {
+func (m *manager) Publish(exchange, exchangeType, key string, body []byte) errors.Error {
 	if m.emitters[exchange] == nil {
-		ch, err := m.createChannelWithExchange(exchange, eType)
+		ch, err := m.createChannelWithExchange(exchange, exchangeType)
 		if err != nil {
 			return err
 		}
@@ -105,11 +105,11 @@ func (m *manager) Publish(exchange string, eType string, key string, body []byte
 	return nil
 }
 
-func (m *manager) Consume(exchange string, eType string, key string) (<-chan events.Message, errors.Error) {
+func (m *manager) Consume(exchange, exchangeType, queue, key string) (<-chan events.Message, errors.Error) {
 	errGen := errors.NewInternal().SetPath("infrastructure/events/manager.Consume")
 
 	if m.emitters[exchange] == nil {
-		ch, err := m.createChannelWithExchange(exchange, eType)
+		ch, err := m.createChannelWithExchange(exchange, exchangeType)
 		if err != nil {
 			return nil, err
 		}
@@ -119,11 +119,16 @@ func (m *manager) Consume(exchange string, eType string, key string) (<-chan eve
 
 	ch := m.consumers[exchange]
 
+	exclusive := true
+	if queue != "" {
+		exclusive = false
+	}
+
 	q, err := ch.QueueDeclare(
-		"",
+		queue,
 		false,
 		false,
-		true,
+		exclusive,
 		false,
 		nil,
 	)

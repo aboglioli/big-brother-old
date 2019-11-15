@@ -92,6 +92,27 @@ func (r *mockRepository) FindUses(id string) ([]*Composition, errors.Error) {
 	return comps, nil
 }
 
+func (r *mockRepository) FindByUsesUpdatedSinceLastChange(usesUpdated bool) ([]*Composition, errors.Error) {
+	r.sleep()
+
+	comps := make([]*Composition, 0)
+	for _, c := range r.compositions {
+		if !c.Enabled {
+			break
+		}
+
+		if c.UsesUpdatedSinceLastChange == usesUpdated {
+			comps = append(comps, copyComposition(c))
+		}
+	}
+
+	if r.CountRequests {
+		r.Requests++
+	}
+
+	return comps, nil
+}
+
 func (r *mockRepository) Insert(c *Composition) errors.Error {
 	r.sleep()
 

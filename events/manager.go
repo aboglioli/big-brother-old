@@ -10,6 +10,6 @@ type Message interface {
 }
 
 type Manager interface {
-	Publish(exchange string, eType string, key string, body []byte) errors.Error
-	Consume(exchange string, eType string, key string) (<-chan Message, errors.Error)
+	Publish(exchange, exchangeType, key string, body []byte) errors.Error
+	Consume(exchange, exchangeType, queue, key string) (<-chan Message, errors.Error)
 }

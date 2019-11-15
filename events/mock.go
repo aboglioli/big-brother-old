@@ -6,10 +6,11 @@ import (
 
 // Message
 type mockMessage struct {
-	exchange string
-	eType    string
-	key      string
-	body     []byte
+	exchange     string
+	exchangeType string
+	queue        string
+	key          string
+	body         []byte
 }
 
 func (d mockMessage) Body() []byte {
@@ -38,8 +39,8 @@ func GetMockManager() *mockManager {
 	return mockMgr
 }
 
-func (m *mockManager) Publish(exchange string, eType string, key string, body []byte) errors.Error {
-	msg := mockMessage{exchange, eType, key, body}
+func (m *mockManager) Publish(exchange, exchangeType, key string, body []byte) errors.Error {
+	msg := mockMessage{exchange, exchangeType, key, "", body}
 	m.buffer = append(m.buffer, msg)
 
 	go func() {
@@ -49,6 +50,6 @@ func (m *mockManager) Publish(exchange string, eType string, key string, body []
 	return nil
 }
 
-func (m *mockManager) Consume(exchange string, eType string, key string) (<-chan Message, errors.Error) {
+func (m *mockManager) Consume(exchange, exchangeType, queue, key string) (<-chan Message, errors.Error) {
 	return m.ch, nil
 }

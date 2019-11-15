@@ -49,7 +49,7 @@ func main() {
 					fmt.Println(err)
 					continue
 				}
-				fmt.Printf("- Type %s\n- Compositions:\n", evt.Type)
+				fmt.Printf("- Type: %s\n- Compositions:\n", evt.Type)
 				for _, c := range comps {
 					fmt.Printf("-- %s (%s)\n", c.Name, c.ID.Hex())
 				}

@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/aboglioli/big-brother/composition"
+	"github.com/aboglioli/big-brother/errors"
 	"github.com/aboglioli/big-brother/events"
 	infrEvents "github.com/aboglioli/big-brother/infrastructure/events"
 )
@@ -16,12 +17,14 @@ type Context struct {
 	serv     composition.Service
 }
 
-func (c *Context) UpdateUses(comp *composition.Composition) {
+func (c *Context) UpdateUses(comp *composition.Composition) errors.Error {
+	errGen := errors.NewInternal().SetPath("cmd/uses/main.Context.UpdateUses")
+
 	fmt.Printf("# Updating uses of %s (%s): ", comp.Name, comp.ID.Hex())
 
 	uses, err := c.serv.UpdateUses(comp)
 	if err != nil {
-		fmt.Printf("[ERROR] %s\n", err)
+		return errGen.SetCode("UPDATE_USES").SetMessage(err.Error())
 	}
 	fmt.Printf("updated %d dependencies\n", len(uses))
 
@@ -32,34 +35,27 @@ func (c *Context) UpdateUses(comp *composition.Composition) {
 	// Update composition to set UsesUpdatedSinceLastChange
 	comp.UsesUpdatedSinceLastChange = true
 	if err := c.repo.Update(comp); err != nil {
-		fmt.Println(err)
+		return errGen.SetCode("UPDATE_UsesUpdatedSinceLastChange").SetMessage(err.Error())
 	}
 
-	c.Publish("CompositionUsesUpdatedSinceLastChange", comp)
+	if err := c.Publish("CompositionUsesUpdatedSinceLastChange", comp); err != nil {
+		return errGen.SetCode("PUBLISH_CompositionUsesUpdatedSinceLastChange").SetMessage(err.Error())
+	}
+
+	return nil
 }
 
-func (c *Context) UpdateUsesSinceLastChange() {
-	// Update dependencies from last changes
-	comps, err := c.repo.FindByUsesUpdatedSinceLastChange(false)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	for _, comp := range comps {
-		c.UpdateUses(comp)
-	}
-}
-
-func (c *Context) Publish(event string, comp *composition.Composition) {
+func (c *Context) Publish(event string, comp *composition.Composition) errors.Error {
 	evt := events.NewEvent(event, comp)
 	body, err := evt.ToBytes()
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
 	if err := c.eventMgr.Publish("composition", "topic", "composition.updated", body); err != nil {
-		fmt.Println(err)
+		return err
 	}
+
+	return nil
 }
 
 func main() {
@@ -104,7 +100,9 @@ func main() {
 					fmt.Println(err)
 				}
 
-				ctx.UpdateUses(comp)
+				if err := ctx.UpdateUses(comp); err != nil {
+					fmt.Println(comp.ID.Hex(), err)
+				}
 			}
 			msg.Ack()
 		}

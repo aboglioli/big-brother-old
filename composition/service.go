@@ -53,6 +53,21 @@ type CreateRequest struct {
 	AutoupdateCost *bool `json:"autoupdateCost"`
 }
 
+// Create creates a new Composition.
+// ID can be defined by the user or not.
+/**
+* @api {topic} composition.created composition.created
+* @apiName CompositionCreated
+* @apiGroup RabbitMQ
+*
+* @apiDescription Emits a new event when a new composition is created
+*
+* @apiSuccessExample {json} Body
+* {
+* 	"type": "CompositionCreated",
+* 	"payload": composition data
+* }
+ */
 func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
 	errGen := errors.NewValidation().SetPath("composition/service.Create")
 	c := NewComposition()
@@ -121,6 +136,23 @@ type UpdateRequest struct {
 	AutoupdateCost *bool `json:"autoupdateCost"`
 }
 
+// Update updates an existing Composition.
+/**
+* @api {topic} composition.updated composition.updated
+* @apiName CompositionUpdatedManually
+* @apiGroup RabbitMQ
+*
+* @apiDescription Emits a new event when an existing composition is updated.
+* This event can be of type "CompositionUpdatedManually" or
+* "CompositionUpdatedAutomatically". The last one is published once a
+* composition is updated due to a dependency change.
+*
+* @apiSuccessExample {json} Body
+* {
+* 	"type": "CompositionUpdatedManually",
+* 	"payload": composition data
+* }
+ */
 func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Error) {
 	errGen := errors.NewValidation().SetPath("composition/service.Update")
 
@@ -214,6 +246,20 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 	return c, nil
 }
 
+// Delete deletes an existing Composition.
+/**
+* @api {topic} composition.deleted composition.deleted
+* @apiName CompositionDeleted
+* @apiGroup RabbitMQ
+*
+* @apiDescription Emits a new event when an existing composition is deleted.
+*
+* @apiSuccessExample {json} Body
+* {
+* 	"type": "CompositionDeleted",
+* 	"payload": composition data
+* }
+ */
 func (s *service) Delete(id string) errors.Error {
 	errGen := errors.NewValidation().SetPath("composition/service.Delete")
 
@@ -244,6 +290,23 @@ func (s *service) Delete(id string) errors.Error {
 	return nil
 }
 
+// Update updates uses of an updated composition.
+/**
+* @api {topic} composition.updated composition.updated
+* @apiName CompositionUpdatedAutomatically
+* @apiGroup RabbitMQ
+*
+* @apiDescription Emits a new event when an existing composition is updated.
+* This event can be of type "CompositionUpdatedManually" or
+* "CompositionUpdatedAutomatically". The last one is published once a
+* composition is updated due to a dependency change.
+*
+* @apiSuccessExample {json} Body
+* {
+* 	"type": "CompositionsUpdatedAutomatically",
+* 	"payload": list of compositions
+* }
+ */
 func (s *service) UpdateUses(c *Composition) ([]*Composition, errors.Error) {
 	errGen := errors.NewValidation().SetPath("composition/service.UpdateUses")
 

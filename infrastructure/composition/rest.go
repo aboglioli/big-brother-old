@@ -50,8 +50,8 @@ type RESTContext struct {
 
 // GetByID finds a Composition by ID
 /**
-* @api {get} /v1/comosition/:compositionId
-* @apiName GetByID
+* @api {get} /v1/comosition/:compositionId GetByID
+* @apiName Find by ID
 * @apiGroup Composition
 *
 * @apiParam {String} compositionId Composition ID
@@ -118,7 +118,7 @@ func (r *RESTContext) GetByID(c *gin.Context) {
 
 // Post creates a new Composition
 /**
-* @api {post} /v1/composition
+* @api {post} /v1/composition Create
 * @apiName Post
 * @apiGroup Composition
 *
@@ -242,7 +242,7 @@ func (r *RESTContext) Post(c *gin.Context) {
 
 // Put updates a new Composition
 /**
-* @api {put} /v1/composition/:compositionId
+* @api {put} /v1/composition/:compositionId Update
 * @apiName Put
 * @apiGroup Composition
 *
@@ -359,14 +359,15 @@ func (r *RESTContext) Put(c *gin.Context) {
 
 // Delete deletes an existing Composition
 /**
-* @api {delete} /v1/composition/:compositionId
+* @api {delete} /v1/composition/:compositionId Delete
 * @apiName Delete
 * @apiGroup Composition
 *
 * @apiParam {String} compositionId Composition ID
 *
 * @apiDescription Deletes an existing Composition by ID. To be deleted it
-* doesn't have to be used as dependency in another Composition.
+* doesn't have to be used as dependency in another Composition. Soft deleting
+* (set "enabled" to false).
 *
 * @apiSuccessExample {json} Response
 * HTTP/1.1 200 OK

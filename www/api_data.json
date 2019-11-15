@@ -2,7 +2,7 @@
   {
     "type": "delete",
     "url": "/v1/composition/:compositionId",
-    "title": "",
+    "title": "Delete",
     "name": "Delete",
     "group": "Composition",
     "parameter": {
@@ -18,7 +18,7 @@
         ]
       }
     },
-    "description": "<p>Deletes an existing Composition by ID. To be deleted it doesn't have to be used as dependency in another Composition.</p>",
+    "description": "<p>Deletes an existing Composition by ID. To be deleted it doesn't have to be used as dependency in another Composition. Soft deleting (set &quot;enabled&quot; to false).</p>",
     "success": {
       "examples": [
         {
@@ -35,8 +35,8 @@
   {
     "type": "get",
     "url": "/v1/comosition/:compositionId",
-    "title": "",
-    "name": "GetByID",
+    "title": "GetByID",
+    "name": "Find_by_ID",
     "group": "Composition",
     "parameter": {
       "fields": {
@@ -68,7 +68,7 @@
   {
     "type": "post",
     "url": "/v1/composition",
-    "title": "",
+    "title": "Create",
     "name": "Post",
     "group": "Composition",
     "parameter": {
@@ -145,7 +145,7 @@
   {
     "type": "put",
     "url": "/v1/composition/:compositionId",
-    "title": "",
+    "title": "Update",
     "name": "Put",
     "group": "Composition",
     "parameter": {
@@ -223,5 +223,85 @@
     "version": "0.0.0",
     "filename": "./infrastructure/composition/rest.go",
     "groupTitle": "Composition"
+  },
+  {
+    "type": "topic",
+    "url": "composition.created",
+    "title": "composition.created",
+    "name": "CompositionCreated",
+    "group": "RabbitMQ",
+    "description": "<p>Emits a new event when a new composition is created</p>",
+    "success": {
+      "examples": [
+        {
+          "title": "Body",
+          "content": "{\n\t\"type\": \"CompositionCreated\",\n\t\"payload\": composition data\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "./composition/service.go",
+    "groupTitle": "RabbitMQ"
+  },
+  {
+    "type": "topic",
+    "url": "composition.deleted",
+    "title": "composition.deleted",
+    "name": "CompositionDeleted",
+    "group": "RabbitMQ",
+    "description": "<p>Emits a new event when an existing composition is deleted.</p>",
+    "success": {
+      "examples": [
+        {
+          "title": "Body",
+          "content": "{\n\t\"type\": \"CompositionDeleted\",\n\t\"payload\": composition data\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "./composition/service.go",
+    "groupTitle": "RabbitMQ"
+  },
+  {
+    "type": "topic",
+    "url": "composition.updated",
+    "title": "composition.updated",
+    "name": "CompositionUpdatedAutomatically",
+    "group": "RabbitMQ",
+    "description": "<p>Emits a new event when an existing composition is updated. This event can be of type &quot;CompositionUpdatedManually&quot; or &quot;CompositionUpdatedAutomatically&quot;. The last one is published once a composition is updated due to a dependency change.</p>",
+    "success": {
+      "examples": [
+        {
+          "title": "Body",
+          "content": "{\n\t\"type\": \"CompositionsUpdatedAutomatically\",\n\t\"payload\": list of compositions\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "./composition/service.go",
+    "groupTitle": "RabbitMQ"
+  },
+  {
+    "type": "topic",
+    "url": "composition.updated",
+    "title": "composition.updated",
+    "name": "CompositionUpdatedManually",
+    "group": "RabbitMQ",
+    "description": "<p>Emits a new event when an existing composition is updated. This event can be of type &quot;CompositionUpdatedManually&quot; or &quot;CompositionUpdatedAutomatically&quot;. The last one is published once a composition is updated due to a dependency change.</p>",
+    "success": {
+      "examples": [
+        {
+          "title": "Body",
+          "content": "{\n\t\"type\": \"CompositionUpdatedManually\",\n\t\"payload\": composition data\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "./composition/service.go",
+    "groupTitle": "RabbitMQ"
   }
 ]

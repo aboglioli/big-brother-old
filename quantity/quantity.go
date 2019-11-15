@@ -5,6 +5,7 @@ import (
 	"github.com/aboglioli/big-brother/unit"
 )
 
+// Quantity defines quantity with unit from International System of Units
 type Quantity struct {
 	Quantity float64 `bson:"quantity" json:"quantity" validate:"required"`
 	Unit     string  `bson:"unit" json:"unit" validate:"required"`

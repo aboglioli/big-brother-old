@@ -2,32 +2,18 @@ package composition
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/aboglioli/big-brother/composition"
 	"github.com/aboglioli/big-brother/config"
-	"github.com/aboglioli/big-brother/infrastructure/events"
+	"github.com/aboglioli/big-brother/events"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 )
 
 // StartREST starts API server
-func StartREST() {
-	// Dendencies resolution
-	eventManager, err := events.GetManager()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	compositionRepository, rawErr := composition.NewRepository()
-	if rawErr != nil {
-		log.Fatal(err)
-	}
-
-	compositionService := composition.NewService(compositionRepository, eventManager)
-
+func StartREST(eventMgr events.Manager, serv composition.Service) {
 	// Start Gin server
 	conf := config.Get()
 	server := gin.Default()
@@ -42,7 +28,7 @@ func StartREST() {
 
 	// Create context and define router
 	rest := &RESTContext{
-		compositionService: compositionService,
+		compositionService: serv,
 		conf:               conf,
 	}
 

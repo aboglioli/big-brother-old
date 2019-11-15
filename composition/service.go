@@ -17,6 +17,7 @@ type Service interface {
 	Delete(id string) errors.Error
 
 	UpdateUses(c *Composition) ([]*Composition, errors.Error)
+	Validate(id string) errors.Error
 }
 
 type service struct {
@@ -362,6 +363,21 @@ func (s *service) UpdateUses(c *Composition) ([]*Composition, errors.Error) {
 	}
 
 	return comps, nil
+}
+
+func (s *service) Validate(compID string) errors.Error {
+	comp, err := s.repository.FindByID(compID)
+	if err != nil {
+		return err
+	}
+
+	comp.Validated = true
+
+	if err := s.repository.Update(comp); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *service) updateUses(c *Composition, cache map[string]*Composition) errors.Error {

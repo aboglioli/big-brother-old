@@ -123,6 +123,24 @@ func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
 		return nil, err
 	}
 
+	// Publish event: article-exists (to catalog)
+	validationEvent := &ArticleExistsEventRequest{
+		Type:     "article-exist",
+		Exchange: "composition-validation",
+		Queue:    "",
+		Message: articleExistsEventRequestMessage{
+			ReferenceID: c.ID.Hex(),
+			ArticleID:   c.ID.Hex(),
+		},
+	}
+	body, err = validationEvent.ToBytes()
+	if err != nil {
+		return nil, errGen.SetCode("CONVERT_EVENT_TO_BYTES").SetReference(err)
+	}
+	if err := s.eventMgr.Publish("catalog", "direct", "", body); err != nil {
+		return nil, errGen.SetCode("FAILED_TO_PUBLISH").SetReference(err)
+	}
+
 	return c, nil
 }
 
@@ -242,24 +260,6 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 		return nil, errGen.SetCode("CONVERT_EVENT_TO_BYTES").SetReference(err)
 	}
 	if err := s.eventMgr.Publish("composition", "topic", "composition.updated", body); err != nil {
-		return nil, errGen.SetCode("FAILED_TO_PUBLISH").SetReference(err)
-	}
-
-	// Publish event: article-exists (to catalog)
-	validationEvent := &ArticleExistsEventRequest{
-		Type:     "article-exist",
-		Exchange: "composition",
-		Queue:    "",
-		Message: articleExistsEventRequestMessage{
-			ReferenceID: c.ID.Hex(),
-			ArticleID:   c.ID.Hex(),
-		},
-	}
-	body, err = validationEvent.ToBytes()
-	if err != nil {
-		return nil, errGen.SetCode("CONVERT_EVENT_TO_BYTES").SetReference(err)
-	}
-	if err := s.eventMgr.Publish("catalog", "direct", "", body); err != nil {
 		return nil, errGen.SetCode("FAILED_TO_PUBLISH").SetReference(err)
 	}
 

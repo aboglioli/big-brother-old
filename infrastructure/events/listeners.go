@@ -49,7 +49,7 @@ func StartListeners(eventMgr events.Manager, serv composition.Service) {
 	go func() {
 		wg.Add(1)
 
-		msgs, err := eventMgr.Consume("auth", "direct", "", "")
+		msgs, err := eventMgr.Consume("composition-validation", "direct", "", "")
 		if err != nil {
 			fmt.Println(err)
 			return

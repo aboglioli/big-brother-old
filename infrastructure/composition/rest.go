@@ -115,9 +115,7 @@ func (r *RESTContext) GetByID(c *gin.Context) {
 
 	comp, err := r.compositionService.GetByID(compID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
+		handleError(c, err)
 		return
 	}
 
@@ -238,9 +236,7 @@ func (r *RESTContext) Post(c *gin.Context) {
 
 	comp, err := r.compositionService.Create(&body)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
+		handleError(c, err)
 		return
 	}
 
@@ -355,9 +351,7 @@ func (r *RESTContext) Put(c *gin.Context) {
 
 	comp, err := r.compositionService.Update(compID, &body)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
+		handleError(c, err)
 		return
 	}
 
@@ -390,9 +384,7 @@ func (r *RESTContext) Delete(c *gin.Context) {
 	compID := c.Param("compositionId")
 
 	if err := r.compositionService.Delete(compID); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
+		handleError(c, err)
 		return
 	}
 

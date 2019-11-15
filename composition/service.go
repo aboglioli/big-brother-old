@@ -113,8 +113,8 @@ func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
 	}
 
 	// Publish event: composition.created
-	evt := events.NewEvent("CompositionCreated", c)
-	body, err := evt.ToBytes()
+	event := &CompositionChangedEvent{"CompositionCreated", c}
+	body, err := event.ToBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -228,12 +228,30 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 	}
 
 	// Publish event: composition.updated
-	evt := events.NewEvent("CompositionUpdatedManually", c)
-	body, err := evt.ToBytes()
+	changeEvent := &CompositionChangedEvent{"CompositionUpdatedManually", c}
+	body, err := changeEvent.ToBytes()
 	if err != nil {
 		return nil, errGen.SetCode("CONVERT_EVENT_TO_BYTES").SetReference(err)
 	}
 	if err := s.eventMgr.Publish("composition", "topic", "composition.updated", body); err != nil {
+		return nil, errGen.SetCode("FAILED_TO_PUBLISH").SetReference(err)
+	}
+
+	// Publish event: article-exists (to catalog)
+	validationEvent := &ArticleExistsEventRequest{
+		Type:     "article-exist",
+		Exchange: "composition",
+		Queue:    "",
+		Message: articleExistsEventRequestMessage{
+			ReferenceID: c.ID.Hex(),
+			ArticleID:   c.ID.Hex(),
+		},
+	}
+	body, err = validationEvent.ToBytes()
+	if err != nil {
+		return nil, errGen.SetCode("CONVERT_EVENT_TO_BYTES").SetReference(err)
+	}
+	if err := s.eventMgr.Publish("catalog", "direct", "", body); err != nil {
 		return nil, errGen.SetCode("FAILED_TO_PUBLISH").SetReference(err)
 	}
 
@@ -278,8 +296,8 @@ func (s *service) Delete(id string) errors.Error {
 	}
 
 	// Publish event
-	evt := events.NewEvent("CompositionDeleted", c)
-	body, err := evt.ToBytes()
+	event := &CompositionChangedEvent{"CompositionDeleted", c}
+	body, err := event.ToBytes()
 	if err != nil {
 		return err
 	}
@@ -326,8 +344,8 @@ func (s *service) UpdateUses(c *Composition) ([]*Composition, errors.Error) {
 	}
 
 	if len(comps) > 0 {
-		evt := events.NewEvent("CompositionsUpdatedAutomatically", comps)
-		body, err := evt.ToBytes()
+		event := &CompositionUpdatedAutomaticallyEvent{"CompositionsUpdatedAutomatically", comps}
+		body, err := event.ToBytes()
 		if err != nil {
 			return nil, err
 		}

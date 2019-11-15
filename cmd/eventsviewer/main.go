@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/aboglioli/big-brother/composition"
@@ -27,34 +26,35 @@ func main() {
 
 		fmt.Println("[Waiting for events on topic: 'composition.*']")
 		for msg := range msgs {
-			evt, err := events.FromBytes(msg.Body())
-			if err != nil {
+			t := &events.Type{}
+			if err := t.FromBytes(msg.Body()); err != nil {
 				fmt.Println(err)
 				continue
 			}
 
-			fmt.Println("# New event:")
+			fmt.Printf("# NEW EVENT: %s\n", t.Type)
 
-			switch evt.Type {
-			case "CompositionUpdatedManually", "CompositionUsesUpdatedSinceLastChange":
-				comp, err := payloadToComposition(evt.Payload)
-				if err != nil {
-					fmt.Println(err)
-					continue
+			switch t.Type {
+			case "CompositionCreated", "CompositionUpdatedManually", "CompositionUsesUpdatedSinceLastChange":
+				event := &composition.CompositionChangedEvent{}
+				if err := event.FromBytes(msg.Body()); err != nil {
+
 				}
-				fmt.Printf("- Type: %s\n- Composition: %s (%s)\n", evt.Type, comp.Name, comp.ID.Hex())
+				comp := event.Composition
+				fmt.Printf("- Composition: %s (%s)\n", comp.Name, comp.ID.Hex())
 			case "CompositionsUpdatedAutomatically":
-				comps, err := payloadToCompositions(evt.Payload)
-				if err != nil {
+				event := &composition.CompositionUpdatedAutomaticallyEvent{}
+				if err := event.FromBytes(msg.Body()); err != nil {
 					fmt.Println(err)
 					continue
 				}
-				fmt.Printf("- Type: %s\n- Compositions:\n", evt.Type)
+				comps := event.Compositions
+				fmt.Println("- Compositions:")
 				for _, c := range comps {
 					fmt.Printf("-- %s (%s)\n", c.Name, c.ID.Hex())
 				}
 			default:
-				fmt.Printf("- Type: %s\n- Payload %s\n", evt.Type, evt.Payload)
+				fmt.Println("- Unknown event")
 			}
 
 			msg.Ack()
@@ -62,34 +62,4 @@ func main() {
 	}()
 
 	<-forever
-}
-
-func payloadToComposition(payload interface{}) (*composition.Composition, error) {
-	b, err := json.Marshal(payload)
-	if err != nil {
-		return nil, err
-	}
-
-	var comp composition.Composition
-	err = json.Unmarshal(b, &comp)
-	if err != nil {
-		return nil, err
-	}
-
-	return &comp, nil
-}
-
-func payloadToCompositions(payload interface{}) ([]*composition.Composition, error) {
-	b, err := json.Marshal(payload)
-	if err != nil {
-		return nil, err
-	}
-
-	var comps []*composition.Composition
-	err = json.Unmarshal(b, &comps)
-	if err != nil {
-		return nil, err
-	}
-
-	return comps, nil
 }

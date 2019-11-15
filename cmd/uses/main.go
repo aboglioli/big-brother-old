@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 
@@ -46,7 +45,7 @@ func (c *Context) UpdateUses(comp *composition.Composition) errors.Error {
 }
 
 func (c *Context) Publish(event string, comp *composition.Composition) errors.Error {
-	evt := events.NewEvent(event, comp)
+	evt := &composition.CompositionChangedEvent{event, comp}
 	body, err := evt.ToBytes()
 	if err != nil {
 		return err
@@ -89,16 +88,19 @@ func main() {
 
 		fmt.Println("[Listening for composition updates]")
 		for msg := range msgs {
-			evt, err := events.FromBytes(msg.Body())
-			if err != nil {
+			t := &events.Type{}
+			if err := t.FromBytes(msg.Body()); err != nil {
 				fmt.Println(err)
+				continue
 			}
 
-			if evt.Type == "CompositionUpdatedManually" {
-				comp, err := payloadToComposition(evt.Payload)
-				if err != nil {
+			if t.Type == "CompositionUpdatedManually" {
+				event := &composition.CompositionChangedEvent{}
+				if err := event.FromBytes(msg.Body()); err != nil {
 					fmt.Println(err)
+					continue
 				}
+				comp := event.Composition
 
 				if err := ctx.UpdateUses(comp); err != nil {
 					fmt.Println(comp.ID.Hex(), err)
@@ -109,19 +111,4 @@ func main() {
 	}()
 
 	<-forever
-}
-
-func payloadToComposition(payload interface{}) (*composition.Composition, error) {
-	b, err := json.Marshal(payload)
-	if err != nil {
-		return nil, err
-	}
-
-	var comp composition.Composition
-	err = json.Unmarshal(b, &comp)
-	if err != nil {
-		return nil, err
-	}
-
-	return &comp, nil
 }

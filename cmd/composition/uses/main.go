@@ -44,13 +44,9 @@ func (c *Context) UpdateUses(comp *composition.Composition) errors.Error {
 	return nil
 }
 
-func (c *Context) Publish(event string, comp *composition.Composition) errors.Error {
-	evt := &composition.CompositionChangedEvent{event, comp}
-	body, err := evt.ToBytes()
-	if err != nil {
-		return err
-	}
-	if err := c.eventMgr.Publish("composition", "topic", "composition.updated", body); err != nil {
+func (c *Context) Publish(eventType string, comp *composition.Composition) errors.Error {
+	event := &composition.CompositionChangedEvent{eventType, comp}
+	if err := c.eventMgr.Publish("composition", "topic", "composition.updated", event); err != nil {
 		return err
 	}
 
@@ -88,15 +84,9 @@ func main() {
 
 		fmt.Println("[Listening for composition updates]")
 		for msg := range msgs {
-			t := &events.Type{}
-			if err := t.FromBytes(msg.Body()); err != nil {
-				fmt.Println(err)
-				continue
-			}
-
-			if t.Type == "CompositionUpdatedManually" {
-				event := &composition.CompositionChangedEvent{}
-				if err := event.FromBytes(msg.Body()); err != nil {
+			if msg.Type() == "CompositionUpdatedManually" {
+				var event composition.CompositionChangedEvent
+				if err := msg.Decode(&event); err != nil {
 					fmt.Println(err)
 					continue
 				}

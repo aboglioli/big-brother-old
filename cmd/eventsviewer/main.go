@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/aboglioli/big-brother/composition"
-	"github.com/aboglioli/big-brother/events"
 	infrEvents "github.com/aboglioli/big-brother/infrastructure/events"
 )
 
@@ -26,25 +25,22 @@ func main() {
 
 		fmt.Println("[Waiting for events on topic: 'composition.*']")
 		for msg := range msgs {
-			t := &events.Type{}
-			if err := t.FromBytes(msg.Body()); err != nil {
-				fmt.Println(err)
-				continue
-			}
+			eventType := msg.Type()
 
-			fmt.Printf("# NEW EVENT: %s\n", t.Type)
+			fmt.Printf("# NEW EVENT: %s\n", eventType)
 
-			switch t.Type {
+			switch eventType {
 			case "CompositionCreated", "CompositionUpdatedManually", "CompositionUsesUpdatedSinceLastChange":
-				event := &composition.CompositionChangedEvent{}
-				if err := event.FromBytes(msg.Body()); err != nil {
-
+				var event composition.CompositionChangedEvent
+				if err := msg.Decode(&event); err != nil {
+					fmt.Println(err)
+					continue
 				}
 				comp := event.Composition
 				fmt.Printf("- Composition: %s (%s)\n", comp.Name, comp.ID.Hex())
 			case "CompositionsUpdatedAutomatically":
-				event := &composition.CompositionUpdatedAutomaticallyEvent{}
-				if err := event.FromBytes(msg.Body()); err != nil {
+				var event composition.CompositionUpdatedAutomaticallyEvent
+				if err := msg.Decode(&event); err != nil {
 					fmt.Println(err)
 					continue
 				}

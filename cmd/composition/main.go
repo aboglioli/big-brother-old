@@ -24,6 +24,5 @@ func main() {
 
 	compositionService := composition.NewService(compositionRepository, eventMgr)
 
-	go infrEvents.StartListeners(eventMgr, compositionService)
 	infrComp.StartREST(eventMgr, compositionService)
 }

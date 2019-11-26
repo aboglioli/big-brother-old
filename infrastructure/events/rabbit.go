@@ -10,14 +10,27 @@ import (
 // Message
 type message struct {
 	amqp.Delivery
+	converter events.Converter
 }
 
-func newMessage(d amqp.Delivery) events.Message {
-	return message{d}
+func newMessage(d amqp.Delivery, c events.Converter) events.Message {
+	return message{d, c}
 }
 
 func (d message) Body() []byte {
 	return d.Delivery.Body
+}
+
+func (d message) Type() string {
+	var e events.EventType
+	if err := d.Decode(&e); err != nil {
+		return ""
+	}
+	return e.Type
+}
+
+func (d message) Decode(dst interface{}) errors.Error {
+	return d.converter.Decode(d.Body(), dst)
 }
 
 func (d message) Ack() {
@@ -31,13 +44,16 @@ type manager struct {
 	connection *amqp.Connection
 	emitters   map[string]*amqp.Channel
 	consumers  map[string]*amqp.Channel
+	converter  events.Converter
 }
 
 func GetManager() (events.Manager, errors.Error) {
 	if mgr == nil {
+		converter := events.DefaultConverter()
 		mgr = &manager{
 			emitters:  make(map[string]*amqp.Channel),
 			consumers: make(map[string]*amqp.Channel),
+			converter: converter,
 		}
 		_, err := mgr.Connect()
 		if err != nil {
@@ -77,7 +93,7 @@ func (m *manager) Disconnect() {
 	}
 }
 
-func (m *manager) Publish(exchange, exchangeType, key string, body []byte) errors.Error {
+func (m *manager) Publish(exchange, exchangeType, key string, body interface{}) errors.Error {
 	if m.emitters[exchange] == nil {
 		ch, err := m.createChannelWithExchange(exchange, exchangeType)
 		if err != nil {
@@ -89,16 +105,20 @@ func (m *manager) Publish(exchange, exchangeType, key string, body []byte) error
 
 	ch := m.emitters[exchange]
 
-	err := ch.Publish(
+	b, err := m.converter.Code(body)
+	if err != nil {
+		return err
+	}
+
+	if err := ch.Publish(
 		exchange,
 		key,
 		false,
 		false,
 		amqp.Publishing{
-			Body: []byte(body),
+			Body: b,
 		},
-	)
-	if err != nil {
+	); err != nil {
 		return errors.NewInternal().SetPath("infrastructure/events/manager.Send").SetCode("FAILED_TO_PUBLISH_MESSAGE").SetMessage(err.Error())
 	}
 
@@ -163,7 +183,7 @@ func (m *manager) Consume(exchange, exchangeType, queue, key string) (<-chan eve
 	msg := make(chan events.Message)
 	go func() {
 		for d := range delivery {
-			msg <- newMessage(d)
+			msg <- newMessage(d, m.converter)
 		}
 		close(msg)
 	}()

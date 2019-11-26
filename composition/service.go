@@ -115,11 +115,7 @@ func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
 
 	// Publish event: composition.created
 	event := &CompositionChangedEvent{"CompositionCreated", c}
-	body, err := event.ToBytes()
-	if err != nil {
-		return nil, err
-	}
-	if err := s.eventMgr.Publish("composition", "topic", "composition.created", body); err != nil {
+	if err := s.eventMgr.Publish("composition", "topic", "composition.created", event); err != nil {
 		return nil, err
 	}
 
@@ -133,11 +129,7 @@ func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
 			ArticleID:   c.ID.Hex(),
 		},
 	}
-	body, err = validationEvent.ToBytes()
-	if err != nil {
-		return nil, errGen.SetCode("CONVERT_EVENT_TO_BYTES").SetReference(err)
-	}
-	if err := s.eventMgr.Publish("catalog", "direct", "", body); err != nil {
+	if err := s.eventMgr.Publish("catalog", "direct", "", validationEvent); err != nil {
 		return nil, errGen.SetCode("FAILED_TO_PUBLISH").SetReference(err)
 	}
 
@@ -255,11 +247,7 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 
 	// Publish event: composition.updated
 	changeEvent := &CompositionChangedEvent{"CompositionUpdatedManually", c}
-	body, err := changeEvent.ToBytes()
-	if err != nil {
-		return nil, errGen.SetCode("CONVERT_EVENT_TO_BYTES").SetReference(err)
-	}
-	if err := s.eventMgr.Publish("composition", "topic", "composition.updated", body); err != nil {
+	if err := s.eventMgr.Publish("composition", "topic", "composition.updated", changeEvent); err != nil {
 		return nil, errGen.SetCode("FAILED_TO_PUBLISH").SetReference(err)
 	}
 
@@ -305,11 +293,7 @@ func (s *service) Delete(id string) errors.Error {
 
 	// Publish event
 	event := &CompositionChangedEvent{"CompositionDeleted", c}
-	body, err := event.ToBytes()
-	if err != nil {
-		return err
-	}
-	if err := s.eventMgr.Publish("composition", "topic", "composition.deleted", body); err != nil {
+	if err := s.eventMgr.Publish("composition", "topic", "composition.deleted", event); err != nil {
 		return err
 	}
 
@@ -353,11 +337,7 @@ func (s *service) UpdateUses(c *Composition) ([]*Composition, errors.Error) {
 
 	if len(comps) > 0 {
 		event := &CompositionUpdatedAutomaticallyEvent{"CompositionsUpdatedAutomatically", comps}
-		body, err := event.ToBytes()
-		if err != nil {
-			return nil, err
-		}
-		if err := s.eventMgr.Publish("composition", "topic", "composition.updated", body); err != nil {
+		if err := s.eventMgr.Publish("composition", "topic", "composition.updated", event); err != nil {
 			return nil, err
 		}
 	}

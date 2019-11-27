@@ -154,13 +154,23 @@ func TestCreateComposition(t *testing.T) {
 	})
 
 	// Create
-	t.Run("Default values with valid units", func(t *testing.T) {
+	t.Run("Default values with valid units and raise event 'CompositionCreated'", func(t *testing.T) {
 		repo.Clean()
 		comp := newComposition()
 		_, err := serv.Create(compToCreateRequest(comp))
 
 		if err != nil || repo.Count() != 1 {
 			t.Error("Composition should be created")
+		}
+
+		if eventMgr.Count() != 1 {
+			t.Errorf("Creation should emit an event: %d\n", eventMgr.Count())
+		}
+
+		msgs := eventMgr.Messages()
+		msg := msgs[0]
+		if msg.Type() != "CompositionCreated" {
+			t.Errorf("Wrong event: %s\n", msg.Type())
 		}
 	})
 
@@ -202,8 +212,9 @@ func TestCreateComposition(t *testing.T) {
 		}
 	})
 
-	t.Run("Calculate cost on creating", func(t *testing.T) {
+	t.Run("Calculate cost on creating and comparte with raised event", func(t *testing.T) {
 		repo.Clean()
+		eventMgr.Clean()
 		dep, comp := newComposition(), newComposition()
 		dep.Cost = 100
 		dep.Unit = quantity.Quantity{
@@ -230,6 +241,24 @@ func TestCreateComposition(t *testing.T) {
 
 		if c.Cost != 37.5 {
 			t.Error("Cost wrong calculated")
+		}
+
+		if eventMgr.Count() != 1 {
+			t.Errorf("Should raise an event: %d\n", eventMgr.Count())
+		}
+
+		msgs := eventMgr.Messages()
+		msg := msgs[0]
+		if msg.Type() != "CompositionCreated" {
+			t.Errorf("Wrong event: %s\n", msg.Type())
+		}
+
+		var evt CompositionChangedEvent
+		if err := msg.Decode(&evt); err != nil {
+			t.Error(err)
+		}
+		if evt.Composition.Cost != c.Cost || evt.Composition.ID.Hex() != c.ID.Hex() {
+			t.Error("Composition from event is not the expected one")
 		}
 	})
 }

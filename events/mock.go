@@ -38,8 +38,8 @@ var mockMgr *mockManager
 
 type mockManager struct {
 	converter Converter
-	buffer    []mockMessage
 	ch        chan Message
+	buffer    []mockMessage
 }
 
 func GetMockManager() *mockManager {
@@ -47,8 +47,8 @@ func GetMockManager() *mockManager {
 		converter := DefaultConverter()
 		mockMgr = &mockManager{
 			converter: converter,
-			buffer:    make([]mockMessage, 0),
 			ch:        make(chan Message),
+			buffer:    make([]mockMessage, 0),
 		}
 	}
 
@@ -78,4 +78,16 @@ func (m *mockManager) Publish(exchange, exchangeType, key string, body interface
 
 func (m *mockManager) Consume(exchange, exchangeType, queue, key string) (<-chan Message, errors.Error) {
 	return m.ch, nil
+}
+
+func (m *mockManager) Messages() []mockMessage {
+	return m.buffer
+}
+
+func (m *mockManager) Count() int {
+	return len(m.buffer)
+}
+
+func (m *mockManager) Clean() {
+	m.buffer = make([]mockMessage, 0)
 }

@@ -350,7 +350,7 @@ func TestUpdateComposition(t *testing.T) {
 		if msgs[1].Type() != "CompositionsUpdatedAutomatically" {
 			t.Errorf("Wrong first event: %s\n", msgs[0].Type())
 		}
-		var compsUpdatedAutomaticallyEvent CompositionUpdatedAutomaticallyEvent
+		var compsUpdatedAutomaticallyEvent CompositionsUpdatedAutomaticallyEvent
 		if err := msgs[1].Decode(&compsUpdatedAutomaticallyEvent); err != nil {
 			t.Error(err)
 		}

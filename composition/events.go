@@ -7,7 +7,7 @@ type CompositionChangedEvent struct {
 }
 
 // CompositionUpdatedAutomatically is an event containing all updated compositions after a dependency update
-type CompositionUpdatedAutomaticallyEvent struct {
+type CompositionsUpdatedAutomaticallyEvent struct {
 	Type         string         `json:"type"`
 	Compositions []*Composition `json:"compositions"`
 }

@@ -322,7 +322,7 @@ func (s *service) UpdateUses(c *Composition) ([]*Composition, errors.Error) {
 	}
 
 	if len(comps) > 0 {
-		event := &CompositionUpdatedAutomaticallyEvent{"CompositionsUpdatedAutomatically", comps}
+		event := &CompositionsUpdatedAutomaticallyEvent{"CompositionsUpdatedAutomatically", comps}
 		if err := s.eventMgr.Publish("composition", "topic", "composition.updated", event); err != nil {
 			return nil, err
 		}

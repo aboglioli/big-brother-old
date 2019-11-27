@@ -39,7 +39,7 @@ func main() {
 				comp := event.Composition
 				fmt.Printf("- Composition: %s (%s)\n", comp.Name, comp.ID.Hex())
 			case "CompositionsUpdatedAutomatically":
-				var event composition.CompositionUpdatedAutomaticallyEvent
+				var event composition.CompositionsUpdatedAutomaticallyEvent
 				if err := msg.Decode(&event); err != nil {
 					fmt.Println(err)
 					continue

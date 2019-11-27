@@ -156,6 +156,7 @@ func TestCreateComposition(t *testing.T) {
 	// Create
 	t.Run("Default values with valid units and raise event 'CompositionCreated'", func(t *testing.T) {
 		repo.Clean()
+		eventMgr.Clean()
 		comp := newComposition()
 		_, err := serv.Create(compToCreateRequest(comp))
 
@@ -267,8 +268,9 @@ func TestUpdateComposition(t *testing.T) {
 	repo, eventMgr := newMockRepository(), events.GetMockManager()
 	serv := NewService(repo, eventMgr)
 
-	t.Run("Update dependency", func(t *testing.T) {
+	t.Run("Update dependency and raise events", func(t *testing.T) {
 		repo.Clean()
+		eventMgr.Clean()
 
 		comps := makeMockedCompositions()
 		repo.InsertMany(comps)
@@ -327,6 +329,34 @@ func TestUpdateComposition(t *testing.T) {
 		checkCompCost(t, comps, 4, c5)
 		checkCompCost(t, comps, 5, c6)
 		checkCompCost(t, comps, 6, c7)
+
+		// Check events
+		if eventMgr.Count() != 2 {
+			t.Errorf("Should raise events: %d\n", eventMgr.Count())
+		}
+
+		msgs := eventMgr.Messages()
+		if msgs[0].Type() != "CompositionUpdatedManually" {
+			t.Errorf("Wrong first event: %s\n", msgs[0].Type())
+		}
+		var compUpdatedManuallyEvent CompositionChangedEvent
+		if err := msgs[0].Decode(&compUpdatedManuallyEvent); err != nil {
+			t.Error(err)
+		}
+		if compUpdatedManuallyEvent.Composition.ID.Hex() != c.ID.Hex() {
+			t.Errorf("Different composition in raised event\n")
+		}
+
+		if msgs[1].Type() != "CompositionsUpdatedAutomatically" {
+			t.Errorf("Wrong first event: %s\n", msgs[0].Type())
+		}
+		var compsUpdatedAutomaticallyEvent CompositionUpdatedAutomaticallyEvent
+		if err := msgs[1].Decode(&compsUpdatedAutomaticallyEvent); err != nil {
+			t.Error(err)
+		}
+		if len(compsUpdatedAutomaticallyEvent.Compositions) != 4 {
+			t.Errorf("Compositions updated automatically: %d\n", len(compsUpdatedAutomaticallyEvent.Compositions))
+		}
 	})
 
 	t.Run("Creating and updating", func(t *testing.T) {

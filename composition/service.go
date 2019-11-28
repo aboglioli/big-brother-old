@@ -114,7 +114,7 @@ func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
 	}
 
 	// Publish event: composition.created
-	event := &CompositionChangedEvent{"CompositionCreated", c}
+	event := &CompositionChangedEvent{events.Event{"CompositionCreated"}, c}
 	if err := s.eventMgr.Publish("composition", "topic", "composition.created", event); err != nil {
 		return nil, err
 	}
@@ -232,7 +232,7 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 	}
 
 	// Publish event: composition.updated
-	changeEvent := &CompositionChangedEvent{"CompositionUpdatedManually", c}
+	changeEvent := &CompositionChangedEvent{events.Event{"CompositionUpdatedManually"}, c}
 	if err := s.eventMgr.Publish("composition", "topic", "composition.updated", changeEvent); err != nil {
 		return nil, errGen.SetCode("FAILED_TO_PUBLISH").SetReference(err)
 	}
@@ -272,7 +272,7 @@ func (s *service) Delete(id string) errors.Error {
 	}
 
 	// Publish event
-	event := &CompositionChangedEvent{"CompositionDeleted", c}
+	event := &CompositionChangedEvent{events.Event{"CompositionDeleted"}, c}
 	if err := s.eventMgr.Publish("composition", "topic", "composition.deleted", event); err != nil {
 		return err
 	}
@@ -316,7 +316,7 @@ func (s *service) UpdateUses(c *Composition) ([]*Composition, errors.Error) {
 	}
 
 	if len(comps) > 0 {
-		event := &CompositionsUpdatedAutomaticallyEvent{"CompositionsUpdatedAutomatically", comps}
+		event := &CompositionsUpdatedAutomaticallyEvent{events.Event{"CompositionsUpdatedAutomatically"}, comps}
 		if err := s.eventMgr.Publish("composition", "topic", "composition.updated", event); err != nil {
 			return nil, err
 		}

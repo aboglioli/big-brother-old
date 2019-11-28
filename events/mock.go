@@ -19,7 +19,7 @@ func (d mockMessage) Body() []byte {
 }
 
 func (d mockMessage) Type() string {
-	var e EventType
+	var e Event
 	if err := d.Decode(&e); err != nil {
 		return ""
 	}
@@ -56,7 +56,7 @@ func GetMockManager() *mockManager {
 }
 
 func (m *mockManager) Publish(exchange, exchangeType, key string, body interface{}) errors.Error {
-	b, err := m.converter.Code(body)
+	b, err := m.converter.Encode(body)
 	if err != nil {
 		return err
 	}

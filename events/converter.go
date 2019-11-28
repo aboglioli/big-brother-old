@@ -6,7 +6,13 @@ import (
 	"github.com/aboglioli/big-brother/errors"
 )
 
-// Default converter
+// Converter is an interface
+type Converter interface {
+	Decode(src []byte, dst interface{}) errors.Error
+	Encode(src interface{}) ([]byte, errors.Error)
+}
+
+// Default converter for json structures
 type jsonConverter struct {
 }
 
@@ -21,7 +27,7 @@ func (c *jsonConverter) Decode(src []byte, dst interface{}) errors.Error {
 
 	return nil
 }
-func (c *jsonConverter) Code(src interface{}) ([]byte, errors.Error) {
+func (c *jsonConverter) Encode(src interface{}) ([]byte, errors.Error) {
 	b, err := json.Marshal(src)
 	if err != nil {
 		return nil, errors.NewInternal().SetPath("infrastructure/events/rabbit.Code").SetCode("FAILTED_TO_CODE").SetMessage(err.Error())

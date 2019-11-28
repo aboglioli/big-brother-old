@@ -1,5 +1,5 @@
 package events
 
-type EventType struct {
+type Event struct {
 	Type string `json:"type"`
 }

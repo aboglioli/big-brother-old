@@ -45,7 +45,7 @@ func (c *Context) UpdateUses(comp *composition.Composition) errors.Error {
 }
 
 func (c *Context) Publish(eventType string, comp *composition.Composition) errors.Error {
-	event := &composition.CompositionChangedEvent{eventType, comp}
+	event := &composition.CompositionChangedEvent{events.Event{eventType}, comp}
 	if err := c.eventMgr.Publish("composition", "topic", "composition.updated", event); err != nil {
 		return err
 	}

@@ -22,7 +22,7 @@ func (d message) Body() []byte {
 }
 
 func (d message) Type() string {
-	var e events.EventType
+	var e events.Event
 	if err := d.Decode(&e); err != nil {
 		return ""
 	}
@@ -105,7 +105,7 @@ func (m *manager) Publish(exchange, exchangeType, key string, body interface{}) 
 
 	ch := m.emitters[exchange]
 
-	b, err := m.converter.Code(body)
+	b, err := m.converter.Encode(body)
 	if err != nil {
 		return err
 	}

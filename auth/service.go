@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/aboglioli/big-brother/config"
-	"github.com/aboglioli/big-brother/errors"
+	"github.com/aboglioli/big-brother/pkg/config"
+	"github.com/aboglioli/big-brother/pkg/errors"
 	gocache "github.com/patrickmn/go-cache"
 )
 

@@ -3,7 +3,7 @@ package composition
 import (
 	"time"
 
-	"github.com/aboglioli/big-brother/errors"
+	"github.com/aboglioli/big-brother/pkg/errors"
 )
 
 type mockRepository struct {

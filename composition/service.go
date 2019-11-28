@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/aboglioli/big-brother/errors"
-	"github.com/aboglioli/big-brother/events"
-	"github.com/aboglioli/big-brother/quantity"
+	"github.com/aboglioli/big-brother/pkg/errors"
+	"github.com/aboglioli/big-brother/pkg/events"
+	"github.com/aboglioli/big-brother/pkg/quantity"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

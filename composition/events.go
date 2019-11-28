@@ -1,7 +1,7 @@
 package composition
 
 import (
-	"github.com/aboglioli/big-brother/events"
+	"github.com/aboglioli/big-brother/pkg/events"
 )
 
 // CompositionChangedEvent is a single composition change

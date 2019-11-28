@@ -3,7 +3,7 @@ package events
 import (
 	"encoding/json"
 
-	"github.com/aboglioli/big-brother/errors"
+	"github.com/aboglioli/big-brother/pkg/errors"
 )
 
 // Converter is an interface

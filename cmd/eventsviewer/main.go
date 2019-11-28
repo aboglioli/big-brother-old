@@ -27,7 +27,7 @@ func main() {
 		for msg := range msgs {
 			eventType := msg.Type()
 
-			fmt.Printf("# NEW EVENT: %s\n", eventType)
+			fmt.Printf("# NEW EVENT: %s\n", msg.Type())
 
 			switch eventType {
 			case "CompositionCreated", "CompositionUpdatedManually", "CompositionUsesUpdatedSinceLastChange":

@@ -1,7 +1,7 @@
 package composition
 
 import (
-	"github.com/aboglioli/big-brother/quantity"
+	"github.com/aboglioli/big-brother/pkg/quantity"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/aboglioli/big-brother/composition"
-	"github.com/aboglioli/big-brother/config"
-	"github.com/aboglioli/big-brother/events"
+	"github.com/aboglioli/big-brother/pkg/config"
+	"github.com/aboglioli/big-brother/pkg/events"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"

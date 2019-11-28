@@ -5,8 +5,8 @@ import (
 	"log"
 
 	"github.com/aboglioli/big-brother/composition"
-	"github.com/aboglioli/big-brother/errors"
-	"github.com/aboglioli/big-brother/events"
+	"github.com/aboglioli/big-brother/pkg/errors"
+	"github.com/aboglioli/big-brother/pkg/events"
 	infrEvents "github.com/aboglioli/big-brother/infrastructure/events"
 )
 

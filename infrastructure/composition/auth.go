@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/aboglioli/big-brother/auth"
-	"github.com/aboglioli/big-brother/errors"
+	"github.com/aboglioli/big-brother/pkg/errors"
 	"github.com/gin-gonic/gin"
 )
 

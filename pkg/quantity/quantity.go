@@ -1,8 +1,8 @@
 package quantity
 
 import (
-	"github.com/aboglioli/big-brother/errors"
-	"github.com/aboglioli/big-brother/unit"
+	"github.com/aboglioli/big-brother/pkg/errors"
+	"github.com/aboglioli/big-brother/pkg/unit"
 )
 
 // Quantity defines quantity with unit from International System of Units

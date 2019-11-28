@@ -3,7 +3,7 @@ package auth
 import (
 	"encoding/json"
 
-	"github.com/aboglioli/big-brother/errors"
+	"github.com/aboglioli/big-brother/pkg/errors"
 )
 
 type LogoutEvent struct {

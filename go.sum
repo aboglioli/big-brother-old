@@ -13,8 +13,6 @@ github.com/gin-contrib/static v0.0.0-20190913125243-df30d4057ba1 h1:20tgJcQcFETY
 github.com/gin-contrib/static v0.0.0-20190913125243-df30d4057ba1/go.mod h1:3pvUTQOgFP8/8nZgiWidsZ7piF6wCF0OVZlb5IyTD1Y=
 github.com/gin-gonic/gin v1.4.0 h1:3tMoCCfM7ppqsR0ptz/wi1impNpT7/9wQtMZ8lr1mCQ=
 github.com/gin-gonic/gin v1.4.0/go.mod h1:OW2EZn3DO8Ln9oIKOvM++LBO+5UPHJJDH72/q/3rZdM=
-github.com/go-redis/redis v6.15.6+incompatible h1:H9evprGPLI8+ci7fxQx6WNZHJSb7be8FqJQRhdQZ5Sg=
-github.com/go-redis/redis v6.15.6+incompatible/go.mod h1:NAIEuMOZ/fxfXJIrKDQDz8wamY7mA7PouImQ2Jvg6kA=
 github.com/go-redis/redis/v7 v7.0.0-beta.4 h1:p6z7Pde69EGRWvlC++y8aFcaWegyrKHzOBGo0zUACTQ=
 github.com/go-redis/redis/v7 v7.0.0-beta.4/go.mod h1:xhhSbUMTsleRPur+Vgx9sUHtyN33bdjxY+9/0n9Ig8s=
 github.com/go-stack/stack v1.8.0 h1:5SgMzNM5HxrEjV0ww2lTmX6E2Izsfxas4+YHWRs3Lsk=

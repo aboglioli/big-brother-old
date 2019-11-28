@@ -1,0 +1,18 @@
+{
+    "composition": {
+        "port": 3349
+    },
+    "mongoUrl": "mongodb://localhost:27017",
+    "mongoAuthSource": "admin",
+    "mongoUsername": "admin",
+    "mongoPassword": "admin",
+
+    "rabbitUrl": "amqp://guest:guest@localhost:5672",
+
+    "redisUrl": "localhost:6379",
+    "redisPassword": "",
+    "redisDb": 0,
+
+    "authEnabled": false,
+    "authUrl": "http://localhost:3000/v1/users"
+}

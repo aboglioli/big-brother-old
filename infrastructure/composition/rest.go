@@ -37,7 +37,7 @@ func StartREST(eventMgr events.Manager, serv composition.Service) {
 	server.PUT("/v1/composition/:compositionId", rest.Put)
 	server.DELETE("/v1/composition/:compositionId", rest.Delete)
 
-	server.Run(fmt.Sprintf(":%d", conf.Port))
+	server.Run(fmt.Sprintf(":%d", conf.Composition.Port))
 }
 
 type RESTContext struct {

@@ -8,20 +8,20 @@ import (
 )
 
 // Message
-type message struct {
+type rabbitMessage struct {
 	amqp.Delivery
 	converter events.Converter
 }
 
 func newMessage(d amqp.Delivery, c events.Converter) events.Message {
-	return message{d, c}
+	return rabbitMessage{d, c}
 }
 
-func (d message) Body() []byte {
+func (d rabbitMessage) Body() []byte {
 	return d.Delivery.Body
 }
 
-func (d message) Type() string {
+func (d rabbitMessage) Type() string {
 	var e events.Event
 	if err := d.Decode(&e); err != nil {
 		return ""
@@ -29,11 +29,11 @@ func (d message) Type() string {
 	return e.Type
 }
 
-func (d message) Decode(dst interface{}) errors.Error {
+func (d rabbitMessage) Decode(dst interface{}) errors.Error {
 	return d.converter.Decode(d.Body(), dst)
 }
 
-func (d message) Ack() {
+func (d rabbitMessage) Ack() {
 	d.Delivery.Ack(false)
 }
 
@@ -55,14 +55,14 @@ func GetManager() (events.Manager, errors.Error) {
 			consumers: make(map[string]*amqp.Channel),
 			converter: converter,
 		}
-		_, err := mgr.Connect()
+		_, err := mgr.connect()
 		if err != nil {
 			return nil, err
 		}
 		go func() {
 			for {
 				<-mgr.connection.NotifyClose(make(chan *amqp.Error))
-				mgr.Connect()
+				mgr.connect()
 			}
 		}()
 	}
@@ -70,7 +70,7 @@ func GetManager() (events.Manager, errors.Error) {
 	return mgr, nil
 }
 
-func (m *manager) Connect() (*amqp.Connection, errors.Error) {
+func (m *manager) connect() (*amqp.Connection, errors.Error) {
 	if m.connection != nil {
 		m.connection.Close()
 	}
@@ -86,7 +86,7 @@ func (m *manager) Connect() (*amqp.Connection, errors.Error) {
 	return m.connection, nil
 }
 
-func (m *manager) Disconnect() {
+func (m *manager) disconnect() {
 	if m.connection != nil {
 		m.connection.Close()
 		m.connection = nil

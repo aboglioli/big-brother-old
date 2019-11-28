@@ -14,7 +14,7 @@ var databases = make(map[string]*mongo.Database)
 
 func connect() (*mongo.Client, error) {
 	conf := config.Get()
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	options := options.Client().ApplyURI(conf.MongoURL).SetAuth(
 		options.Credential{

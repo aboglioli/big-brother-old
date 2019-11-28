@@ -210,7 +210,7 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 				return nil, errGen.SetCode("DEPENDENCY_DOES_NOT_EXIST").SetReference(err)
 			}
 
-			if !quantity.IsValid(dep.Quantity) {
+			if !dep.Quantity.IsValid() {
 				return nil, errGen.SetCode("INVALID_DEPENDENCY_QUANTITY").SetMessage(fmt.Sprintf("Dependency nro %d: %s", i, dep.On.Hex()))
 			}
 
@@ -397,10 +397,10 @@ func (s *service) validateSchema(c *Composition) errors.Error {
 	if c.Cost < 0 {
 		return errGen.SetCode("NEGATIVE_COST").SetMessage(fmt.Sprintf("%v", c.Cost))
 	}
-	if !quantity.IsValid(c.Unit) {
+	if !c.Unit.IsValid() {
 		return errGen.SetCode("INVALID_UNIT").SetMessage(fmt.Sprintf("%v", c.Unit))
 	}
-	if !quantity.IsValid(c.Stock) {
+	if !c.Stock.IsValid() {
 		return errGen.SetCode("INVALID_STOCK").SetMessage(fmt.Sprintf("%v", c.Stock))
 	}
 
@@ -414,7 +414,7 @@ func (s *service) validateSchema(c *Composition) errors.Error {
 			return errGen.SetCode("DEPENDENCY_DOES_NOT_EXIST").SetReference(err)
 		}
 
-		if !quantity.IsValid(d.Quantity) {
+		if !d.Quantity.IsValid() {
 			return errGen.SetCode("INVALID_DEPENDENCY_QUANTITY").SetMessage(fmt.Sprintf("Dependency %d: %v", i, d.Quantity))
 		}
 	}

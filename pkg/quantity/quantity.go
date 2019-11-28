@@ -11,14 +11,6 @@ type Quantity struct {
 	Unit     string  `bson:"unit" json:"unit"`
 }
 
-func IsValid(q Quantity) bool {
-	repo := unit.GetRepository()
-	if repo.Exists(q.Unit) && q.Quantity >= 0 {
-		return true
-	}
-	return false
-}
-
 func (q1 Quantity) Add(q2 Quantity) (Quantity, errors.Error) {
 	u1, err := referenceUnit(q1, q2)
 	if err != nil {

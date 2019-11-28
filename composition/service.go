@@ -237,12 +237,6 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 		return nil, errGen.SetCode("FAILED_TO_PUBLISH").SetReference(err)
 	}
 
-	// Uses are updated asynchronously in another service reacting to the above sent event
-	// Update uses
-	// if err := s.UpdateUses(c); err != nil {
-	// 	return nil, errGen("UPDATE_USES", err.Error())
-	// }
-
 	return c, nil
 }
 

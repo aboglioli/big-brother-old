@@ -24,7 +24,7 @@ type CustomError struct {
 	path      string
 	code      string
 	message   string
-	reference Error // TODO: not used yet
+	reference Error
 }
 
 func NewValidation() *CustomError {
@@ -84,7 +84,7 @@ func (e *CustomError) Error() string {
 	}
 
 	if e.reference != nil {
-		str += "\nStack:\n- "
+		str += "\n- "
 		str += e.reference.Error()
 	}
 

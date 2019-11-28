@@ -7,8 +7,8 @@ import (
 
 // Quantity defines quantity with unit from International System of Units
 type Quantity struct {
-	Quantity float64 `bson:"quantity" json:"quantity" validate:"required"`
-	Unit     string  `bson:"unit" json:"unit" validate:"required"`
+	Quantity float64 `bson:"quantity" json:"quantity"`
+	Unit     string  `bson:"unit" json:"unit"`
 }
 
 func IsValid(q Quantity) bool {

@@ -10,12 +10,12 @@ import (
 )
 
 type Composition struct {
-	ID           primitive.ObjectID `json:"id" bson:"_id" validate:"required"`
+	ID           primitive.ObjectID `json:"id" bson:"_id""`
 	Name         string             `json:"name" bson:"name"`
-	Cost         float64            `json:"cost" bson:"cost" validate:"required"`
-	Unit         quantity.Quantity  `json:"unit" bson:"unit" validate:"required"`
-	Stock        quantity.Quantity  `json:"stock" bson:"stock" validate:"required"`
-	Dependencies []Dependency       `json:"dependencies" bson:"dependencies" validate:"required"`
+	Cost         float64            `json:"cost" bson:"cost"`
+	Unit         quantity.Quantity  `json:"unit" bson:"unit"`
+	Stock        quantity.Quantity  `json:"stock" bson:"stock"`
+	Dependencies []Dependency       `json:"dependencies" bson:"dependencies"`
 
 	AutoupdateCost             bool      `json:"autoupdateCost" bson:"autoupdateCost"`
 	Enabled                    bool      `json:"enabled" bson:"enabled" `

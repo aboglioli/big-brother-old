@@ -6,8 +6,8 @@ import (
 )
 
 type Dependency struct {
-	On       primitive.ObjectID `bson:"on" json:"on" validate:"required" binding:"required"`
-	Quantity quantity.Quantity  `bson:"quantity" json:"quantity" validate:"required" binding:"required"`
+	On       primitive.ObjectID `bson:"on" json:"on" binding:"required"`
+	Quantity quantity.Quantity  `bson:"quantity" json:"quantity" binding:"required"`
 	Subvalue float64            `bson:"subvalue" json:"subvalue"`
 }
 

@@ -201,21 +201,21 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 		}
 	} else {
 		for _, dep := range removed {
-			c.RemoveDependency(dep.Of.Hex())
+			c.RemoveDependency(dep.On.Hex())
 		}
 
 		for i, dep := range added {
-			depComp, err := s.repository.FindByID(dep.Of.Hex())
+			depComp, err := s.repository.FindByID(dep.On.Hex())
 			if err != nil {
 				return nil, errGen.SetCode("DEPENDENCY_DOES_NOT_EXIST").SetReference(err)
 			}
 
 			if !quantity.IsValid(dep.Quantity) {
-				return nil, errGen.SetCode("INVALID_DEPENDENCY_QUANTITY").SetMessage(fmt.Sprintf("Dependency nro %d: %s", i, dep.Of.Hex()))
+				return nil, errGen.SetCode("INVALID_DEPENDENCY_QUANTITY").SetMessage(fmt.Sprintf("Dependency nro %d: %s", i, dep.On.Hex()))
 			}
 
 			if !dep.Quantity.Compatible(depComp.Unit) {
-				return nil, errGen.SetCode("INCOMPATIBLE_DEPENDENCY_QUANTITY").SetMessage(fmt.Sprintf("Dependency nro %d (%s): %v != %v", i, dep.Of.Hex(), dep.Quantity, depComp.Unit))
+				return nil, errGen.SetCode("INCOMPATIBLE_DEPENDENCY_QUANTITY").SetMessage(fmt.Sprintf("Dependency nro %d (%s): %v != %v", i, dep.On.Hex(), dep.Quantity, depComp.Unit))
 			}
 
 			subvalue := depComp.CostFromQuantity(dep.Quantity)
@@ -374,7 +374,7 @@ func (s *service) calculateDependenciesSubvalues(dependencies []Dependency) ([]D
 
 	newDependencies := make([]Dependency, len(dependencies))
 	for i, dep := range dependencies {
-		comp, err := s.repository.FindByID(dep.Of.Hex())
+		comp, err := s.repository.FindByID(dep.On.Hex())
 		if err != nil || comp == nil {
 			return nil, errGen.SetCode("DEPENDENCY_DOES_NOT_EXIST").SetReference(err)
 		}
@@ -409,7 +409,7 @@ func (s *service) validateSchema(c *Composition) errors.Error {
 	}
 
 	for i, d := range c.Dependencies {
-		_, err := s.repository.FindByID(d.Of.Hex())
+		_, err := s.repository.FindByID(d.On.Hex())
 		if err != nil {
 			return errGen.SetCode("DEPENDENCY_DOES_NOT_EXIST").SetReference(err)
 		}

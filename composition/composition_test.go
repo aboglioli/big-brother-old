@@ -54,7 +54,7 @@ func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 
 	t.Run("New dependency", func(t *testing.T) {
 		c.UpsertDependency(Dependency{
-			Of: randID,
+			On: randID,
 			Quantity: quantity.Quantity{
 				Unit:     "u",
 				Quantity: 1,
@@ -67,7 +67,7 @@ func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 	})
 	t.Run("Add same dependency", func(t *testing.T) {
 		c.UpsertDependency(Dependency{
-			Of: randID,
+			On: randID,
 			Quantity: quantity.Quantity{
 				Unit:     "u",
 				Quantity: 2,
@@ -80,7 +80,7 @@ func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 	})
 	t.Run("Add new dependency", func(t *testing.T) {
 		c.UpsertDependency(Dependency{
-			Of: primitive.NewObjectID(),
+			On: primitive.NewObjectID(),
 			Quantity: quantity.Quantity{
 				Unit:     "u",
 				Quantity: 1.5,
@@ -108,7 +108,7 @@ func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 	t.Run("Add dependencies and calculate cost from subvalues", func(t *testing.T) {
 		c.Dependencies = []Dependency{}
 		c.UpsertDependency(Dependency{
-			Of: primitive.NewObjectID(),
+			On: primitive.NewObjectID(),
 			Quantity: quantity.Quantity{
 				Unit:     "u",
 				Quantity: 1.5,
@@ -117,7 +117,7 @@ func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 		})
 		id := primitive.NewObjectID()
 		c.UpsertDependency(Dependency{
-			Of: id,
+			On: id,
 			Quantity: quantity.Quantity{
 				Unit:     "u",
 				Quantity: 2.5,
@@ -125,7 +125,7 @@ func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 			Subvalue: 30,
 		})
 		c.UpsertDependency(Dependency{
-			Of: primitive.NewObjectID(),
+			On: primitive.NewObjectID(),
 			Quantity: quantity.Quantity{
 				Unit:     "u",
 				Quantity: 2.5,
@@ -152,7 +152,7 @@ func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 		c.AutoupdateCost = false
 
 		c.UpsertDependency(Dependency{
-			Of:       primitive.NewObjectID(),
+			On:       primitive.NewObjectID(),
 			Quantity: quantity.Quantity{1.5, "u"},
 			Subvalue: 30,
 		})
@@ -166,7 +166,7 @@ func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 func TestCompareDependencies(t *testing.T) {
 	c1, c2 := makeMockedCompositions()[1], makeMockedCompositions()[1]
 
-	c2.Dependencies[0].Of = c1.Dependencies[0].Of
+	c2.Dependencies[0].On = c1.Dependencies[0].On
 
 	// With itself
 	left, common, right := c1.CompareDependencies(c1.Dependencies)
@@ -208,7 +208,7 @@ func TestCompareDependencies(t *testing.T) {
 
 	// Add a common dependency
 	dep := Dependency{
-		Of:       primitive.NewObjectID(),
+		On:       primitive.NewObjectID(),
 		Quantity: quantity.Quantity{2, "l"},
 	}
 	c1.UpsertDependency(dep)

@@ -78,7 +78,7 @@ func (r *mockRepository) FindUses(id string) ([]*Composition, errors.Error) {
 		}
 
 		for _, d := range c.Dependencies {
-			if d.Of.Hex() == id {
+			if d.On.Hex() == id {
 				comps = append(comps, copyComposition(c))
 				break
 			}

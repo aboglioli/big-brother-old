@@ -23,7 +23,7 @@ func checkCompCost(t *testing.T, comps []*Composition, index int, costShouldBe f
 	if comp.Cost != costShouldBe {
 		t.Errorf("Comp %d: %.2f should be %.2f", index, comp.Cost, costShouldBe)
 		for _, dep := range comp.Dependencies {
-			t.Errorf("- dep %s subvalue %.2f", dep.Of.Hex(), dep.Subvalue)
+			t.Errorf("- dep %s subvalue %.2f", dep.On.Hex(), dep.Subvalue)
 		}
 	}
 }
@@ -94,7 +94,7 @@ func TestCreateComposition(t *testing.T) {
 		comp := newComposition()
 		comp.Dependencies = []Dependency{
 			Dependency{
-				Of: primitive.NewObjectID(),
+				On: primitive.NewObjectID(),
 				Quantity: quantity.Quantity{
 					Quantity: 5,
 					Unit:     "u",
@@ -115,7 +115,7 @@ func TestCreateComposition(t *testing.T) {
 		repo.Insert(dep)
 		comp.Dependencies = []Dependency{
 			Dependency{
-				Of: dep.ID,
+				On: dep.ID,
 				Quantity: quantity.Quantity{
 					Quantity: 5,
 					Unit:     "l",
@@ -135,7 +135,7 @@ func TestCreateComposition(t *testing.T) {
 		repo.Insert(dep)
 		comp.Dependencies = []Dependency{
 			Dependency{
-				Of: dep.ID,
+				On: dep.ID,
 				Quantity: quantity.Quantity{
 					Quantity: 5,
 					Unit:     "kk",
@@ -197,7 +197,7 @@ func TestCreateComposition(t *testing.T) {
 		repo.Insert(dep)
 		comp.Dependencies = []Dependency{
 			Dependency{
-				Of: dep.ID,
+				On: dep.ID,
 				Quantity: quantity.Quantity{
 					Quantity: 5,
 					Unit:     "u",
@@ -224,7 +224,7 @@ func TestCreateComposition(t *testing.T) {
 		}
 		comp.Dependencies = []Dependency{
 			Dependency{
-				Of: dep.ID,
+				On: dep.ID,
 				Quantity: quantity.Quantity{
 					Quantity: 750,
 					Unit:     "g",
@@ -537,7 +537,7 @@ func TestDeleteComposition(t *testing.T) {
 	repo.Insert(dep)
 	comp.Dependencies = []Dependency{
 		Dependency{
-			Of:       dep.ID,
+			On:       dep.ID,
 			Quantity: quantity.Quantity{2, "u"},
 		},
 	}

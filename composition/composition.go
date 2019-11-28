@@ -55,7 +55,7 @@ func (c *Composition) SetDependencies(deps []Dependency) {
 
 func (c *Composition) FindDependencyByID(id string) *Dependency {
 	for _, d := range c.Dependencies {
-		if d.Of.Hex() == id {
+		if d.On.Hex() == id {
 			return &d
 		}
 	}
@@ -65,7 +65,7 @@ func (c *Composition) FindDependencyByID(id string) *Dependency {
 func (c *Composition) UpsertDependency(d Dependency) {
 	updated := false
 	for i, dep := range c.Dependencies {
-		if dep.Of.Hex() == d.Of.Hex() {
+		if dep.On.Hex() == d.On.Hex() {
 			c.Dependencies[i] = d
 			updated = true
 			break
@@ -83,7 +83,7 @@ func (c *Composition) RemoveDependency(depID string) errors.Error {
 	removed := false
 	dependencies := make([]Dependency, 0, len(c.Dependencies))
 	for _, dep := range c.Dependencies {
-		if dep.Of.Hex() != depID {
+		if dep.On.Hex() != depID {
 			dependencies = append(dependencies, dep)
 			continue
 		}

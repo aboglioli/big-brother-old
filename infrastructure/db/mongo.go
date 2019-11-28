@@ -10,11 +10,7 @@ import (
 )
 
 var client *mongo.Client
-var databases map[string]*mongo.Database
-
-func init() {
-	databases = make(map[string]*mongo.Database)
-}
+var databases = make(map[string]*mongo.Database)
 
 func connect() (*mongo.Client, error) {
 	conf := config.Get()

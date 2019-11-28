@@ -2,12 +2,19 @@ package errors
 
 import "fmt"
 
+type ErrorKind string
+
+const (
+	VALIDATION ErrorKind = "Validation"
+	INTERNAL   ErrorKind = "Internal"
+)
+
 // Error is the main interface
 // There are two kinds of errors:
 // - Validation: can be displayed to the user
 // - Internal: contains sensitive data
 type Error interface {
-	Kind() string
+	Kind() ErrorKind
 	Path() string
 	Code() string
 	Message() string
@@ -20,7 +27,7 @@ type Error interface {
 
 // Custom implementation
 type CustomError struct {
-	kind      string
+	kind      ErrorKind
 	path      string
 	code      string
 	message   string
@@ -29,13 +36,13 @@ type CustomError struct {
 
 func NewValidation() *CustomError {
 	return &CustomError{
-		kind: "validation",
+		kind: VALIDATION,
 	}
 }
 
 func NewInternal() *CustomError {
 	return &CustomError{
-		kind: "internal",
+		kind: INTERNAL,
 	}
 }
 
@@ -59,7 +66,7 @@ func (e *CustomError) SetReference(ref Error) *CustomError {
 	return e
 }
 
-func (e *CustomError) Kind() string {
+func (e *CustomError) Kind() ErrorKind {
 	return e.kind
 }
 

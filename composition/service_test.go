@@ -250,8 +250,8 @@ func TestCreateComposition(t *testing.T) {
 
 		msgs := eventMgr.Messages()
 		msg := msgs[0]
-		if msg.Type() != "CompositionCreated" {
-			t.Errorf("Wrong event: %s\n", msg.Type())
+		if msg.Type() != "CompositionCreated" || msg.Key != "composition.created" {
+			t.Errorf("Wrong event: %s - %s\n", msg.Type(), msg.Key)
 		}
 
 		var evt CompositionChangedEvent
@@ -336,7 +336,7 @@ func TestUpdateComposition(t *testing.T) {
 		}
 
 		msgs := eventMgr.Messages()
-		if msgs[0].Type() != "CompositionUpdatedManually" {
+		if msgs[0].Type() != "CompositionUpdatedManually" || msgs[0].Key != "composition.updated" {
 			t.Errorf("Wrong first event: %s\n", msgs[0].Type())
 		}
 		var compUpdatedManuallyEvent CompositionChangedEvent
@@ -347,7 +347,7 @@ func TestUpdateComposition(t *testing.T) {
 			t.Errorf("Different composition in raised event\n")
 		}
 
-		if msgs[1].Type() != "CompositionsUpdatedAutomatically" {
+		if msgs[1].Type() != "CompositionsUpdatedAutomatically" || msgs[0].Key != "composition.updated" {
 			t.Errorf("Wrong first event: %s\n", msgs[0].Type())
 		}
 		var compsUpdatedAutomaticallyEvent CompositionsUpdatedAutomaticallyEvent

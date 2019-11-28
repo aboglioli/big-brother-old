@@ -13,7 +13,7 @@ func handleError(c *gin.Context, err errors.Error) {
 	switch e := err.(type) {
 	case *errors.CustomError:
 		switch e.Kind() {
-		case "validation":
+		case errors.VALIDATION:
 			fmt.Println("[Validation Error]")
 			fmt.Println(e)
 
@@ -23,7 +23,7 @@ func handleError(c *gin.Context, err errors.Error) {
 					"message": e.Message(),
 				},
 			})
-		case "internal":
+		case errors.INTERNAL:
 			fmt.Println("[Internal Error]")
 			fmt.Println(e)
 

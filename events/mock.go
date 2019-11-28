@@ -7,10 +7,10 @@ import (
 // Message
 type mockMessage struct {
 	converter    Converter
-	exchange     string
-	exchangeType string
-	queue        string
-	key          string
+	Exchange     string
+	ExchangeType string
+	Queue        string
+	Key          string
 	body         []byte
 }
 
@@ -27,7 +27,7 @@ func (d mockMessage) Type() string {
 }
 
 func (d mockMessage) Decode(dst interface{}) errors.Error {
-	return d.converter.Decode(d.body, dst)
+	return d.converter.Decode(d.Body(), dst)
 }
 
 func (d mockMessage) Ack() {
@@ -62,9 +62,9 @@ func (m *mockManager) Publish(exchange, exchangeType, key string, body interface
 	}
 	msg := mockMessage{
 		converter:    m.converter,
-		exchange:     exchange,
-		exchangeType: exchangeType,
-		key:          key,
+		Exchange:     exchange,
+		ExchangeType: exchangeType,
+		Key:          key,
 		body:         b,
 	}
 	m.buffer = append(m.buffer, msg)

@@ -5,6 +5,7 @@ import (
 
 	"github.com/aboglioli/big-brother/composition"
 	infrEvents "github.com/aboglioli/big-brother/infrastructure/events"
+	"github.com/aboglioli/big-brother/pkg/events"
 )
 
 func main() {
@@ -17,7 +18,8 @@ func main() {
 	forever := make(chan bool)
 
 	go func() {
-		msgs, err := eventMgr.Consume("composition", "topic", "", "composition.*")
+		opts := &events.Options{"composition", "topic", "composition.*", ""}
+		msgs, err := eventMgr.Consume(opts)
 		if err != nil {
 			fmt.Println(err)
 			return

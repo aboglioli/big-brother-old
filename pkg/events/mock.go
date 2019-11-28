@@ -55,16 +55,16 @@ func GetMockManager() *mockManager {
 	return mockMgr
 }
 
-func (m *mockManager) Publish(exchange, exchangeType, key string, body interface{}) errors.Error {
+func (m *mockManager) Publish(body interface{}, opts *Options) errors.Error {
 	b, err := m.converter.Encode(body)
 	if err != nil {
 		return err
 	}
 	msg := mockMessage{
 		converter:    m.converter,
-		Exchange:     exchange,
-		ExchangeType: exchangeType,
-		Key:          key,
+		Exchange:     opts.Exchange,
+		ExchangeType: opts.ExchangeType,
+		Key:          opts.Key,
 		body:         b,
 	}
 	m.buffer = append(m.buffer, msg)
@@ -76,7 +76,7 @@ func (m *mockManager) Publish(exchange, exchangeType, key string, body interface
 	return nil
 }
 
-func (m *mockManager) Consume(exchange, exchangeType, queue, key string) (<-chan Message, errors.Error) {
+func (m *mockManager) Consume(opts *Options) (<-chan Message, errors.Error) {
 	return m.ch, nil
 }
 

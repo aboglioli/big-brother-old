@@ -4,7 +4,14 @@ import (
 	"github.com/aboglioli/big-brother/pkg/errors"
 )
 
+type Options struct {
+	Exchange     string
+	ExchangeType string
+	Key          string
+	Queue        string
+}
+
 type Manager interface {
-	Publish(exchange, exchangeType, key string, body interface{}) errors.Error
-	Consume(exchange, exchangeType, queue, key string) (<-chan Message, errors.Error)
+	Publish(body interface{}, opts *Options) errors.Error
+	Consume(opts *Options) (<-chan Message, errors.Error)
 }

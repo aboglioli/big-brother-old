@@ -5,9 +5,9 @@ import (
 	"log"
 
 	"github.com/aboglioli/big-brother/composition"
+	infrEvents "github.com/aboglioli/big-brother/infrastructure/events"
 	"github.com/aboglioli/big-brother/pkg/errors"
 	"github.com/aboglioli/big-brother/pkg/events"
-	infrEvents "github.com/aboglioli/big-brother/infrastructure/events"
 )
 
 type Context struct {
@@ -37,17 +37,9 @@ func (c *Context) UpdateUses(comp *composition.Composition) errors.Error {
 		return errGen.SetCode("UPDATE_UsesUpdatedSinceLastChange").SetMessage(err.Error())
 	}
 
-	if err := c.Publish("CompositionUsesUpdatedSinceLastChange", comp); err != nil {
+	event, opts := composition.NewCompositionUsesUpdatedSinceLastChangeEvent(comp)
+	if err := c.eventMgr.Publish(event, opts); err != nil {
 		return errGen.SetCode("PUBLISH_CompositionUsesUpdatedSinceLastChange").SetMessage(err.Error())
-	}
-
-	return nil
-}
-
-func (c *Context) Publish(eventType string, comp *composition.Composition) errors.Error {
-	event := &composition.CompositionChangedEvent{events.Event{eventType}, comp}
-	if err := c.eventMgr.Publish("composition", "topic", "composition.updated", event); err != nil {
-		return err
 	}
 
 	return nil
@@ -76,7 +68,8 @@ func main() {
 	forever := make(chan bool)
 
 	go func() {
-		msgs, err := eventMgr.Consume("composition", "topic", "uses", "composition.updated")
+		opts := &events.Options{"composition", "topic", "composition.updated", "uses"}
+		msgs, err := eventMgr.Consume(opts)
 		if err != nil {
 			fmt.Println(err)
 			return

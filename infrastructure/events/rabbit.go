@@ -93,17 +93,17 @@ func (m *manager) Disconnect() {
 	}
 }
 
-func (m *manager) Publish(exchange, exchangeType, key string, body interface{}) errors.Error {
-	if m.emitters[exchange] == nil {
-		ch, err := m.createChannelWithExchange(exchange, exchangeType)
+func (m *manager) Publish(body interface{}, opts *events.Options) errors.Error {
+	if m.emitters[opts.Exchange] == nil {
+		ch, err := m.createChannelWithExchange(opts.Exchange, opts.ExchangeType)
 		if err != nil {
 			return err
 		}
 
-		m.emitters[exchange] = ch
+		m.emitters[opts.Exchange] = ch
 	}
 
-	ch := m.emitters[exchange]
+	ch := m.emitters[opts.Exchange]
 
 	b, err := m.converter.Encode(body)
 	if err != nil {
@@ -111,8 +111,8 @@ func (m *manager) Publish(exchange, exchangeType, key string, body interface{}) 
 	}
 
 	if err := ch.Publish(
-		exchange,
-		key,
+		opts.Exchange,
+		opts.Key,
 		false,
 		false,
 		amqp.Publishing{
@@ -125,27 +125,27 @@ func (m *manager) Publish(exchange, exchangeType, key string, body interface{}) 
 	return nil
 }
 
-func (m *manager) Consume(exchange, exchangeType, queue, key string) (<-chan events.Message, errors.Error) {
+func (m *manager) Consume(opts *events.Options) (<-chan events.Message, errors.Error) {
 	errGen := errors.NewInternal().SetPath("infrastructure/events/manager.Consume")
 
-	if m.emitters[exchange] == nil {
-		ch, err := m.createChannelWithExchange(exchange, exchangeType)
+	if m.emitters[opts.Exchange] == nil {
+		ch, err := m.createChannelWithExchange(opts.Exchange, opts.ExchangeType)
 		if err != nil {
 			return nil, err
 		}
 
-		m.consumers[exchange] = ch
+		m.consumers[opts.Exchange] = ch
 	}
 
-	ch := m.consumers[exchange]
+	ch := m.consumers[opts.Exchange]
 
 	exclusive := true
-	if queue != "" {
+	if opts.Queue != "" {
 		exclusive = false
 	}
 
 	q, err := ch.QueueDeclare(
-		queue,
+		opts.Queue,
 		false,
 		false,
 		exclusive,
@@ -158,8 +158,8 @@ func (m *manager) Consume(exchange, exchangeType, queue, key string) (<-chan eve
 
 	err = ch.QueueBind(
 		q.Name,
-		key,
-		exchange,
+		opts.Key,
+		opts.Exchange,
 		false,
 		nil,
 	)

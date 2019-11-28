@@ -1,6 +1,6 @@
 {
     "composition": {
-        "port": 3349
+        "port": 3344
     },
     "mongoUrl": "mongodb://localhost:27017",
     "mongoAuthSource": "admin",

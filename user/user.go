@@ -35,6 +35,7 @@ func NewUser() *User {
 		ID:        primitive.NewObjectID(),
 		Enabled:   true,
 		Validated: false,
+		Roles:     []string{"user"},
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}

@@ -57,3 +57,44 @@ func TestUserValidation(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestUserPassword(t *testing.T) {
+	user := NewUser()
+	pwd := "123456"
+	user.SetPassword(pwd)
+
+	if len(user.Password) < 30 || user.Password == pwd {
+		t.Error("Wrong encryption")
+	}
+
+	if !user.ComparePassword("123456") {
+		t.Error("Wrong comparison")
+	}
+
+	if user.ComparePassword("123457") {
+		t.Error("Wrong comparison")
+	}
+}
+
+func TestUserRoles(t *testing.T) {
+	user := NewUser()
+
+	if !user.HasRole("user") || len(user.Roles) != 1 {
+		t.Error("Default role")
+	}
+
+	user.AddRole("admin")
+	if !user.HasRole("admin") || len(user.Roles) != 2 {
+		t.Error("Error adding role")
+	}
+
+	user.AddRole("user")
+	if !user.HasRole("user") || len(user.Roles) != 2 {
+		t.Error("Error adding role")
+	}
+
+	user.RemoveRole("admin")
+	if user.HasRole("admin") || len(user.Roles) != 1 || user.Roles[0] != "user" {
+		t.Error("Error removing role")
+	}
+}

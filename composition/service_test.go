@@ -7,6 +7,7 @@ import (
 	"github.com/aboglioli/big-brother/pkg/errors"
 	"github.com/aboglioli/big-brother/pkg/events"
 	"github.com/aboglioli/big-brother/pkg/quantity"
+	"github.com/aboglioli/big-brother/pkg/tests"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -58,38 +59,6 @@ func TestCreateComposition(t *testing.T) {
 	repo, eventMgr := newMockRepository(), events.GetMockManager()
 	serv := NewService(repo, eventMgr)
 
-	// Errors
-	t.Run("Negative cost", func(t *testing.T) {
-		comp := newComposition()
-		comp.Cost = -1.0
-		_, err := serv.Create(compToCreateRequest(comp))
-
-		if !hasErrCode(err, "NEGATIVE_COST") {
-			t.Error("Cost can't be negative")
-		}
-	})
-
-	t.Run("Invalid units", func(t *testing.T) {
-		comp := newComposition()
-		comp.Unit.Unit = "asd"
-
-		if _, err := serv.Create(compToCreateRequest(comp)); !hasErrCode(err, "INVALID_UNIT") {
-			t.Error("Unit should exist")
-		}
-
-		comp.Unit.Unit = "u"
-		comp.Stock.Unit = "asd"
-		if _, err := serv.Create(compToCreateRequest(comp)); !hasErrCode(err, "INVALID_STOCK") {
-			t.Error("Stock unit should exist")
-		}
-
-		comp.Unit.Unit = "kg"
-		comp.Stock.Unit = "l"
-		if _, err := serv.Create(compToCreateRequest(comp)); !hasErrCode(err, "INCOMPATIBLE_STOCK_AND_UNIT") {
-			t.Error("Stock and unit should be compatible")
-		}
-	})
-
 	t.Run("Non-existing dependency", func(t *testing.T) {
 		comp := newComposition()
 		comp.Dependencies = []Dependency{
@@ -103,9 +72,7 @@ func TestCreateComposition(t *testing.T) {
 		}
 		_, err := serv.Create(compToCreateRequest(comp))
 
-		if !hasErrCode(err, "DEPENDENCY_DOES_NOT_EXIST") {
-			t.Error("Check dependency existence")
-		}
+		tests.ErrCode(t, err, "DEPENDENCY_DOES_NOT_EXIST", "Check dependency existence")
 	})
 
 	t.Run("Incompatible dependency quantity", func(t *testing.T) {
@@ -123,34 +90,8 @@ func TestCreateComposition(t *testing.T) {
 			},
 		}
 
-		if _, err := serv.Create(compToCreateRequest(comp)); !hasErrCode(err, "INCOMPATIBLE_DEPENDENCY_QUANTITY") {
-			t.Error("Dependency cannot be created with incompatible dependency quantity")
-		}
-	})
-
-	t.Run("Invalid dependency quantity", func(t *testing.T) {
-		repo.Clean()
-		dep, comp := newComposition(), newComposition()
-		dep.Unit = quantity.Quantity{2, "kg"}
-		repo.Insert(dep)
-		comp.Dependencies = []Dependency{
-			Dependency{
-				On: dep.ID,
-				Quantity: quantity.Quantity{
-					Quantity: 5,
-					Unit:     "kk",
-				},
-			},
-		}
-
-		if _, err := serv.Create(compToCreateRequest(comp)); !hasErrCode(err, "INVALID_DEPENDENCY_QUANTITY") {
-			t.Error("Dependency cannot be created with invalid dependency quantity")
-		}
-
-		comp.Dependencies[0].Quantity = quantity.Quantity{-5, "kg"}
-		if _, err := serv.Create(compToCreateRequest(comp)); !hasErrCode(err, "INVALID_DEPENDENCY_QUANTITY") {
-			t.Error("Dependency cannot be created with invalid dependency quantity")
-		}
+		_, err := serv.Create(compToCreateRequest(comp))
+		tests.ErrCode(t, err, "INCOMPATIBLE_DEPENDENCY_QUANTITY", "Dependency cannot be created with incompatible dependency quantity")
 	})
 
 	// Create
@@ -160,19 +101,13 @@ func TestCreateComposition(t *testing.T) {
 		comp := newComposition()
 		_, err := serv.Create(compToCreateRequest(comp))
 
-		if err != nil || repo.Count() != 1 {
-			t.Error("Composition should be created")
-		}
-
-		if eventMgr.Count() != 1 {
-			t.Errorf("Creation should emit an event: %d\n", eventMgr.Count())
-		}
+		tests.Ok(t, err, "Should be created")
+		tests.Equals(t, repo.Count(), 1, "Should be created")
+		tests.Equals(t, eventMgr.Count(), 1, "Should emit an event")
 
 		msgs := eventMgr.Messages()
 		msg := msgs[0]
-		if msg.Type() != "CompositionCreated" {
-			t.Errorf("Wrong event: %s\n", msg.Type())
-		}
+		tests.Equals(t, msg.Type(), "CompositionCreated", "Wrong event")
 	})
 
 	t.Run("Assign stock automatically from unit", func(t *testing.T) {
@@ -182,13 +117,9 @@ func TestCreateComposition(t *testing.T) {
 		createReq := compToCreateRequest(comp)
 		createReq.Stock = nil
 		c, err := serv.Create(createReq)
-		if err != nil {
-			t.Error(err)
-		}
 
-		if !c.Stock.Equals(quantity.Quantity{0, c.Unit.Unit}) {
-			t.Error("Stock should be auto-assigned")
-		}
+		tests.Ok(t, err, "No error")
+		tests.Assert(t, c.Stock.Equals(quantity.Quantity{0, c.Unit.Unit}), "Stock should be auto-assigned")
 	})
 
 	t.Run("Valid dependency", func(t *testing.T) {
@@ -207,10 +138,8 @@ func TestCreateComposition(t *testing.T) {
 
 		_, err := serv.Create(compToCreateRequest(comp))
 
-		if err != nil || repo.Count() != 2 {
-			t.Error(err)
-			t.Error("Composition with single dependency should be created")
-		}
+		tests.Ok(t, err, "No error")
+		tests.Equals(t, repo.Count(), 2, "Composition with single dependency should be created")
 	})
 
 	t.Run("Calculate cost on creating and comparte with raised event", func(t *testing.T) {
@@ -235,32 +164,17 @@ func TestCreateComposition(t *testing.T) {
 
 		c, err := serv.Create(compToCreateRequest(comp))
 
-		if err != nil {
-			t.Error(err)
-			return
-		}
-
-		if c.Cost != 37.5 {
-			t.Error("Cost wrong calculated")
-		}
-
-		if eventMgr.Count() != 1 {
-			t.Errorf("Should raise an event: %d\n", eventMgr.Count())
-		}
+		tests.Ok(t, err, "No error")
+		tests.Equals(t, c.Cost, 37.5, "Cost not calculated")
+		tests.Equals(t, eventMgr.Count(), 1, "Should raise an event")
 
 		msgs := eventMgr.Messages()
 		msg := msgs[0]
-		if msg.Type() != "CompositionCreated" || msg.Key != "composition.created" {
-			t.Errorf("Wrong event: %s - %s\n", msg.Type(), msg.Key)
-		}
+		tests.Assert(t, msg.Type() == "CompositionCreated" && msg.Key == "composition.created", "Wrong event")
 
 		var evt CompositionChangedEvent
-		if err := msg.Decode(&evt); err != nil {
-			t.Error(err)
-		}
-		if evt.Composition.Cost != c.Cost || evt.Composition.ID.Hex() != c.ID.Hex() {
-			t.Error("Composition from event is not the expected one")
-		}
+		tests.Ok(t, msg.Decode(&evt), "Decode")
+		tests.Assert(t, evt.Composition.Cost == c.Cost && evt.Composition.ID.Hex() == c.ID.Hex(), "Composition from event is not the expected one")
 	})
 }
 
@@ -277,15 +191,9 @@ func TestUpdateComposition(t *testing.T) {
 		for _, c := range comps {
 			servImpl := serv.(*service)
 			deps, err := servImpl.calculateDependenciesSubvalues(c.Dependencies)
-			if err != nil {
-				t.Error(err)
-				continue
-			}
+			tests.Ok(t, err, "No error")
 			c.SetDependencies(deps)
-			if err := repo.Update(c); err != nil {
-				t.Error(err)
-				continue
-			}
+			tests.Ok(t, repo.Update(c), "No error")
 		}
 
 		c := comps[0]
@@ -296,22 +204,14 @@ func TestUpdateComposition(t *testing.T) {
 		}
 
 		c, err := serv.Update(c.ID.Hex(), compToUpdateRequest(c))
-		if err != nil {
-			t.Error(err)
-		}
+		tests.Ok(t, err, "No error")
 		updatedUses, err := serv.UpdateUses(c)
-		if err != nil {
-			t.Error(err)
-		}
+		tests.Ok(t, err, "No error")
 
-		if len(updatedUses) != 4 {
-			t.Errorf("Uses weren't updated: %d updated instead of %d\n", len(updatedUses), 4)
-		}
+		tests.Equals(t, len(updatedUses), 4, "Uses weren't updated")
 
 		comps, _ = repo.FindAll()
-		if len(comps) != 7 {
-			t.Error("Compositions count has changed")
-		}
+		tests.Equals(t, len(comps), 7, "Compositions count has changed")
 
 		c1 := 300.0
 		q1 := 2.5
@@ -331,32 +231,19 @@ func TestUpdateComposition(t *testing.T) {
 		checkCompCost(t, comps, 6, c7)
 
 		// Check events
-		if eventMgr.Count() != 2 {
-			t.Errorf("Should raise events: %d\n", eventMgr.Count())
-		}
+		tests.Equals(t, eventMgr.Count(), 2, "Should raise events")
 
 		msgs := eventMgr.Messages()
-		if msgs[0].Type() != "CompositionUpdatedManually" || msgs[0].Key != "composition.updated" {
-			t.Errorf("Wrong first event: %s\n", msgs[0].Type())
-		}
-		var compUpdatedManuallyEvent CompositionChangedEvent
-		if err := msgs[0].Decode(&compUpdatedManuallyEvent); err != nil {
-			t.Error(err)
-		}
-		if compUpdatedManuallyEvent.Composition.ID.Hex() != c.ID.Hex() {
-			t.Errorf("Different composition in raised event\n")
-		}
+		tests.Assert(t, msgs[0].Type() == "CompositionUpdatedManually" && msgs[0].Key == "composition.updated", "Wrong event")
 
-		if msgs[1].Type() != "CompositionsUpdatedAutomatically" || msgs[0].Key != "composition.updated" {
-			t.Errorf("Wrong first event: %s\n", msgs[0].Type())
-		}
+		var compUpdatedManuallyEvent CompositionChangedEvent
+		tests.Ok(t, msgs[0].Decode(&compUpdatedManuallyEvent), "Error")
+		tests.Equals(t, compUpdatedManuallyEvent.Composition.ID.Hex(), c.ID.Hex(), "Different composition")
+		tests.Assert(t, msgs[1].Type() == "CompositionsUpdatedAutomatically" && msgs[0].Key == "composition.updated", "Wrong event")
+
 		var compsUpdatedAutomaticallyEvent CompositionsUpdatedAutomaticallyEvent
-		if err := msgs[1].Decode(&compsUpdatedAutomaticallyEvent); err != nil {
-			t.Error(err)
-		}
-		if len(compsUpdatedAutomaticallyEvent.Compositions) != 4 {
-			t.Errorf("Compositions updated automatically: %d\n", len(compsUpdatedAutomaticallyEvent.Compositions))
-		}
+		tests.Ok(t, msgs[1].Decode(&compsUpdatedAutomaticallyEvent), "No error")
+		tests.Equals(t, len(compsUpdatedAutomaticallyEvent.Compositions), 4, "Update automatically")
 	})
 
 	t.Run("Creating and updating", func(t *testing.T) {
@@ -367,18 +254,11 @@ func TestUpdateComposition(t *testing.T) {
 		comp.Stock = quantity.Quantity{1, "u"}
 
 		createdComp, err := serv.Create(compToCreateRequest(comp))
-		if err != nil {
-			t.Error(err)
-		}
+		tests.Ok(t, err, "No Error")
 
 		updatedComp, err := serv.Update(createdComp.ID.Hex(), compToUpdateRequest(createdComp))
-		if err != nil {
-			t.Error(err)
-		}
-
-		if createdComp.ID.Hex() != updatedComp.ID.Hex() {
-			t.Error("Composition ID has changed")
-		}
+		tests.Ok(t, err, "No error")
+		tests.Equals(t, createdComp.ID.Hex(), updatedComp.ID.Hex(), "ID changed")
 	})
 
 	t.Run("Invalid units", func(t *testing.T) {
@@ -389,26 +269,21 @@ func TestUpdateComposition(t *testing.T) {
 		comp.Stock = quantity.Quantity{1, "u"}
 
 		createdComp, err := serv.Create(compToCreateRequest(comp))
-		if err != nil {
-			t.Error(err)
-		}
+		tests.Ok(t, err, "No error")
 
 		createdComp.Unit = quantity.Quantity{1, "asd"}
-		if _, err := serv.Update(createdComp.ID.Hex(), compToUpdateRequest(createdComp)); !hasErrCode(err, "INVALID_UNIT") {
-			t.Error("Should return error due to invalid unit")
-		}
+		_, err = serv.Update(createdComp.ID.Hex(), compToUpdateRequest(createdComp))
+		tests.ErrCode(t, err, "INVALID_UNIT", "Should return error due to invalid unit")
 
 		createdComp.Unit = quantity.Quantity{1, "u"}
 		createdComp.Stock = quantity.Quantity{1, "asd"}
-		if _, err := serv.Update(createdComp.ID.Hex(), compToUpdateRequest(createdComp)); !hasErrCode(err, "INVALID_STOCK") {
-			t.Error("Should return error due to invalid unit in stock")
-		}
+		_, err = serv.Update(createdComp.ID.Hex(), compToUpdateRequest(createdComp))
+		tests.ErrCode(t, err, "INVALID_STOCK", "Should return error due to invalid unit in stock")
 
 		createdComp.Unit = quantity.Quantity{1, "kg"}
 		createdComp.Stock = quantity.Quantity{1, "l"}
-		if _, err := serv.Update(createdComp.ID.Hex(), compToUpdateRequest(createdComp)); !hasErrCode(err, "INCOMPATIBLE_STOCK_AND_UNIT") {
-			t.Error("Stock and unit should be compatible")
-		}
+		_, err = serv.Update(createdComp.ID.Hex(), compToUpdateRequest(createdComp))
+		tests.ErrCode(t, err, "INCOMPATIBLE_STOCK_AND_UNIT", "Stock and unit should be compatible")
 	})
 
 	t.Run("Empty stock ignored on updating", func(t *testing.T) {
@@ -422,23 +297,15 @@ func TestUpdateComposition(t *testing.T) {
 		updateReq.Stock = nil
 
 		c, err := serv.Update(comp.ID.Hex(), updateReq)
-		if err != nil {
-			t.Error(err)
-		}
+		tests.Ok(t, err, "No error")
 
-		if !c.Stock.Equals(quantity.Quantity{25, "l"}) {
-			t.Error("Empty stock should be ignored")
-		}
+		tests.Assert(t, c.Stock.Equals(quantity.Quantity{25, "l"}), "Empty stock should be ignored")
 
 		updateReq.Stock = &quantity.Quantity{4000, "ml"}
 		c, err = serv.Update(comp.ID.Hex(), updateReq)
-		if err != nil {
-			t.Error(err)
-		}
+		tests.Ok(t, err, "No error")
 
-		if !c.Stock.Equals(quantity.Quantity{4000, "ml"}) {
-			t.Error("Non-empty stock should be assigned")
-		}
+		tests.Assert(t, c.Stock.Equals(quantity.Quantity{4000, "ml"}), "Non-empty stock should be assigned")
 	})
 }
 
@@ -464,17 +331,11 @@ func TestCreateAndUpdateDependencies(t *testing.T) {
 
 	createReq := compToCreateRequest(comp)
 	comp, err := serv.Create(createReq)
-	if err != nil {
-		t.Error(err)
-	}
+	tests.Ok(t, err, "No error")
 
-	if comp.Cost != 125 {
-		t.Errorf("Cost %f should be %f\n", comp.Cost, 125.0)
-	}
+	tests.Equals(t, comp.Cost, 125.0, "Cost should be 125.0")
 
-	if comp.Dependencies[0].Subvalue != 50 || comp.Dependencies[1].Subvalue != 50 || comp.Dependencies[2].Subvalue != 25 {
-		t.Errorf("Dependency subvalue wrong")
-	}
+	tests.Assert(t, comp.Dependencies[0].Subvalue == 50 && comp.Dependencies[1].Subvalue == 50 && comp.Dependencies[2].Subvalue == 25, "Dependency subvalue wrong")
 
 	t.Run("Add dependency", func(t *testing.T) {
 		dep4 := newComposition()
@@ -487,13 +348,9 @@ func TestCreateAndUpdateDependencies(t *testing.T) {
 
 		updateReq := compToUpdateRequest(comp)
 		comp, err := serv.Update(comp.ID.Hex(), updateReq)
-		if err != nil {
-			t.Error(err)
-		}
+		tests.Ok(t, err, "No error")
 
-		if comp.Cost != 175 {
-			t.Errorf("Cost %f should be 175\n", comp.Cost)
-		}
+		tests.Equals(t, comp.Cost, 175.0, "Cost should be 175.0")
 	})
 
 	t.Run("Remove dependency", func(t *testing.T) {
@@ -502,13 +359,8 @@ func TestCreateAndUpdateDependencies(t *testing.T) {
 
 		updateReq := compToUpdateRequest(comp)
 		comp, err := serv.Update(comp.ID.Hex(), updateReq)
-		if err != nil {
-			t.Error(err)
-		}
-
-		if comp.Cost != 125 {
-			t.Errorf("Cost %f should be 125\n", comp.Cost)
-		}
+		tests.Ok(t, err, "No error")
+		tests.Equals(t, comp.Cost, 125.0, "Cost should be 125.0")
 	})
 
 	t.Run("Change dependency", func(t *testing.T) {
@@ -517,13 +369,8 @@ func TestCreateAndUpdateDependencies(t *testing.T) {
 
 		updateReq := compToUpdateRequest(comp)
 		comp, err := serv.Update(comp.ID.Hex(), updateReq)
-		if err != nil {
-			t.Error(err)
-		}
-
-		if comp.Cost != 475 {
-			t.Errorf("Cost %f should be 125\n", comp.Cost)
-		}
+		tests.Ok(t, err, "No error")
+		tests.Equals(t, comp.Cost, 475.0, "Cost should be 475.0")
 	})
 }
 
@@ -543,13 +390,10 @@ func TestDeleteComposition(t *testing.T) {
 	}
 	repo.Insert(comp)
 
-	if err := serv.Delete(dep.ID.Hex()); !hasErrCode(err, "COMPOSITION_USED_AS_DEPENDENCY") || repo.Count() != 2 {
-		t.Error("Used dependency cannot be deleted")
-	}
-
-	if err := serv.Delete(comp.ID.Hex()); err != nil || repo.Count() != 1 {
-		t.Error("Not used composition should be deleted")
-	}
+	tests.ErrCode(t, serv.Delete(dep.ID.Hex()), "COMPOSITION_USED_AS_DEPENDENCY", "Used dependency cannot be deleted")
+	tests.Equals(t, repo.Count(), 2, "Used dependency cannot be deleted")
+	tests.Ok(t, serv.Delete(comp.ID.Hex()), "Not used composition should be deleted")
+	tests.Equals(t, repo.Count(), 1, "Not used composition should be deleted")
 }
 
 func TestCalculateDependenciesSubvalues(t *testing.T) {
@@ -561,12 +405,9 @@ func TestCalculateDependenciesSubvalues(t *testing.T) {
 	for _, c := range comps {
 		servImpl := serv.(*service)
 		deps, err := servImpl.calculateDependenciesSubvalues(c.Dependencies)
-		if err != nil {
-			t.Error(err)
-			continue
-		}
+		tests.Ok(t, err, "No error")
 		c.SetDependencies(deps)
-		repo.Update(c)
+		tests.Ok(t, repo.Update(c), "No error")
 	}
 
 	c1 := 200.0

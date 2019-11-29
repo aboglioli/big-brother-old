@@ -1,6 +1,7 @@
 package composition
 
 import (
+	"fmt"
 	"math"
 	"time"
 
@@ -116,6 +117,32 @@ func (c1 *Composition) CompareDependencies(deps []Dependency) (left []Dependency
 	}
 
 	return
+}
+
+func (c *Composition) ValidateSchema() errors.Error {
+	errGen := errors.NewValidation().SetPath("composition/composition.ValidateSchema")
+
+	if c.Cost < 0 {
+		return errGen.SetCode("NEGATIVE_COST").SetMessage(fmt.Sprintf("%v", c.Cost))
+	}
+	if !c.Unit.IsValid() {
+		return errGen.SetCode("INVALID_UNIT").SetMessage(fmt.Sprintf("%v", c.Unit))
+	}
+	if !c.Stock.IsValid() {
+		return errGen.SetCode("INVALID_STOCK").SetMessage(fmt.Sprintf("%v", c.Stock))
+	}
+
+	if !c.Stock.Compatible(c.Unit) {
+		return errGen.SetCode("INCOMPATIBLE_STOCK_AND_UNIT").SetMessage(fmt.Sprintf("%s != %s", c.Stock.Unit, c.Unit.Unit))
+	}
+
+	for i, d := range c.Dependencies {
+		if !d.Quantity.IsValid() {
+			return errGen.SetCode("INVALID_DEPENDENCY_QUANTITY").SetMessage(fmt.Sprintf("Dependency %d: %v", i, d.Quantity))
+		}
+	}
+
+	return nil
 }
 
 func (c *Composition) calculateCostFromDependencies() {

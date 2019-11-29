@@ -87,7 +87,7 @@ func (u *User) RemoveRole(role string) {
 var re = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
 func (u *User) ValidateSchema() errors.Error {
-	errGen := errors.NewValidation().SetPath("auth/user.ValidateSchema")
+	errGen := errors.NewValidation().SetPath("user/user.ValidateSchema")
 
 	if len(u.Username) < 6 || len(u.Username) > 64 {
 		return errGen.SetCode("INVALID_USERNAME_LENGTH").SetMessage(fmt.Sprintf("%d", len(u.Username)))

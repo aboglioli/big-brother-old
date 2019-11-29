@@ -13,7 +13,7 @@ func hasErrCode(err errors.Error, code string) bool {
 	return err.Code() == code
 }
 
-func TestUserValidation(t *testing.T) {
+func TestValidateSchema(t *testing.T) {
 	user := NewUser()
 
 	if err := user.ValidateSchema(); !hasErrCode(err, "INVALID_USERNAME_LENGTH") {

@@ -370,18 +370,9 @@ func (s *service) updateUses(c *Composition, cache map[string]*Composition) erro
 }
 
 func (s *service) calculateDependenciesSubvalues(dependencies []Dependency) ([]Dependency, errors.Error) {
-	errGen := errors.NewValidation().SetPath("composition/service.calculateDependenciesSubvalue")
-
 	newDependencies := make([]Dependency, len(dependencies))
 	for i, dep := range dependencies {
-		comp, err := s.repository.FindByID(dep.On.Hex())
-		if err != nil || comp == nil {
-			return nil, errGen.SetCode("DEPENDENCY_DOES_NOT_EXIST").SetReference(err)
-		}
-
-		if !dep.Quantity.Compatible(comp.Unit) {
-			return nil, errGen.SetCode("INCOMPATIBLE_DEPENDENCY_QUANTITY").SetMessage(fmt.Sprintf("Dependency %d: %v != %v", i, dep.Quantity, comp.Unit))
-		}
+		comp, _ := s.repository.FindByID(dep.On.Hex())
 
 		subvalue := comp.CostFromQuantity(dep.Quantity)
 		dep.Subvalue = math.Round(subvalue*1000) / 1000
@@ -394,28 +385,18 @@ func (s *service) calculateDependenciesSubvalues(dependencies []Dependency) ([]D
 func (s *service) validateSchema(c *Composition) errors.Error {
 	errGen := errors.NewValidation().SetPath("composition/service.validateSchema")
 
-	if c.Cost < 0 {
-		return errGen.SetCode("NEGATIVE_COST").SetMessage(fmt.Sprintf("%v", c.Cost))
-	}
-	if !c.Unit.IsValid() {
-		return errGen.SetCode("INVALID_UNIT").SetMessage(fmt.Sprintf("%v", c.Unit))
-	}
-	if !c.Stock.IsValid() {
-		return errGen.SetCode("INVALID_STOCK").SetMessage(fmt.Sprintf("%v", c.Stock))
+	if err := c.ValidateSchema(); err != nil {
+		return err
 	}
 
-	if !c.Stock.Compatible(c.Unit) {
-		return errGen.SetCode("INCOMPATIBLE_STOCK_AND_UNIT").SetMessage(fmt.Sprintf("%s != %s", c.Stock.Unit, c.Unit.Unit))
-	}
-
-	for i, d := range c.Dependencies {
-		_, err := s.repository.FindByID(d.On.Hex())
+	for i, dep := range c.Dependencies {
+		comp, err := s.repository.FindByID(dep.On.Hex())
 		if err != nil {
 			return errGen.SetCode("DEPENDENCY_DOES_NOT_EXIST").SetReference(err)
 		}
 
-		if !d.Quantity.IsValid() {
-			return errGen.SetCode("INVALID_DEPENDENCY_QUANTITY").SetMessage(fmt.Sprintf("Dependency %d: %v", i, d.Quantity))
+		if !dep.Quantity.Compatible(comp.Unit) {
+			return errGen.SetCode("INCOMPATIBLE_DEPENDENCY_QUANTITY").SetMessage(fmt.Sprintf("Dependency %d: %v != %v", i, dep.Quantity, comp.Unit))
 		}
 	}
 

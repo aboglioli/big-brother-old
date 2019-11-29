@@ -1,6 +1,10 @@
 package quantity
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/aboglioli/big-brother/pkg/tests"
+)
 
 var q1, q2, q3 Quantity
 
@@ -24,43 +28,25 @@ func init() {
 func TestAddSuccessful(t *testing.T) {
 	t.Run("Successful", func(t *testing.T) {
 		qTotal, _ := q1.Add(q2)
-
-		if qTotal.Quantity != 2.5 {
-			t.Errorf("Result value: %f", qTotal.Quantity)
-		}
-
-		if qTotal.Unit != "kg" {
-			t.Errorf("Result unit: %s", qTotal.Unit)
-		}
+		tests.Equals(t, qTotal.Quantity, 2.5)
+		tests.Equals(t, qTotal.Unit, "kg")
 	})
 
 	t.Run("Incompatible units", func(t *testing.T) {
 		_, err := q1.Add(q3)
-
-		if err == nil {
-			t.Errorf("Should return error")
-		}
+		tests.Err(t, err)
 	})
 }
 
 func TestSubtract(t *testing.T) {
 	t.Run("Successful", func(t *testing.T) {
 		qTotal, _ := q1.Subtract(q2)
-
-		if qTotal.Quantity != 1.5 {
-			t.Errorf("Result value: %f", qTotal.Quantity)
-		}
-
-		if qTotal.Unit != "kg" {
-			t.Errorf("Result unit: %s", qTotal.Unit)
-		}
+		tests.Equals(t, qTotal.Quantity, 1.5)
+		tests.Equals(t, qTotal.Unit, "kg")
 	})
 
 	t.Run("Incompatible units", func(t *testing.T) {
 		_, err := q1.Subtract(q3)
-
-		if err == nil {
-			t.Errorf("Should return error")
-		}
+		tests.Err(t, err)
 	})
 }

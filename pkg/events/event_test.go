@@ -2,6 +2,8 @@ package events
 
 import (
 	"testing"
+
+	"github.com/aboglioli/big-brother/pkg/tests"
 )
 
 type customEvent struct {
@@ -14,16 +16,10 @@ func TestCustomEventEncoding(t *testing.T) {
 	conv := DefaultConverter()
 
 	src, err := conv.Encode(cEvt)
-	if err != nil {
-		t.Error(err)
-	}
+	tests.Ok(t, err)
 
 	var dst customEvent
-	if err := conv.Decode(src, &dst); err != nil {
-		t.Error(err)
-	}
+	tests.Ok(t, conv.Decode(src, &dst))
 
-	if dst.Type != cEvt.Type || dst.Data != cEvt.Data {
-		t.Error("Decoded and encoded events are different")
-	}
+	tests.Assert(t, dst.Type == cEvt.Type && dst.Data == cEvt.Data)
 }

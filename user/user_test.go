@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/aboglioli/big-brother/pkg/errors"
+	"github.com/aboglioli/big-brother/pkg/tests"
 )
 
 func hasErrCode(err errors.Error, code string) bool {
@@ -16,46 +17,27 @@ func hasErrCode(err errors.Error, code string) bool {
 func TestValidateSchema(t *testing.T) {
 	user := NewUser()
 
-	if err := user.ValidateSchema(); !hasErrCode(err, "INVALID_USERNAME_LENGTH") {
-		t.Error(err)
-	}
+	tests.ErrCode(t, user.ValidateSchema(), "INVALID_USERNAME_LENGTH")
 
 	user.Username = "username"
-
-	if err := user.ValidateSchema(); !hasErrCode(err, "INVALID_NAME_LENGTH") {
-		t.Error(err)
-	}
+	tests.ErrCode(t, user.ValidateSchema(), "INVALID_NAME_LENGTH")
 
 	user.Name = "Name"
-
-	if err := user.ValidateSchema(); !hasErrCode(err, "INVALID_LASTNAME_LENGTH") {
-		t.Error(err)
-	}
+	tests.ErrCode(t, user.ValidateSchema(), "INVALID_LASTNAME_LENGTH")
 
 	user.Lastname = "Name"
-
-	if err := user.ValidateSchema(); !hasErrCode(err, "INVALID_EMAIL_LENGTH") {
-		t.Error(err)
-	}
+	tests.ErrCode(t, user.ValidateSchema(), "INVALID_EMAIL_LENGTH")
 
 	user.Email = "asd&asd.com"
-	if err := user.ValidateSchema(); !hasErrCode(err, "INVALID_EMAIL_ADDRESS") {
-		t.Error(err)
-	}
+	tests.ErrCode(t, user.ValidateSchema(), "INVALID_EMAIL_ADDRESS")
 	user.Email = "as-as-as"
-	if err := user.ValidateSchema(); !hasErrCode(err, "INVALID_EMAIL_ADDRESS") {
-		t.Error(err)
-	}
+	tests.ErrCode(t, user.ValidateSchema(), "INVALID_EMAIL_ADDRESS")
 	user.Email = "asd@google_yahoo.com"
-	if err := user.ValidateSchema(); !hasErrCode(err, "INVALID_EMAIL_ADDRESS") {
-		t.Error(err)
-	}
+	tests.ErrCode(t, user.ValidateSchema(), "INVALID_EMAIL_ADDRESS")
 
 	user.Email = "asd@asd.com"
 
-	if err := user.ValidateSchema(); err != nil {
-		t.Error(err)
-	}
+	tests.Ok(t, user.ValidateSchema())
 }
 
 func TestUserPassword(t *testing.T) {
@@ -63,38 +45,29 @@ func TestUserPassword(t *testing.T) {
 	pwd := "123456"
 	user.SetPassword(pwd)
 
-	if len(user.Password) < 30 || user.Password == pwd {
-		t.Error("Wrong encryption")
-	}
+	tests.Assert(t, len(user.Password) > 30)
+	tests.Assert(t, user.Password != pwd)
 
-	if !user.ComparePassword("123456") {
-		t.Error("Wrong comparison")
-	}
-
-	if user.ComparePassword("123457") {
-		t.Error("Wrong comparison")
-	}
+	tests.Assert(t, user.ComparePassword("123456"))
+	tests.Assert(t, !user.ComparePassword("123457"))
 }
 
 func TestUserRoles(t *testing.T) {
 	user := NewUser()
 
-	if !user.HasRole("user") || len(user.Roles) != 1 {
-		t.Error("Default role")
-	}
+	tests.Assert(t, user.HasRole("user"))
+	tests.Equals(t, len(user.Roles), 1)
 
 	user.AddRole("admin")
-	if !user.HasRole("admin") || len(user.Roles) != 2 {
-		t.Error("Error adding role")
-	}
+	tests.Assert(t, user.HasRole("admin"))
+	tests.Equals(t, len(user.Roles), 2)
 
 	user.AddRole("user")
-	if !user.HasRole("user") || len(user.Roles) != 2 {
-		t.Error("Error adding role")
-	}
+	tests.Assert(t, user.HasRole("user"))
+	tests.Equals(t, len(user.Roles), 2)
 
 	user.RemoveRole("admin")
-	if user.HasRole("admin") || len(user.Roles) != 1 || user.Roles[0] != "user" {
-		t.Error("Error removing role")
-	}
+	tests.Assert(t, !user.HasRole("admin"))
+	tests.Assert(t, user.HasRole("user"))
+	tests.Equals(t, len(user.Roles), 1)
 }

@@ -33,3 +33,7 @@ func (r *redisCache) Get(k string) interface{} {
 func (r *redisCache) Set(k string, v interface{}, d time.Duration) {
 	r.client.Set(k, v, d)
 }
+
+func (r *redisCache) Delete(k string) {
+	r.client.Del(k)
+}

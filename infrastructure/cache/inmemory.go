@@ -34,3 +34,7 @@ func (c *goCache) Get(k string) interface{} {
 func (c *goCache) Set(k string, v interface{}, d time.Duration) {
 	c.cache.Set(k, v, d)
 }
+
+func (c *goCache) Delete(k string) {
+	c.cache.Delete(k)
+}

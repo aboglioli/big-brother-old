@@ -1,5 +1,9 @@
 package tests
 
+import (
+	"testing"
+)
+
 const (
 	Any = "tests.Anything"
 )
@@ -17,20 +21,18 @@ func (m *Mock) Called(f string, args ...interface{}) {
 	m.Calls = append(m.Calls, Call{f, args})
 }
 
-func (m *Mock) Assert(calls []Call) bool {
+func (m *Mock) Assert(t *testing.T, calls []Call) {
 	if len(m.Calls) != len(calls) {
-		return false
+		t.Fatalf("MOCK: Different number of calls\n%s\n", printStackInfo())
 	}
 
 	for i, call1 := range m.Calls {
 		call2 := calls[i]
 
 		if call1.Func != call2.Func || !compareArgs(call1.Args, call2.Args) {
-			return false
+			t.Fatalf("MOCK:\nexpected: %s {%v}\nactual: %s {%v}\n%s\n", call1.Func, call1.Args, call2.Func, call2.Args, printStackInfo())
 		}
 	}
-
-	return true
 }
 
 func (m *Mock) Reset() {

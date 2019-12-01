@@ -23,6 +23,20 @@ func (m *Mock) Called(f string, args ...interface{}) {
 	m.Calls = append(m.Calls, Call{f, args})
 }
 
+func (m *Mock) CallsTo(f string) int {
+	count := 0
+	for _, c := range m.Calls {
+		if c.Func == f {
+			count++
+		}
+	}
+	return count
+}
+
+func (m *Mock) CountCalls() int {
+	return len(m.Calls)
+}
+
 func (m *Mock) Assert(t *testing.T, calls []Call) {
 	if len(m.Calls) != len(calls) {
 		t.Fatalf("MOCK: Different number of calls\n%s\n", printStackInfo())

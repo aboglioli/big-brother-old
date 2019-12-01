@@ -28,8 +28,8 @@ func init() {
 func TestAddSuccessful(t *testing.T) {
 	t.Run("Successful", func(t *testing.T) {
 		qTotal, _ := q1.Add(q2)
-		tests.Equals(t, qTotal.Quantity, 2.5)
-		tests.Equals(t, qTotal.Unit, "kg")
+		tests.Equal(t, qTotal.Quantity, 2.5)
+		tests.Equal(t, qTotal.Unit, "kg")
 	})
 
 	t.Run("Incompatible units", func(t *testing.T) {
@@ -41,8 +41,8 @@ func TestAddSuccessful(t *testing.T) {
 func TestSubtract(t *testing.T) {
 	t.Run("Successful", func(t *testing.T) {
 		qTotal, _ := q1.Subtract(q2)
-		tests.Equals(t, qTotal.Quantity, 1.5)
-		tests.Equals(t, qTotal.Unit, "kg")
+		tests.Equal(t, qTotal.Quantity, 1.5)
+		tests.Equal(t, qTotal.Unit, "kg")
 	})
 
 	t.Run("Incompatible units", func(t *testing.T) {

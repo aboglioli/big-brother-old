@@ -32,7 +32,7 @@ func Assert(t *testing.T, cond bool, msgs ...string) {
 	}
 }
 
-func Equals(t *testing.T, v1 interface{}, v2 interface{}, msgs ...string) {
+func Equal(t *testing.T, v1 interface{}, v2 interface{}, msgs ...string) {
 	if v1 != v2 {
 		t.Errorf("EQUALS: %s\n%v != %v\n%s\n", msgs, v1, v2, printStackInfo())
 	}

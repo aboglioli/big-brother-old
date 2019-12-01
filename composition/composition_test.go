@@ -20,7 +20,7 @@ func TestCalculateCostFromSubvalue(t *testing.T) {
 		},
 	)
 	c.calculateCostFromDependencies()
-	tests.Equals(t, c.Cost, 350.0, "Cost should be 350")
+	tests.Equal(t, c.Cost, 350.0, "Cost should be 350")
 }
 
 func TestCalculateCostByQuantity(t *testing.T) {
@@ -28,13 +28,13 @@ func TestCalculateCostByQuantity(t *testing.T) {
 	comp.Cost = 50
 	comp.Unit = quantity.Quantity{2, "kg"}
 
-	tests.Equals(t, comp.CostFromQuantity(quantity.Quantity{1000, "g"}), 25.0, "Cost should be 25")
-	tests.Equals(t, comp.CostFromQuantity(quantity.Quantity{500, "g"}), 12.5, "Cost should be 12.5")
-	tests.Equals(t, comp.CostFromQuantity(quantity.Quantity{3, "kg"}), 3.0*50/2, "Cost should be 75")
+	tests.Equal(t, comp.CostFromQuantity(quantity.Quantity{1000, "g"}), 25.0, "Cost should be 25")
+	tests.Equal(t, comp.CostFromQuantity(quantity.Quantity{500, "g"}), 12.5, "Cost should be 12.5")
+	tests.Equal(t, comp.CostFromQuantity(quantity.Quantity{3, "kg"}), 3.0*50/2, "Cost should be 75")
 
 	comp.Unit = quantity.Quantity{0, "kg"}
 
-	tests.Equals(t, comp.CostFromQuantity(quantity.Quantity{1, "kg"}), 0.0, "Division by zero")
+	tests.Equal(t, comp.CostFromQuantity(quantity.Quantity{1, "kg"}), 0.0, "Division by zero")
 }
 
 func TestAddAndRemoveCompositionDependencies(t *testing.T) {
@@ -50,7 +50,7 @@ func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 			},
 		})
 
-		tests.Equals(t, len(c.Dependencies), 1, "Dependency should have been added")
+		tests.Equal(t, len(c.Dependencies), 1, "Dependency should have been added")
 	})
 	t.Run("Add same dependency", func(t *testing.T) {
 		c.UpsertDependency(Dependency{
@@ -78,7 +78,7 @@ func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 		err := c.RemoveDependency(randID.Hex())
 
 		tests.Ok(t, err, "Dependency should be removed")
-		tests.Equals(t, len(c.Dependencies), 1, "Dependency should be removed")
+		tests.Equal(t, len(c.Dependencies), 1, "Dependency should be removed")
 	})
 	t.Run("Remove non-existing dependency", func(t *testing.T) {
 		err := c.RemoveDependency(primitive.NewObjectID().String())
@@ -113,13 +113,13 @@ func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 			Subvalue: 10.5,
 		})
 
-		tests.Equals(t, len(c.Dependencies), 3, "Cost should be calculated after upserting")
-		tests.Equals(t, c.Cost, 61.0, "Cost should be calculated after upserting")
+		tests.Equal(t, len(c.Dependencies), 3, "Cost should be calculated after upserting")
+		tests.Equal(t, c.Cost, 61.0, "Cost should be calculated after upserting")
 
 		c.RemoveDependency(id.Hex())
 
-		tests.Equals(t, len(c.Dependencies), 2, "Cost should be calculated after removing")
-		tests.Equals(t, c.Cost, 31.0, "Cost should be calculated after removing")
+		tests.Equal(t, len(c.Dependencies), 2, "Cost should be calculated after removing")
+		tests.Equal(t, c.Cost, 31.0, "Cost should be calculated after removing")
 	})
 
 	t.Run("Add new dependency to a non-autoupdated composition", func(t *testing.T) {
@@ -135,7 +135,7 @@ func TestAddAndRemoveCompositionDependencies(t *testing.T) {
 			Subvalue: 30,
 		})
 
-		tests.Equals(t, c.Cost, 45.0, "Cost should not be updated automatically")
+		tests.Equal(t, c.Cost, 45.0, "Cost should not be updated automatically")
 	})
 }
 
@@ -146,23 +146,23 @@ func TestCompareDependencies(t *testing.T) {
 
 	// With itself
 	left, common, right := c1.CompareDependencies(c1.Dependencies)
-	tests.Equals(t, len(left), 0, "Left should be empty")
-	tests.Equals(t, len(common), 1, "Common should have 1 element")
-	tests.Equals(t, len(right), 0, "Right should be empty")
+	tests.Equal(t, len(left), 0, "Left should be empty")
+	tests.Equal(t, len(common), 1, "Common should have 1 element")
+	tests.Equal(t, len(right), 0, "Right should be empty")
 
 	// Copy
 	left, common, right = c1.CompareDependencies(c2.Dependencies)
-	tests.Equals(t, len(left), 0, "Left should be empty")
-	tests.Equals(t, len(common), 1, "Common should have 1 element")
-	tests.Equals(t, len(right), 0, "Right should be empty")
+	tests.Equal(t, len(left), 0, "Left should be empty")
+	tests.Equal(t, len(common), 1, "Common should have 1 element")
+	tests.Equal(t, len(right), 0, "Right should be empty")
 
 	// After changing
 	c2.Dependencies[0].Quantity = quantity.Quantity{250.0, "g"}
 
 	left, common, right = c1.CompareDependencies(c2.Dependencies)
-	tests.Equals(t, len(left), 1, "Left")
-	tests.Equals(t, len(common), 0, "There aren't common dependencies")
-	tests.Equals(t, len(right), 1, "Right")
+	tests.Equal(t, len(left), 1, "Left")
+	tests.Equal(t, len(common), 0, "There aren't common dependencies")
+	tests.Equal(t, len(right), 1, "Right")
 
 	// Add a common dependency
 	dep := Dependency{
@@ -173,9 +173,9 @@ func TestCompareDependencies(t *testing.T) {
 	c2.UpsertDependency(dep)
 
 	left, common, right = c1.CompareDependencies(c2.Dependencies)
-	tests.Equals(t, len(left), 1, "Left")
-	tests.Equals(t, len(common), 1, "There is a common dependencies")
-	tests.Equals(t, len(right), 1, "Right")
+	tests.Equal(t, len(left), 1, "Left")
+	tests.Equal(t, len(common), 1, "There is a common dependencies")
+	tests.Equal(t, len(right), 1, "Right")
 }
 
 func TestValidateSchema(t *testing.T) {

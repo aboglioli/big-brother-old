@@ -56,18 +56,18 @@ func TestUserRoles(t *testing.T) {
 	user := NewUser()
 
 	tests.Assert(t, user.HasRole("user"))
-	tests.Equals(t, len(user.Roles), 1)
+	tests.Equal(t, len(user.Roles), 1)
 
 	user.AddRole("admin")
 	tests.Assert(t, user.HasRole("admin"))
-	tests.Equals(t, len(user.Roles), 2)
+	tests.Equal(t, len(user.Roles), 2)
 
 	user.AddRole("user")
 	tests.Assert(t, user.HasRole("user"))
-	tests.Equals(t, len(user.Roles), 2)
+	tests.Equal(t, len(user.Roles), 2)
 
 	user.RemoveRole("admin")
 	tests.Assert(t, !user.HasRole("admin"))
 	tests.Assert(t, user.HasRole("user"))
-	tests.Equals(t, len(user.Roles), 1)
+	tests.Equal(t, len(user.Roles), 1)
 }

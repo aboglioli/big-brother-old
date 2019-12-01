@@ -52,5 +52,8 @@ func TestAssert(t *testing.T) {
 		Call{"Method1", []interface{}{nil, NotNil}},
 		Call{"Method2", []interface{}{1, NotNil, Nil}},
 	})
+	Equal(t, m.CallsTo("Method1"), 2)
+	Equal(t, m.CallsTo("Method2"), 1)
+	Equal(t, m.CountCalls(), 3)
 	m.Reset()
 }

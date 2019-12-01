@@ -5,7 +5,9 @@ import (
 )
 
 const (
-	Any = "tests.Anything"
+	Any    = "tests.Anything"
+	Nil    = "tests.Nil"
+	NotNil = "tests.NotNil"
 )
 
 type Call struct {
@@ -47,6 +49,14 @@ func compareArgs(args1 []interface{}, args2 []interface{}) bool {
 	for i, arg1 := range args1 {
 		arg2 := args2[i]
 		if arg1 == Any || arg2 == Any {
+			continue
+		}
+
+		if arg2 == Nil && arg1 == nil {
+			continue
+		}
+
+		if arg2 == NotNil && arg1 != nil {
 			continue
 		}
 

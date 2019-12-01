@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -39,6 +40,17 @@ func TestAssert(t *testing.T) {
 	m.Assert(t, []Call{
 		Call{"simple", []interface{}{}},
 		Call{"simple", []interface{}{}},
+	})
+	m.Reset()
+
+	err := errors.New("Error")
+	m.Called("Method1", "data", nil)
+	m.Called("Method1", nil, err)
+	m.Called("Method2", 1, 2, nil)
+	m.Assert(t, []Call{
+		Call{"Method1", []interface{}{"data", Nil}},
+		Call{"Method1", []interface{}{nil, NotNil}},
+		Call{"Method2", []interface{}{1, NotNil, Nil}},
 	})
 	m.Reset()
 }

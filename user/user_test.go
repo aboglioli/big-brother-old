@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/aboglioli/big-brother/pkg/errors"
-	"github.com/aboglioli/big-brother/pkg/tests"
+	"github.com/aboglioli/big-brother/pkg/tests/assert"
 )
 
 func hasErrCode(err errors.Error, code string) bool {
@@ -17,27 +17,27 @@ func hasErrCode(err errors.Error, code string) bool {
 func TestValidateSchema(t *testing.T) {
 	user := NewUser()
 
-	tests.ErrCode(t, user.ValidateSchema(), "INVALID_USERNAME_LENGTH")
+	assert.ErrCode(t, user.ValidateSchema(), "INVALID_USERNAME_LENGTH")
 
 	user.Username = "username"
-	tests.ErrCode(t, user.ValidateSchema(), "INVALID_NAME_LENGTH")
+	assert.ErrCode(t, user.ValidateSchema(), "INVALID_NAME_LENGTH")
 
 	user.Name = "Name"
-	tests.ErrCode(t, user.ValidateSchema(), "INVALID_LASTNAME_LENGTH")
+	assert.ErrCode(t, user.ValidateSchema(), "INVALID_LASTNAME_LENGTH")
 
 	user.Lastname = "Name"
-	tests.ErrCode(t, user.ValidateSchema(), "INVALID_EMAIL_LENGTH")
+	assert.ErrCode(t, user.ValidateSchema(), "INVALID_EMAIL_LENGTH")
 
 	user.Email = "asd&asd.com"
-	tests.ErrCode(t, user.ValidateSchema(), "INVALID_EMAIL_ADDRESS")
+	assert.ErrCode(t, user.ValidateSchema(), "INVALID_EMAIL_ADDRESS")
 	user.Email = "as-as-as"
-	tests.ErrCode(t, user.ValidateSchema(), "INVALID_EMAIL_ADDRESS")
+	assert.ErrCode(t, user.ValidateSchema(), "INVALID_EMAIL_ADDRESS")
 	user.Email = "asd@google_yahoo.com"
-	tests.ErrCode(t, user.ValidateSchema(), "INVALID_EMAIL_ADDRESS")
+	assert.ErrCode(t, user.ValidateSchema(), "INVALID_EMAIL_ADDRESS")
 
 	user.Email = "asd@asd.com"
 
-	tests.Ok(t, user.ValidateSchema())
+	assert.Ok(t, user.ValidateSchema())
 }
 
 func TestUserPassword(t *testing.T) {
@@ -45,29 +45,29 @@ func TestUserPassword(t *testing.T) {
 	pwd := "123456"
 	user.SetPassword(pwd)
 
-	tests.Assert(t, len(user.Password) > 30)
-	tests.Assert(t, user.Password != pwd)
+	assert.Assert(t, len(user.Password) > 30)
+	assert.Assert(t, user.Password != pwd)
 
-	tests.Assert(t, user.ComparePassword("123456"))
-	tests.Assert(t, !user.ComparePassword("123457"))
+	assert.Assert(t, user.ComparePassword("123456"))
+	assert.Assert(t, !user.ComparePassword("123457"))
 }
 
 func TestUserRoles(t *testing.T) {
 	user := NewUser()
 
-	tests.Assert(t, user.HasRole("user"))
-	tests.Equal(t, len(user.Roles), 1)
+	assert.Assert(t, user.HasRole("user"))
+	assert.Equal(t, len(user.Roles), 1)
 
 	user.AddRole("admin")
-	tests.Assert(t, user.HasRole("admin"))
-	tests.Equal(t, len(user.Roles), 2)
+	assert.Assert(t, user.HasRole("admin"))
+	assert.Equal(t, len(user.Roles), 2)
 
 	user.AddRole("user")
-	tests.Assert(t, user.HasRole("user"))
-	tests.Equal(t, len(user.Roles), 2)
+	assert.Assert(t, user.HasRole("user"))
+	assert.Equal(t, len(user.Roles), 2)
 
 	user.RemoveRole("admin")
-	tests.Assert(t, !user.HasRole("admin"))
-	tests.Assert(t, user.HasRole("user"))
-	tests.Equal(t, len(user.Roles), 1)
+	assert.Assert(t, !user.HasRole("admin"))
+	assert.Assert(t, user.HasRole("user"))
+	assert.Equal(t, len(user.Roles), 1)
 }

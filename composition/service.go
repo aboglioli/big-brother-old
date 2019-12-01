@@ -102,13 +102,6 @@ func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
 		return nil, err
 	}
 
-	deps, err := s.calculateDependenciesSubvalues(c.Dependencies)
-	if err != nil {
-		return nil, err
-	}
-
-	c.SetDependencies(deps)
-
 	if err := s.repository.Insert(c); err != nil {
 		return nil, errGen.SetCode("INSERT").SetReference(err)
 	}
@@ -369,19 +362,6 @@ func (s *service) updateUses(c *Composition, cache map[string]*Composition) erro
 	return nil
 }
 
-func (s *service) calculateDependenciesSubvalues(dependencies []Dependency) ([]Dependency, errors.Error) {
-	newDependencies := make([]Dependency, len(dependencies))
-	for i, dep := range dependencies {
-		comp, _ := s.repository.FindByID(dep.On.Hex())
-
-		subvalue := comp.CostFromQuantity(dep.Quantity)
-		dep.Subvalue = math.Round(subvalue*1000) / 1000
-		newDependencies[i] = dep
-	}
-
-	return newDependencies, nil
-}
-
 func (s *service) validateSchema(c *Composition) errors.Error {
 	errGen := errors.NewValidation().SetPath("composition/service.validateSchema")
 
@@ -389,6 +369,7 @@ func (s *service) validateSchema(c *Composition) errors.Error {
 		return err
 	}
 
+	newDependencies := make([]Dependency, len(c.Dependencies))
 	for i, dep := range c.Dependencies {
 		comp, err := s.repository.FindByID(dep.On.Hex())
 		if err != nil {
@@ -398,7 +379,12 @@ func (s *service) validateSchema(c *Composition) errors.Error {
 		if !dep.Quantity.Compatible(comp.Unit) {
 			return errGen.SetCode("INCOMPATIBLE_DEPENDENCY_QUANTITY").SetMessage(fmt.Sprintf("Dependency %d: %v != %v", i, dep.Quantity, comp.Unit))
 		}
+
+		subvalue := comp.CostFromQuantity(dep.Quantity)
+		dep.Subvalue = math.Round(subvalue*1000) / 1000
+		newDependencies[i] = dep
 	}
+	c.SetDependencies(newDependencies)
 
 	return nil
 }

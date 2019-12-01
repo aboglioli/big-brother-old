@@ -1,8 +1,10 @@
-package tests
+package mock
 
 import (
 	"errors"
 	"testing"
+
+	"github.com/aboglioli/big-brother/pkg/tests/assert"
 )
 
 type mockStruct struct {
@@ -52,8 +54,8 @@ func TestAssert(t *testing.T) {
 		Call{"Method1", []interface{}{nil, NotNil}},
 		Call{"Method2", []interface{}{1, NotNil, Nil}},
 	})
-	Equal(t, m.CallsTo("Method1"), 2)
-	Equal(t, m.CallsTo("Method2"), 1)
-	Equal(t, m.CountCalls(), 3)
+	assert.Equal(t, m.CallsTo("Method1"), 2)
+	assert.Equal(t, m.CallsTo("Method2"), 1)
+	assert.Equal(t, m.CountCalls(), 3)
 	m.Reset()
 }

@@ -3,7 +3,7 @@ package quantity
 import (
 	"testing"
 
-	"github.com/aboglioli/big-brother/pkg/tests"
+	"github.com/aboglioli/big-brother/pkg/tests/assert"
 )
 
 var q1, q2, q3 Quantity
@@ -28,25 +28,25 @@ func init() {
 func TestAddSuccessful(t *testing.T) {
 	t.Run("Successful", func(t *testing.T) {
 		qTotal, _ := q1.Add(q2)
-		tests.Equal(t, qTotal.Quantity, 2.5)
-		tests.Equal(t, qTotal.Unit, "kg")
+		assert.Equal(t, qTotal.Quantity, 2.5)
+		assert.Equal(t, qTotal.Unit, "kg")
 	})
 
 	t.Run("Incompatible units", func(t *testing.T) {
 		_, err := q1.Add(q3)
-		tests.Err(t, err)
+		assert.Err(t, err)
 	})
 }
 
 func TestSubtract(t *testing.T) {
 	t.Run("Successful", func(t *testing.T) {
 		qTotal, _ := q1.Subtract(q2)
-		tests.Equal(t, qTotal.Quantity, 1.5)
-		tests.Equal(t, qTotal.Unit, "kg")
+		assert.Equal(t, qTotal.Quantity, 1.5)
+		assert.Equal(t, qTotal.Unit, "kg")
 	})
 
 	t.Run("Incompatible units", func(t *testing.T) {
 		_, err := q1.Subtract(q3)
-		tests.Err(t, err)
+		assert.Err(t, err)
 	})
 }

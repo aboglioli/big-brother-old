@@ -4,11 +4,11 @@ import (
 	"time"
 
 	"github.com/aboglioli/big-brother/pkg/errors"
-	"github.com/aboglioli/big-brother/pkg/tests"
+	"github.com/aboglioli/big-brother/pkg/tests/mock"
 )
 
 type mockRepository struct {
-	tests.Mock
+	mock.Mock
 	compositions []*Composition
 }
 

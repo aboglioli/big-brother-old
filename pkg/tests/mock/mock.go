@@ -1,7 +1,10 @@
-package tests
+package mock
 
 import (
+	"fmt"
 	"testing"
+
+	"github.com/aboglioli/big-brother/pkg/tests"
 )
 
 const (
@@ -39,14 +42,18 @@ func (m *Mock) CountCalls() int {
 
 func (m *Mock) Assert(t *testing.T, calls []Call) {
 	if len(m.Calls) != len(calls) {
-		t.Fatalf("MOCK: Different number of calls\n%s\n", printStackInfo())
+		calls := ""
+		for _, call := range m.Calls {
+			calls += fmt.Sprintf("- %s {%v}\n", call.Func, call.Args)
+		}
+		t.Fatalf("MOCK: Different number of calls\n%s%s\n", calls, tests.PrintStackInfo())
 	}
 
 	for i, call1 := range m.Calls {
 		call2 := calls[i]
 
 		if call1.Func != call2.Func || !compareArgs(call1.Args, call2.Args) {
-			t.Fatalf("MOCK:\nexpected: %s {%v}\nactual: %s {%v}\n%s\n", call1.Func, call1.Args, call2.Func, call2.Args, printStackInfo())
+			t.Fatalf("MOCK:\nexpected: %s {%v}\nactual: %s {%v}\n%s\n", call1.Func, call1.Args, call2.Func, call2.Args, tests.PrintStackInfo())
 		}
 	}
 }

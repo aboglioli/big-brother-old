@@ -101,7 +101,7 @@ func (u *User) ValidateSchema() errors.Error {
 		return errGen.SetCode("INVALID_LASTNAME_LENGTH").SetMessage(fmt.Sprintf("%d", len(u.Lastname)))
 	}
 
-	if len(u.Email) < 6 || len(u.Email) > 64 {
+	if len(u.Email) < 6 || len(u.Email) > 80 {
 		return errGen.SetCode("INVALID_EMAIL_LENGTH").SetMessage(fmt.Sprintf("%d", len(u.Email)))
 	}
 

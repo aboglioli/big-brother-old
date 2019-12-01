@@ -212,7 +212,7 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 			}
 
 			subvalue := depComp.CostFromQuantity(dep.Quantity)
-			dep.Subvalue = math.Round(subvalue*100) / 100
+			dep.Subvalue = math.Round(subvalue*1000) / 1000
 
 			c.UpsertDependency(dep)
 		}

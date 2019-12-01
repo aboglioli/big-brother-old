@@ -97,9 +97,18 @@ func TestCreateComposition(t *testing.T) {
 	// Create
 	t.Run("Default values with valid units and raise event 'CompositionCreated'", func(t *testing.T) {
 		repo.Clean()
+		repo.Reset()
 		eventMgr.Clean()
 		comp := newComposition()
 		_, err := serv.Create(compToCreateRequest(comp))
+
+		repo.Assert(t, []tests.Call{
+			tests.Call{"FindByID", []interface{}{comp.ID.Hex()}},
+			tests.Call{"Insert", []interface{}{tests.NotNil}},
+		})
+		savedComp, ok := repo.Calls[1].Args[0].(*Composition)
+		tests.Assert(t, ok)
+		tests.Equal(t, savedComp.ID.Hex(), comp.ID.Hex())
 
 		tests.Ok(t, err, "Should be created")
 		tests.Equal(t, repo.Count(), 1, "Should be created")

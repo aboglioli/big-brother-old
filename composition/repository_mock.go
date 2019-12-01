@@ -4,23 +4,16 @@ import (
 	"time"
 
 	"github.com/aboglioli/big-brother/pkg/errors"
+	"github.com/aboglioli/big-brother/pkg/tests"
 )
 
 type mockRepository struct {
-	compositions  []*Composition
-	CountRequests bool
-	Requests      int
-	SimulateDelay bool
-	SleepTime     int
+	tests.Mock
+	compositions []*Composition
 }
 
 func newMockRepository() *mockRepository {
-	return &mockRepository{
-		CountRequests: false,
-		Requests:      0,
-		SimulateDelay: false,
-		SleepTime:     0,
-	}
+	return &mockRepository{}
 }
 
 // Helpers
@@ -28,15 +21,9 @@ func (r *mockRepository) Clean() {
 	r.compositions = make([]*Composition, 0)
 }
 
-func (r *mockRepository) sleep() {
-	if r.SimulateDelay {
-		time.Sleep(time.Duration(r.SleepTime) * time.Millisecond)
-	}
-}
-
 // Implementation
 func (r *mockRepository) FindAll() ([]*Composition, errors.Error) {
-	r.sleep()
+	r.Called("FindAll")
 
 	comps := make([]*Composition, 0)
 	for _, c := range r.compositions {
@@ -45,15 +32,11 @@ func (r *mockRepository) FindAll() ([]*Composition, errors.Error) {
 		}
 	}
 
-	if r.CountRequests {
-		r.Requests++
-	}
-
 	return comps, nil
 }
 
 func (r *mockRepository) FindByID(id string) (*Composition, errors.Error) {
-	r.sleep()
+	r.Called("FindByID", id)
 
 	for _, c := range r.compositions {
 		if c.ID.Hex() == id && c.Enabled {
@@ -61,15 +44,11 @@ func (r *mockRepository) FindByID(id string) (*Composition, errors.Error) {
 		}
 	}
 
-	if r.CountRequests {
-		r.Requests++
-	}
-
 	return nil, errors.NewInternal().SetPath("composition/repository_mock.FindById").SetCode("NOT_FOUND")
 }
 
 func (r *mockRepository) FindUses(id string) ([]*Composition, errors.Error) {
-	r.sleep()
+	r.Called("FindUses", id)
 
 	comps := make([]*Composition, 0)
 	for _, c := range r.compositions {
@@ -85,15 +64,11 @@ func (r *mockRepository) FindUses(id string) ([]*Composition, errors.Error) {
 		}
 	}
 
-	if r.CountRequests {
-		r.Requests++
-	}
-
 	return comps, nil
 }
 
 func (r *mockRepository) FindByUsesUpdatedSinceLastChange(usesUpdated bool) ([]*Composition, errors.Error) {
-	r.sleep()
+	r.Called("FindByUsesUpdatedSinceLastChange", usesUpdated)
 
 	comps := make([]*Composition, 0)
 	for _, c := range r.compositions {
@@ -106,28 +81,20 @@ func (r *mockRepository) FindByUsesUpdatedSinceLastChange(usesUpdated bool) ([]*
 		}
 	}
 
-	if r.CountRequests {
-		r.Requests++
-	}
-
 	return comps, nil
 }
 
 func (r *mockRepository) Insert(c *Composition) errors.Error {
-	r.sleep()
+	r.Called("Insert", c)
 
 	c.UpdatedAt = time.Now()
 	r.compositions = append(r.compositions, copyComposition(c))
-
-	if r.CountRequests {
-		r.Requests++
-	}
 
 	return nil
 }
 
 func (r *mockRepository) InsertMany(comps []*Composition) errors.Error {
-	r.sleep()
+	r.Called("InsertMany", comps)
 
 	newComps := make([]*Composition, len(comps))
 	for i, c := range comps {
@@ -136,15 +103,11 @@ func (r *mockRepository) InsertMany(comps []*Composition) errors.Error {
 	}
 	r.compositions = append(r.compositions, newComps...)
 
-	if r.CountRequests {
-		r.Requests++
-	}
-
 	return nil
 }
 
 func (r *mockRepository) Update(c *Composition) errors.Error {
-	r.sleep()
+	r.Called("Update", c)
 
 	for _, comp := range r.compositions {
 		if comp.ID.Hex() == c.ID.Hex() {
@@ -157,15 +120,11 @@ func (r *mockRepository) Update(c *Composition) errors.Error {
 		}
 	}
 
-	if r.CountRequests {
-		r.Requests++
-	}
-
 	return nil
 }
 
 func (r *mockRepository) Delete(id string) errors.Error {
-	r.sleep()
+	r.Called("Delete", id)
 
 	for _, comp := range r.compositions {
 		if comp.ID.Hex() == id && comp.Enabled {
@@ -175,25 +134,15 @@ func (r *mockRepository) Delete(id string) errors.Error {
 		}
 	}
 
-	if r.CountRequests {
-		r.Requests++
-	}
-
 	return errors.NewInternal().SetPath("composition/repository_mock.Delete").SetCode("NOT_FOUND")
 }
 
 func (r *mockRepository) Count() int {
-	r.sleep()
-
 	count := 0
 	for _, c := range r.compositions {
 		if c.Enabled {
 			count++
 		}
-	}
-
-	if r.CountRequests {
-		r.Requests++
 	}
 
 	return count

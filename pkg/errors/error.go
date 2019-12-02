@@ -26,23 +26,33 @@ type Error interface {
 }
 
 // Custom implementation
+type ErrField struct {
+	path string
+	code string
+}
+
 type CustomError struct {
 	kind      ErrorKind
 	path      string
 	code      string
 	message   string
+	fields    []ErrField
 	reference Error
 }
 
 func NewValidation() *CustomError {
 	return &CustomError{
-		kind: VALIDATION,
+		kind:   VALIDATION,
+		code:   "VALIDATION",
+		fields: []ErrField{},
 	}
 }
 
 func NewInternal() *CustomError {
 	return &CustomError{
-		kind: INTERNAL,
+		kind:   INTERNAL,
+		code:   "INTERNAL",
+		fields: []ErrField{},
 	}
 }
 
@@ -66,6 +76,14 @@ func (e *CustomError) SetReference(ref Error) *CustomError {
 	return e
 }
 
+func (e *CustomError) AddPath(path string, code string) *CustomError {
+	e.fields = append(e.fields, ErrField{
+		path: path,
+		code: code,
+	})
+	return e
+}
+
 func (e *CustomError) Kind() ErrorKind {
 	return e.kind
 }
@@ -74,12 +92,16 @@ func (e *CustomError) Path() string {
 	return e.path
 }
 
+func (e *CustomError) Code() string {
+	return e.code
+}
+
 func (e *CustomError) Message() string {
 	return e.message
 }
 
-func (e *CustomError) Code() string {
-	return e.code
+func (e *CustomError) Reference() Error {
+	return e.reference
 }
 
 func (e *CustomError) Error() string {
@@ -100,8 +122,4 @@ func (e *CustomError) Error() string {
 
 func (e *CustomError) String() string {
 	return e.Error()
-}
-
-func (e *CustomError) Reference() Error {
-	return e.reference
 }

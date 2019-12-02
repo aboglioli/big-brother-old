@@ -48,11 +48,11 @@ func (s *service) Create(req *CreateRequest) (*User, errors.Error) {
 	u := NewUser()
 
 	if existing, err := s.repository.FindByUsername(req.Username); existing != nil || err == nil {
-		return nil, errGen.SetCode("EXISTING_USERNAME").SetMessage(err.Error())
+		return nil, errGen.SetCode("EXISTING_USERNAME")
 	}
 
 	if existing, err := s.repository.FindByEmail(req.Email); existing != nil || err == nil {
-		return nil, errGen.SetCode("EXISTING_EMAIL").SetMessage(err.Error())
+		return nil, errGen.SetCode("EXISTING_EMAIL")
 	}
 
 	if len(req.Password) < 8 {

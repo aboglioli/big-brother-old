@@ -31,7 +31,7 @@ func (r *mockRepository) FindByID(id string) (*User, errors.Error) {
 		}
 	}
 
-	return nil, errors.NewInternal().SetPath("user/repository_mock.FindById").SetCode("NOT_FOUND")
+	return nil, errors.NewInternal("NOT_FOUND").SetPath("user/repository_mock.FindById")
 }
 
 func (r *mockRepository) FindByUsername(username string) (*User, errors.Error) {
@@ -43,7 +43,7 @@ func (r *mockRepository) FindByUsername(username string) (*User, errors.Error) {
 		}
 	}
 
-	return nil, errors.NewInternal().SetPath("user/repository_mock.FindByUsername").SetCode("NOT_FOUND")
+	return nil, errors.NewInternal("NOT_FOUND").SetPath("user/repository_mock.FindByUsername")
 }
 
 func (r *mockRepository) FindByEmail(email string) (*User, errors.Error) {
@@ -55,7 +55,7 @@ func (r *mockRepository) FindByEmail(email string) (*User, errors.Error) {
 		}
 	}
 
-	return nil, errors.NewInternal().SetPath("user/repository_mock.FindByEmail").SetCode("NOT_FOUND")
+	return nil, errors.NewInternal("NOT_FOUND").SetPath("user/repository_mock.FindByEmail")
 }
 
 func (r *mockRepository) Insert(u *User) errors.Error {
@@ -86,7 +86,7 @@ func (r *mockRepository) Update(u *User) errors.Error {
 	for _, user := range r.users {
 		if user.ID.Hex() == u.ID.Hex() {
 			if !user.Enabled {
-				return errors.NewInternal().SetPath("user/repository_mock.Update").SetCode("DISABLED")
+				return errors.NewInternal("DISABLED").SetPath("user/repository_mock.Update")
 			}
 			*user = *copyUser(u)
 			user.UpdatedAt = time.Now()
@@ -108,7 +108,7 @@ func (r *mockRepository) Delete(id string) errors.Error {
 		}
 	}
 
-	return errors.NewInternal().SetPath("user/repository_mock.Delete").SetCode("NOT_FOUND")
+	return errors.NewInternal("NOT_FOUND").SetPath("user/repository_mock.Delete")
 }
 
 func (r *mockRepository) Count() int {

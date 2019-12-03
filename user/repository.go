@@ -38,12 +38,12 @@ func NewRepository() (Repository, errors.Error) {
 }
 
 func (r *repository) FindByID(id string) (*User, errors.Error) {
-	errGen := errors.NewInternal().SetPath("user/repository.FindByID")
+	path := "user/repository.FindByID"
 	ctx := context.Background()
 
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, errGen.SetCode("OBJECTID_FROM_HEX").SetMessage(err.Error())
+		return nil, errors.NewInternal("OBJECTID_FROM_HEX").SetPath(path).SetMessage(err.Error())
 	}
 
 	filter := bson.M{
@@ -52,19 +52,19 @@ func (r *repository) FindByID(id string) (*User, errors.Error) {
 
 	res := r.collection.FindOne(ctx, filter)
 	if res.Err() != nil {
-		return nil, errGen.SetCode("FIND_ONE").SetMessage(res.Err().Error())
+		return nil, errors.NewInternal("FIND_ONE").SetPath(path).SetMessage(err.Error())
 	}
 
 	var user User
 	if err := res.Decode(&user); err != nil {
-		return nil, errGen.SetCode("DECODE").SetMessage(err.Error())
+		return nil, errors.NewInternal("DECODE").SetPath(path).SetMessage(err.Error())
 	}
 
 	return &user, nil
 }
 
 func (r *repository) FindByUsername(username string) (*User, errors.Error) {
-	errGen := errors.NewInternal().SetPath("user/repository.FindByUsername")
+	path := "user/repository.FindByUsername"
 	ctx := context.Background()
 
 	filter := bson.M{
@@ -73,19 +73,19 @@ func (r *repository) FindByUsername(username string) (*User, errors.Error) {
 
 	res := r.collection.FindOne(ctx, filter)
 	if res.Err() != nil {
-		return nil, errGen.SetCode("FIND_ONE").SetMessage(res.Err().Error())
+		return nil, errors.NewInternal("FIND_ONE").SetPath(path).SetMessage(res.Err().Error())
 	}
 
 	var user User
 	if err := res.Decode(&user); err != nil {
-		return nil, errGen.SetCode("DECODE").SetMessage(err.Error())
+		return nil, errors.NewInternal("DECODE").SetPath(path).SetMessage(err.Error())
 	}
 
 	return &user, nil
 }
 
 func (r *repository) FindByEmail(email string) (*User, errors.Error) {
-	errGen := errors.NewInternal().SetPath("user/repository.FindByEmail")
+	path := "user/repository.FindByEmail"
 	ctx := context.Background()
 
 	filter := bson.M{
@@ -94,12 +94,12 @@ func (r *repository) FindByEmail(email string) (*User, errors.Error) {
 
 	res := r.collection.FindOne(ctx, filter)
 	if res.Err() != nil {
-		return nil, errGen.SetCode("FIND_ONE").SetMessage(res.Err().Error())
+		return nil, errors.NewInternal("FIND_ONE").SetPath(path).SetMessage(res.Err().Error())
 	}
 
 	var user User
 	if err := res.Decode(&user); err != nil {
-		return nil, errGen.SetCode("DECODE").SetMessage(err.Error())
+		return nil, errors.NewInternal("DECODE").SetPath(path).SetMessage(err.Error())
 	}
 
 	return &user, nil
@@ -110,18 +110,18 @@ func (r *repository) Insert(u *User) errors.Error {
 
 	_, err := r.collection.InsertOne(ctx, u)
 	if err != nil {
-		return errors.NewInternal().SetPath("user/repository.Insert").SetCode("INSERT_ONE").SetMessage(err.Error())
+		return errors.NewInternal("INSERT_ONE").SetPath("user/repository.Insert").SetMessage(err.Error())
 	}
 
 	return nil
 }
 
 func (r *repository) Update(u *User) errors.Error {
-	errGen := errors.NewInternal().SetPath("user/repository.Update")
+	path := "user/repository.Update"
 	ctx := context.Background()
 
 	if u.ID.IsZero() {
-		return errGen.SetCode("INVALID_OBJECTID")
+		return errors.NewInternal("INVALID_OBJECTID").SetPath(path)
 	}
 
 	u.UpdatedAt = time.Now()
@@ -136,19 +136,19 @@ func (r *repository) Update(u *User) errors.Error {
 
 	_, err := r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		return errGen.SetCode("UPDATE_ONE").SetMessage(err.Error())
+		return errors.NewInternal("UPDATE_ONE").SetPath(path).SetMessage(err.Error())
 	}
 
 	return nil
 }
 
 func (r *repository) Delete(id string) errors.Error {
-	errGen := errors.NewInternal().SetPath("composition/repository.Delete")
+	path := "composition/repository.Delete"
 	ctx := context.Background()
 
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return errGen.SetCode("OBJECTID_FROM_HEX").SetMessage(err.Error())
+		return errors.NewInternal("OBJECTID_FROM_HEX").SetPath(path).SetMessage(err.Error())
 	}
 
 	filter := bson.M{
@@ -164,7 +164,7 @@ func (r *repository) Delete(id string) errors.Error {
 
 	_, err = r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		return errGen.SetCode("UPDATE_ONE").SetMessage(err.Error())
+		return errors.NewInternal("UPDATE_ONE").SetPath(path).SetMessage(err.Error())
 	}
 
 	return nil

@@ -27,10 +27,10 @@ func NewService(repo Repository, eventMgr events.Manager) Service {
 func (s *service) GetByID(id string) (*User, errors.Error) {
 	user, err := s.repository.FindByID(id)
 	if err != nil {
-		return nil, errors.NewValidation().SetPath("user/service.GetByID").SetCode("USER_NOT_FOUND").SetReference(err)
+		return nil, errors.NewStatus("USER_NOT_FOUND").SetPath("user/service.GetByID").SetRef(err)
 	}
 	if !user.Enabled {
-		return nil, errors.NewValidation().SetPath("user/service.GetByID").SetCode("USER_IS_DELETED")
+		return nil, errors.NewStatus("USER_IS_DELETED").SetPath("user/service.GetByID")
 	}
 	return user, nil
 }
@@ -44,19 +44,19 @@ type CreateRequest struct {
 }
 
 func (s *service) Create(req *CreateRequest) (*User, errors.Error) {
-	errGen := errors.NewValidation().SetPath("user/service.Create")
+	path := "user/service.Create"
 	u := NewUser()
 
 	if existing, err := s.repository.FindByUsername(req.Username); existing != nil || err == nil {
-		return nil, errGen.SetCode("EXISTING_USERNAME")
+		return nil, errors.NewStatus("EXISTING_USERNAME").SetPath(path)
 	}
 
 	if existing, err := s.repository.FindByEmail(req.Email); existing != nil || err == nil {
-		return nil, errGen.SetCode("EXISTING_EMAIL")
+		return nil, errors.NewStatus("EXISTING_EMAIL").SetPath(path)
 	}
 
 	if len(req.Password) < 8 {
-		return nil, errGen.SetCode("PASSWORD_TOO_SHORT")
+		return nil, errors.NewStatus("PASSWORD_TOO_SHORT").SetPath(path)
 	}
 
 	u.Username = req.Username
@@ -70,7 +70,7 @@ func (s *service) Create(req *CreateRequest) (*User, errors.Error) {
 	}
 
 	if err := s.repository.Insert(u); err != nil {
-		return nil, errGen.SetCode("INSERT").SetReference(err)
+		return nil, errors.NewInternal("INSERT").SetPath(path).SetRef(err)
 	}
 
 	// Publish event: composition.created
@@ -91,23 +91,23 @@ type UpdateRequest struct {
 }
 
 func (s *service) Update(id string, req *UpdateRequest) (*User, errors.Error) {
-	errGen := errors.NewValidation().SetPath("user/service.Update")
+	path := "user/service.Update"
 
 	u, err := s.repository.FindByID(id)
 	if u == nil || err != nil {
-		return nil, errGen.SetCode("USER_DOES_NOT_EXIST").SetReference(err)
+		return nil, errors.NewStatus("USER_DOES_NOT_EXIST").SetPath(path).SetRef(err)
 	}
 
 	if req.Username != nil {
 		if existing, err := s.repository.FindByUsername(*req.Username); existing != nil || err == nil {
-			return nil, errGen.SetCode("EXISTING_USERNAME").SetMessage(err.Error())
+			return nil, errors.NewStatus("EXISTING_USERNAME").SetPath(path).SetMessage(err.Error())
 		}
 		u.Username = *req.Username
 	}
 
 	if req.Password != nil {
 		if len(*req.Password) < 8 {
-			return nil, errGen.SetCode("PASSWORD_TOO_SHORT")
+			return nil, errors.NewStatus("PASSWORD_TOO_SHORT").SetPath(path)
 		}
 		u.SetPassword(*req.Password)
 	}
@@ -122,7 +122,7 @@ func (s *service) Update(id string, req *UpdateRequest) (*User, errors.Error) {
 
 	if req.Email != nil {
 		if existing, err := s.repository.FindByEmail(*req.Email); existing != nil || err == nil {
-			return nil, errGen.SetCode("EXISTING_EMAIL").SetMessage(err.Error())
+			return nil, errors.NewStatus("EXISTING_EMAIL").SetPath(path).SetMessage(err.Error())
 		}
 		u.Email = *req.Email
 	}
@@ -132,22 +132,22 @@ func (s *service) Update(id string, req *UpdateRequest) (*User, errors.Error) {
 	}
 
 	if err := s.repository.Update(u); err != nil {
-		return nil, errGen.SetCode("UPDATE").SetReference(err)
+		return nil, errors.NewInternal("UPDATE").SetPath(path).SetRef(err)
 	}
 
 	return u, nil
 }
 
 func (s *service) Delete(id string) errors.Error {
-	errGen := errors.NewValidation().SetPath("user/service.Delete")
+	path := "user/service.Delete"
 
 	_, err := s.repository.FindByID(id)
 	if err != nil {
-		return errGen.SetCode("NOT_FOUND").SetReference(err)
+		return errors.NewStatus("NOT_FOUND").SetPath(path).SetRef(err)
 	}
 
 	if err := s.repository.Delete(id); err != nil {
-		return errGen.SetCode("DELETE").SetReference(err)
+		return errors.NewInternal("DELETE").SetPath(path).SetRef(err)
 	}
 
 	return nil

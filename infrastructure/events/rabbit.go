@@ -78,7 +78,7 @@ func (m *manager) connect() (*amqp.Connection, errors.Error) {
 	conf := config.Get()
 	conn, err := amqp.Dial(conf.RabbitURL)
 	if err != nil {
-		return nil, errors.NewInternal().SetPath("infrastructure/events/manager.Connect").SetCode("FAILED_TO_CONNECT").SetMessage(err.Error())
+		return nil, errors.NewInternal("FAILED_TO_CONNECT").SetPath("infrastructure/events/manager.Connect").SetMessage(err.Error())
 	}
 
 	m.connection = conn
@@ -119,14 +119,14 @@ func (m *manager) Publish(body interface{}, opts *events.Options) errors.Error {
 			Body: b,
 		},
 	); err != nil {
-		return errors.NewInternal().SetPath("infrastructure/events/manager.Send").SetCode("FAILED_TO_PUBLISH_MESSAGE").SetMessage(err.Error())
+		return errors.NewInternal("FAILED_TO_PUBLISH_MESSAGE").SetPath("infrastructure/events/manager.Publish").SetMessage(err.Error())
 	}
 
 	return nil
 }
 
 func (m *manager) Consume(opts *events.Options) (<-chan events.Message, errors.Error) {
-	errGen := errors.NewInternal().SetPath("infrastructure/events/manager.Consume")
+	path := "infrastructure/events/manager.Consume"
 
 	if m.emitters[opts.Exchange] == nil {
 		ch, err := m.createChannelWithExchange(opts.Exchange, opts.ExchangeType)
@@ -153,7 +153,7 @@ func (m *manager) Consume(opts *events.Options) (<-chan events.Message, errors.E
 		nil,
 	)
 	if err != nil {
-		return nil, errGen.SetCode("FAILED_TO_DECLARE_QUEUE").SetMessage(err.Error())
+		return nil, errors.NewInternal("FAILED_TO_DECLARE_QUEUE").SetMessage(err.Error())
 	}
 
 	err = ch.QueueBind(
@@ -164,7 +164,7 @@ func (m *manager) Consume(opts *events.Options) (<-chan events.Message, errors.E
 		nil,
 	)
 	if err != nil {
-		return nil, errGen.SetCode("FAILED_TO_BIND_QUEUE").SetMessage(err.Error())
+		return nil, errors.NewInternal("FAILED_TO_BIND_QUEUE").SetPath(path).SetMessage(err.Error())
 	}
 
 	delivery, err := ch.Consume(
@@ -177,7 +177,7 @@ func (m *manager) Consume(opts *events.Options) (<-chan events.Message, errors.E
 		nil,
 	)
 	if err != nil {
-		return nil, errGen.SetCode("FAILED_TO_CONSUME").SetMessage(err.Error())
+		return nil, errors.NewInternal("FAILED_TO_CONSUME").SetPath(path).SetMessage(err.Error())
 	}
 
 	msg := make(chan events.Message)
@@ -192,11 +192,11 @@ func (m *manager) Consume(opts *events.Options) (<-chan events.Message, errors.E
 }
 
 func (m *manager) createChannelWithExchange(exchange string, eType string) (*amqp.Channel, errors.Error) {
-	errGen := errors.NewInternal().SetPath("infrastructure/events/manager.createChannelWithExchange")
+	path := "infrastructure/events/manager.createChannelWithExchange"
 
 	ch, err := m.connection.Channel()
 	if err != nil {
-		return nil, errGen.SetCode("FAILED_TO_CREATE_CHANNEL").SetMessage(err.Error())
+		return nil, errors.NewInternal("FAILED_TO_CREATE_CHANNEL").SetPath(path).SetMessage(err.Error())
 	}
 
 	err = ch.ExchangeDeclare(
@@ -209,7 +209,7 @@ func (m *manager) createChannelWithExchange(exchange string, eType string) (*amq
 		nil,
 	)
 	if err != nil {
-		return nil, errGen.SetCode("FAILED_TO_DECLARE_EXCHANGE").SetMessage(err.Error())
+		return nil, errors.NewInternal("FAILED_TO_DECLARE_EXCHANGE").SetPath(path).SetMessage(err.Error())
 	}
 
 	return ch, nil

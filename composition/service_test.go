@@ -306,17 +306,17 @@ func TestUpdateComposition(t *testing.T) {
 
 		createdComp.Unit = quantity.Quantity{1, "asd"}
 		_, err = serv.Update(createdComp.ID.Hex(), compToUpdateRequest(createdComp))
-		assert.ErrCode(t, err, "INVALID_UNIT", "Should return error due to invalid unit")
+		assert.ErrValidation(t, err, "unit", "INVALID")
 
 		createdComp.Unit = quantity.Quantity{1, "u"}
 		createdComp.Stock = quantity.Quantity{1, "asd"}
 		_, err = serv.Update(createdComp.ID.Hex(), compToUpdateRequest(createdComp))
-		assert.ErrCode(t, err, "INVALID_STOCK", "Should return error due to invalid unit in stock")
+		assert.ErrValidation(t, err, "stock", "INVALID")
 
 		createdComp.Unit = quantity.Quantity{1, "kg"}
 		createdComp.Stock = quantity.Quantity{1, "l"}
 		_, err = serv.Update(createdComp.ID.Hex(), compToUpdateRequest(createdComp))
-		assert.ErrCode(t, err, "INCOMPATIBLE_STOCK_AND_UNIT", "Stock and unit should be compatible")
+		assert.ErrValidation(t, err, "stock", "INCOMPATIBLE_STOCK_AND_UNIT")
 	})
 
 	t.Run("Empty stock ignored on updating", func(t *testing.T) {

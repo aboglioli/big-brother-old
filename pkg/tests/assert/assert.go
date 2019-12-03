@@ -48,10 +48,44 @@ func Err(t *testing.T, err error, msgs ...string) {
 	}
 }
 
-func ErrCode(t *testing.T, err errors.Error, code string, msgs ...string) {
+func ErrCode(t *testing.T, err error, code string, msgs ...string) {
 	if err == nil {
-		t.Fatalf("ERR: %s\nexpected: error with code %s\nactual: nil err\n%s\n", msgs, code, tests.PrintStackInfo())
-	} else if err.Code() != code {
-		t.Fatalf("ERR: %s\nexpected: error with code %s\nactual: %s\n%s\n", msgs, code, err.Code(), tests.PrintStackInfo())
+		t.Fatalf("ERR: %s\nexpected: error with code %s\nactual: nil error\n%s\n", msgs, code, tests.PrintStackInfo())
+		return
+	}
+
+	c, ok := err.(errors.Code)
+	if !ok {
+		t.Fatalf("ERR: %s\nexpected: error with code %s\nactual: not an error with Code\n%s\n", msgs, code, tests.PrintStackInfo())
+		return
+	}
+
+	if c.Code() != code {
+		t.Fatalf("ERR: %s\nexpected: error with code %s\nactual: %s\n%s\n", msgs, code, c.Code(), tests.PrintStackInfo())
+	}
+}
+
+func ErrValidation(t *testing.T, err error, path string, code string, msgs ...string) {
+	if err == nil {
+		t.Fatalf("ERR: %s\nexpected: Validation error\nactual: nil error\n%s\n", msgs, tests.PrintStackInfo())
+		return
+	}
+
+	v, ok := err.(*errors.Validation)
+	if !ok {
+		t.Fatalf("ERR: %s\nexpected: Validation error\nactual: not a Validation error\n%s\n", msgs, tests.PrintStackInfo())
+		return
+	}
+
+	fieldExists := false
+	for _, f := range v.Fields() {
+		if f.Path == path && f.Code == code {
+			fieldExists = true
+			break
+		}
+	}
+
+	if !fieldExists {
+		t.Fatalf("ERR: %s\nexpected: Validation error with field {%s, %s}\nactual: fields %s\n%s\n", msgs, path, code, v.Fields(), tests.PrintStackInfo())
 	}
 }

@@ -17,23 +17,27 @@ func hasErrCode(err errors.Error, code string) bool {
 func TestValidateSchema(t *testing.T) {
 	user := NewUser()
 
-	assert.ErrCode(t, user.ValidateSchema(), "INVALID_USERNAME_LENGTH")
+	assert.ErrValidation(t, user.ValidateSchema(), "username", "INVALID_LENGTH")
+	assert.ErrValidation(t, user.ValidateSchema(), "name", "INVALID_LENGTH")
+	assert.ErrValidation(t, user.ValidateSchema(), "lastname", "INVALID_LENGTH")
+	assert.ErrValidation(t, user.ValidateSchema(), "email", "INVALID_LENGTH")
+	assert.ErrValidation(t, user.ValidateSchema(), "email", "INVALID_ADDRESS")
 
 	user.Username = "username"
-	assert.ErrCode(t, user.ValidateSchema(), "INVALID_NAME_LENGTH")
+	assert.ErrValidation(t, user.ValidateSchema(), "name", "INVALID_LENGTH")
 
 	user.Name = "Name"
-	assert.ErrCode(t, user.ValidateSchema(), "INVALID_LASTNAME_LENGTH")
+	assert.ErrValidation(t, user.ValidateSchema(), "lastname", "INVALID_LENGTH")
 
 	user.Lastname = "Name"
-	assert.ErrCode(t, user.ValidateSchema(), "INVALID_EMAIL_LENGTH")
+	assert.ErrValidation(t, user.ValidateSchema(), "email", "INVALID_LENGTH")
 
 	user.Email = "asd&asd.com"
-	assert.ErrCode(t, user.ValidateSchema(), "INVALID_EMAIL_ADDRESS")
+	assert.ErrValidation(t, user.ValidateSchema(), "email", "INVALID_ADDRESS")
 	user.Email = "as-as-as"
-	assert.ErrCode(t, user.ValidateSchema(), "INVALID_EMAIL_ADDRESS")
+	assert.ErrValidation(t, user.ValidateSchema(), "email", "INVALID_ADDRESS")
 	user.Email = "asd@google_yahoo.com"
-	assert.ErrCode(t, user.ValidateSchema(), "INVALID_EMAIL_ADDRESS")
+	assert.ErrValidation(t, user.ValidateSchema(), "email", "INVALID_ADDRESS")
 
 	user.Email = "asd@asd.com"
 

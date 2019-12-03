@@ -30,7 +30,7 @@ func (p *UserProxy) Validate(token string) (*user.User, errors.Error) {
 
 	user, err := getFromApi(token)
 	if err != nil {
-		return nil, errors.NewInternal().SetCode("AUTH_API").SetMessage(fmt.Sprintf("Couldn't request Auth API: %s", err.Error()))
+		return nil, errors.NewInternal("AUTH_API").SetMessage(fmt.Sprintf("Couldn't request Auth API: %s", err.Error()))
 	}
 
 	p.cache.Set(token, user, infrCache.DefaultExpiration)

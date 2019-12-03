@@ -183,21 +183,22 @@ func TestValidateSchema(t *testing.T) {
 	t.Run("Negative cost", func(t *testing.T) {
 		comp := newComposition()
 		comp.Cost = -1.0
-		assert.ErrCode(t, comp.ValidateSchema(), "NEGATIVE_COST", "Cost should be greater or equal than 0")
+		assert.Err(t, comp.ValidateSchema()) // TODO: check validation
 	})
 
 	t.Run("Invalid units", func(t *testing.T) {
 		comp := newComposition()
 		comp.Unit.Unit = "asd"
-		assert.ErrCode(t, comp.ValidateSchema(), "INVALID_UNIT", "Unit should exist")
+		// assert.ErrCode(t, comp.ValidateSchema(), "INVALID_UNIT", "Unit should exist")
+		assert.ErrValidation(t, comp.ValidateSchema(), "unit", "INVALID")
 
 		comp.Unit.Unit = "u"
 		comp.Stock.Unit = "asd"
-		assert.ErrCode(t, comp.ValidateSchema(), "INVALID_STOCK", "Stock unit should exist")
+		assert.ErrValidation(t, comp.ValidateSchema(), "stock", "INVALID")
 
 		comp.Unit.Unit = "kg"
 		comp.Stock.Unit = "l"
-		assert.ErrCode(t, comp.ValidateSchema(), "INCOMPATIBLE_STOCK_AND_UNIT", "Stock and unit should be compatible")
+		assert.ErrValidation(t, comp.ValidateSchema(), "stock", "INCOMPATIBLE_STOCK_AND_UNIT")
 	})
 
 	t.Run("Invalid dependency quantity", func(t *testing.T) {
@@ -212,10 +213,10 @@ func TestValidateSchema(t *testing.T) {
 			},
 		}
 
-		assert.ErrCode(t, comp.ValidateSchema(), "INVALID_DEPENDENCY_QUANTITY", "Dependency has invalid quantity")
+		assert.ErrValidation(t, comp.ValidateSchema(), "dependency", "INVALID_QUANTITY")
 
 		comp.Dependencies[0].Quantity = quantity.Quantity{-5, "kg"}
-		assert.ErrCode(t, comp.ValidateSchema(), "INVALID_DEPENDENCY_QUANTITY", "Dependency has invalid quantity")
+		assert.ErrValidation(t, comp.ValidateSchema(), "dependency", "INVALID_QUANTITY")
 	})
 
 	// Create

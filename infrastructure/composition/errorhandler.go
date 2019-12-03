@@ -11,26 +11,23 @@ import (
 
 func handleError(c *gin.Context, err errors.Error) {
 	switch e := err.(type) {
-	case *errors.CustomError:
-		switch e.Kind() {
-		case errors.VALIDATION:
-			fmt.Println("[Validation Error]")
-			fmt.Println(e)
+	case *errors.Internal:
+		fmt.Println("[Internal Error]")
+		fmt.Println(e)
 
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": gin.H{
-					"code":    e.Code(),
-					"message": e.Message(),
-				},
-			})
-		case errors.INTERNAL:
-			fmt.Println("[Internal Error]")
-			fmt.Println(e)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "INTERNAL_ERROR",
+		})
+	case *errors.Validation:
+		fmt.Println("[Validation Error]")
+		fmt.Println(e)
 
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "INTERNAL_ERROR",
-			})
-		}
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": gin.H{
+				"code":    e.Code(),
+				"message": e.Message(),
+			},
+		})
 	default:
 		fmt.Println("[Unknown error]")
 		fmt.Println(e)

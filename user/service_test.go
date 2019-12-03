@@ -100,19 +100,19 @@ func TestCreateUser(t *testing.T) {
 		req = userToCreateRequest(user)
 		req.Username = ""
 		createdUser, err = serv.Create(req)
-		assert.ErrCode(t, err, "INVALID_USERNAME_LENGTH")
+		assert.ErrValidation(t, err, "username", "INVALID_LENGTH")
 		assert.Nil(t, createdUser)
 
 		req = userToCreateRequest(user)
 		req.Name = ""
 		createdUser, err = serv.Create(req)
-		assert.ErrCode(t, err, "INVALID_NAME_LENGTH")
+		assert.ErrValidation(t, err, "name", "INVALID_LENGTH")
 		assert.Nil(t, createdUser)
 
 		req = userToCreateRequest(user)
 		req.Lastname = ""
 		createdUser, err = serv.Create(req)
-		assert.ErrCode(t, err, "INVALID_LASTNAME_LENGTH")
+		assert.ErrValidation(t, err, "lastname", "INVALID_LENGTH")
 		assert.Nil(t, createdUser)
 	})
 }

@@ -17,13 +17,13 @@ type Context struct {
 }
 
 func (c *Context) UpdateUses(comp *composition.Composition) errors.Error {
-	errGen := errors.NewInternal().SetPath("cmd/uses/main.Context.UpdateUses")
+	path := "cmd/uses/main.Context.UpdateUses"
 
 	fmt.Printf("# Updating uses of %s (%s): ", comp.Name, comp.ID.Hex())
 
 	uses, err := c.serv.UpdateUses(comp)
 	if err != nil {
-		return errGen.SetCode("UPDATE_USES").SetMessage(err.Error())
+		return errors.NewInternal("UPDATE_USES").SetPath(path).SetMessage(err.Error())
 	}
 	fmt.Printf("updated %d dependencies\n", len(uses))
 
@@ -34,12 +34,12 @@ func (c *Context) UpdateUses(comp *composition.Composition) errors.Error {
 	// Update composition to set UsesUpdatedSinceLastChange
 	comp.UsesUpdatedSinceLastChange = true
 	if err := c.repo.Update(comp); err != nil {
-		return errGen.SetCode("UPDATE_UsesUpdatedSinceLastChange").SetMessage(err.Error())
+		return errors.NewInternal("UPDATE_UsesUpdatedSinceLastChange").SetPath(path).SetMessage(err.Error())
 	}
 
 	event, opts := composition.NewCompositionUsesUpdatedSinceLastChangeEvent(comp)
 	if err := c.eventMgr.Publish(event, opts); err != nil {
-		return errGen.SetCode("PUBLISH_CompositionUsesUpdatedSinceLastChange").SetMessage(err.Error())
+		return errors.NewInternal("PUBLISH_CompositionUsesUpdatedSinceLastChange").SetPath(path).SetMessage(err.Error())
 	}
 
 	return nil

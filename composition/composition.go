@@ -1,7 +1,6 @@
 package composition
 
 import (
-	"fmt"
 	"math"
 	"time"
 
@@ -93,7 +92,7 @@ func (c *Composition) RemoveDependency(depID string) errors.Error {
 	c.Dependencies = dependencies
 
 	if !removed {
-		return errors.NewValidation().SetPath("composition/composition.RemoveDependency").SetCode("DEPENDENCY_DOES_NOT_EXIST")
+		return errors.NewValidation("DEPENDENCY_DOES_NOT_EXIST")
 	}
 
 	c.calculateCostFromDependencies()
@@ -120,26 +119,30 @@ func (c1 *Composition) CompareDependencies(deps []Dependency) (left []Dependency
 }
 
 func (c *Composition) ValidateSchema() errors.Error {
-	errGen := errors.NewValidation().SetPath("composition/composition.ValidateSchema")
+	err := errors.NewValidation("VALIDATE_SCHEMA")
 
 	if c.Cost < 0 {
-		return errGen.SetCode("NEGATIVE_COST").SetMessage(fmt.Sprintf("%v", c.Cost))
+		err.Add("cost", "NEGATIVE_COST")
 	}
 	if !c.Unit.IsValid() {
-		return errGen.SetCode("INVALID_UNIT").SetMessage(fmt.Sprintf("%v", c.Unit))
+		err.Add("unit", "INVALID")
 	}
 	if !c.Stock.IsValid() {
-		return errGen.SetCode("INVALID_STOCK").SetMessage(fmt.Sprintf("%v", c.Stock))
+		err.Add("stock", "INVALID")
 	}
 
 	if !c.Stock.Compatible(c.Unit) {
-		return errGen.SetCode("INCOMPATIBLE_STOCK_AND_UNIT").SetMessage(fmt.Sprintf("%s != %s", c.Stock.Unit, c.Unit.Unit))
+		err.Add("stock", "INCOMPATIBLE_STOCK_AND_UNIT")
 	}
 
 	for i, d := range c.Dependencies {
 		if !d.Quantity.IsValid() {
-			return errGen.SetCode("INVALID_DEPENDENCY_QUANTITY").SetMessage(fmt.Sprintf("Dependency %d: %v", i, d.Quantity))
+			err.AddWithMessage("dependency", "INVALID_QUANTITY", "dependency %d", i)
 		}
+	}
+
+	if err.Size() > 0 {
+		return err
 	}
 
 	return nil

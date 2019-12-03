@@ -35,10 +35,10 @@ func NewService(r Repository, e events.Manager) Service {
 func (s *service) GetByID(id string) (*Composition, errors.Error) {
 	comp, err := s.repository.FindByID(id)
 	if err != nil {
-		return nil, errors.NewValidation().SetPath("composition/service.GetByID").SetCode("COMPOSITION_NOT_FOUND").SetReference(err)
+		return nil, errors.NewStatus("COMPOSITION_NOT_FOUND").SetPath("composition/service.GetByID").SetRef(err)
 	}
 	if !comp.Enabled {
-		return nil, errors.NewValidation().SetPath("composition/service.GetByID").SetCode("COMPOSITION_IS_DELETED")
+		return nil, errors.NewStatus("COMPOSITION_IS_DELETED").SetPath("composition/service.GetByID")
 	}
 	return comp, nil
 }
@@ -70,16 +70,16 @@ type CreateRequest struct {
 * }
  */
 func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
-	errGen := errors.NewValidation().SetPath("composition/service.Create")
+	path := "composition/service.Create"
 	c := NewComposition()
 
 	if req.ID != nil {
 		id, err := primitive.ObjectIDFromHex(*req.ID)
 		if err != nil {
-			return nil, errGen.SetCode("INVALID_ID").SetMessage(err.Error())
+			return nil, errors.NewStatus("INVALID_ID").SetPath(path).SetMessage(err.Error())
 		}
 		if existingComp, err := s.repository.FindByID(*req.ID); existingComp != nil || err == nil {
-			return nil, errGen.SetCode("COMPOSITION_ALREADY_EXISTS").SetMessage(fmt.Sprintf("Composition with ID %s exists", *req.ID)).SetReference(err)
+			return nil, errors.NewStatus("COMPOSITION_ALREADY_EXISTS").SetPath(path).SetMessage(fmt.Sprintf("Composition with ID %s exists", *req.ID)).SetRef(err)
 		}
 		c.ID = id
 	}
@@ -103,7 +103,7 @@ func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
 	}
 
 	if err := s.repository.Insert(c); err != nil {
-		return nil, errGen.SetCode("INSERT").SetReference(err)
+		return nil, errors.NewStatus("INSERT").SetPath(path).SetRef(err)
 	}
 
 	// Publish event: composition.created
@@ -144,19 +144,19 @@ type UpdateRequest struct {
 * }
  */
 func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Error) {
-	errGen := errors.NewValidation().SetPath("composition/service.Update")
+	path := "composition/service.Update"
 
 	if req.ID != nil && *req.ID != id {
-		return nil, errGen.SetCode("ID_DOES_NOT_MATCH").SetMessage(fmt.Sprintf("%s != %s", *req.ID, id))
+		return nil, errors.NewStatus("ID_DOES_NOT_MATCH").SetPath(path).SetMessage(fmt.Sprintf("%s != %s", *req.ID, id))
 	}
 
 	c, err := s.repository.FindByID(id)
 	if err != nil {
-		return nil, errGen.SetCode("COMPOSITION_DOES_NOT_EXIST").SetReference(err)
+		return nil, errors.NewStatus("COMPOSITION_DOES_NOT_EXIST").SetPath(path).SetRef(err)
 	}
 
 	if !c.Enabled {
-		return nil, errGen.SetCode("COMPOSITION_IS_DELETED")
+		return nil, errors.NewStatus("COMPOSITION_IS_DELETED").SetPath(path)
 	}
 
 	savedUnit := c.Unit
@@ -182,7 +182,7 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 	}
 
 	if !savedUnit.Compatible(c.Unit) {
-		return nil, errGen.SetCode("CANNOT_CHANGE_UNIT_TYPE").SetMessage(fmt.Sprintf("%v != %v", c.Unit, req.Unit))
+		return nil, errors.NewStatus("CANNOT_CHANGE_UNIT_TYPE").SetPath(path).SetMessage(fmt.Sprintf("%v != %v", c.Unit, req.Unit))
 	}
 
 	removed, _, added := c.CompareDependencies(req.Dependencies)
@@ -200,15 +200,15 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 		for i, dep := range added {
 			depComp, err := s.repository.FindByID(dep.On.Hex())
 			if err != nil {
-				return nil, errGen.SetCode("DEPENDENCY_DOES_NOT_EXIST").SetReference(err)
+				return nil, errors.NewStatus("DEPENDENCY_DOES_NOT_EXIST").SetPath(path).SetRef(err)
 			}
 
 			if !dep.Quantity.IsValid() {
-				return nil, errGen.SetCode("INVALID_DEPENDENCY_QUANTITY").SetMessage(fmt.Sprintf("Dependency nro %d: %s", i, dep.On.Hex()))
+				return nil, errors.NewStatus("INVALID_DEPENDENCY_QUANTITY").SetPath(path).SetMessage("Dependency nro %d: %s", i, dep.On.Hex())
 			}
 
 			if !dep.Quantity.Compatible(depComp.Unit) {
-				return nil, errGen.SetCode("INCOMPATIBLE_DEPENDENCY_QUANTITY").SetMessage(fmt.Sprintf("Dependency nro %d (%s): %v != %v", i, dep.On.Hex(), dep.Quantity, depComp.Unit))
+				return nil, errors.NewStatus("INCOMPATIBLE_DEPENDENCY_QUANTITY").SetPath(path).SetMessage("Dependency nro %d (%s): %v != %v", i, dep.On.Hex(), dep.Quantity, depComp.Unit)
 			}
 
 			subvalue := depComp.CostFromQuantity(dep.Quantity)
@@ -221,13 +221,13 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 	c.UsesUpdatedSinceLastChange = false
 
 	if err := s.repository.Update(c); err != nil {
-		return nil, errGen.SetCode("UPDATE").SetReference(err)
+		return nil, errors.NewStatus("UPDATE").SetRef(err)
 	}
 
 	// Publish event: composition.updated
 	event, opts := NewCompositionUpdatedManuallyEvent(c)
 	if err := s.eventMgr.Publish(event, opts); err != nil {
-		return nil, errGen.SetCode("FAILED_TO_PUBLISH").SetReference(err)
+		return nil, errors.NewStatus("FAILED_TO_PUBLISH").SetRef(err)
 	}
 
 	return c, nil
@@ -248,26 +248,26 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 * }
  */
 func (s *service) Delete(id string) errors.Error {
-	errGen := errors.NewValidation().SetPath("composition/service.Delete")
+	path := "composition/service.Delete"
 
 	c, err := s.repository.FindByID(id)
 	if err != nil {
-		return errGen.SetCode("DELETE").SetReference(err)
+		return errors.NewStatus("DELETE").SetPath(path).SetRef(err)
 	}
 
 	uses, _ := s.repository.FindUses(id)
 	if len(uses) > 0 {
-		return errGen.SetCode("COMPOSITION_USED_AS_DEPENDENCY").SetMessage(fmt.Sprintf("Composition used as dependecy in %d compositions", len(uses)))
+		return errors.NewStatus("COMPOSITION_USED_AS_DEPENDENCY").SetPath(path).SetMessage("Composition used as dependecy in %d compositions", len(uses))
 	}
 
 	if err := s.repository.Delete(id); err != nil {
-		return errGen.SetCode("NOT_FOUND").SetReference(err)
+		return errors.NewStatus("NOT_FOUND").SetPath(path).SetRef(err)
 	}
 
 	// Publish event
 	event, opts := NewCompositionDeletedEvent(c)
 	if err := s.eventMgr.Publish(event, opts); err != nil {
-		return err
+		return errors.NewStatus("PUBLISH").SetPath(path).SetRef(err)
 	}
 
 	return nil
@@ -291,19 +291,19 @@ func (s *service) Delete(id string) errors.Error {
 * }
  */
 func (s *service) UpdateUses(c *Composition) ([]*Composition, errors.Error) {
-	errGen := errors.NewValidation().SetPath("composition/service.UpdateUses")
+	path := "composition/service.UpdateUses"
 
 	cache := make(map[string]*Composition)
 
 	err := s.updateUses(c, cache)
 	if err != nil {
-		return nil, errGen.SetCode("UPDATE_USES").SetReference(err)
+		return nil, errors.NewStatus("UPDATE_USES").SetPath(path).SetRef(err)
 	}
 
 	comps := make([]*Composition, 0)
 	for _, u := range cache {
 		if err := s.repository.Update(u); err != nil {
-			return nil, errGen.SetCode("UPDATE_USES").SetReference(err)
+			return nil, errors.NewStatus("UPDATE_USES").SetPath(path).SetRef(err)
 		}
 		comps = append(comps, u)
 	}
@@ -334,7 +334,7 @@ func (s *service) Validate(compID string) errors.Error {
 }
 
 func (s *service) updateUses(c *Composition, cache map[string]*Composition) errors.Error {
-	errGen := errors.NewValidation().SetPath("composition/service.updateUses")
+	path := "composition/service.updateUses"
 
 	uses, _ := s.repository.FindUses(c.ID.Hex())
 
@@ -355,7 +355,7 @@ func (s *service) updateUses(c *Composition, cache map[string]*Composition) erro
 
 		// Update uses
 		if err := s.updateUses(u, cache); err != nil {
-			return errGen.SetCode("UPDATE_USES").SetReference(err)
+			return errors.NewStatus("UPDATE_USES").SetPath(path).SetRef(err)
 		}
 	}
 
@@ -363,7 +363,7 @@ func (s *service) updateUses(c *Composition, cache map[string]*Composition) erro
 }
 
 func (s *service) validateSchema(c *Composition) errors.Error {
-	errGen := errors.NewValidation().SetPath("composition/service.validateSchema")
+	path := "composition/service.validateSchema"
 
 	if err := c.ValidateSchema(); err != nil {
 		return err
@@ -373,11 +373,11 @@ func (s *service) validateSchema(c *Composition) errors.Error {
 	for i, dep := range c.Dependencies {
 		comp, err := s.repository.FindByID(dep.On.Hex())
 		if err != nil {
-			return errGen.SetCode("DEPENDENCY_DOES_NOT_EXIST").SetReference(err)
+			return errors.NewStatus("DEPENDENCY_DOES_NOT_EXIST").SetPath(path).SetRef(err)
 		}
 
 		if !dep.Quantity.Compatible(comp.Unit) {
-			return errGen.SetCode("INCOMPATIBLE_DEPENDENCY_QUANTITY").SetMessage(fmt.Sprintf("Dependency %d: %v != %v", i, dep.Quantity, comp.Unit))
+			return errors.NewStatus("INCOMPATIBLE_DEPENDENCY_QUANTITY").SetPath(path).SetMessage("Dependency %d: %v != %v", i, dep.Quantity, comp.Unit)
 		}
 
 		subvalue := comp.CostFromQuantity(dep.Quantity)

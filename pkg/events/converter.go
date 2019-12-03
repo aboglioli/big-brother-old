@@ -22,7 +22,7 @@ func DefaultConverter() *jsonConverter {
 
 func (c *jsonConverter) Decode(src []byte, dst interface{}) errors.Error {
 	if err := json.Unmarshal(src, dst); err != nil {
-		return errors.NewInternal().SetPath("infrastructure/events/rabbit.Decode").SetCode("FAILED_TO_DECODE").SetMessage(err.Error())
+		return errors.NewInternal("FAILED_TO_DECODE").SetPath("infrastructure/events/rabbit.Decode").SetMessage(err.Error())
 	}
 
 	return nil
@@ -30,7 +30,7 @@ func (c *jsonConverter) Decode(src []byte, dst interface{}) errors.Error {
 func (c *jsonConverter) Encode(src interface{}) ([]byte, errors.Error) {
 	b, err := json.Marshal(src)
 	if err != nil {
-		return nil, errors.NewInternal().SetPath("infrastructure/events/rabbit.Code").SetCode("FAILTED_TO_CODE").SetMessage(err.Error())
+		return nil, errors.NewInternal("FAILTED_TO_CODE").SetPath("infrastructure/events/rabbit.Code").SetMessage(err.Error())
 	}
 	return b, nil
 }

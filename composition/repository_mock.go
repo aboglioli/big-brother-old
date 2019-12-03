@@ -44,7 +44,7 @@ func (r *mockRepository) FindByID(id string) (*Composition, errors.Error) {
 		}
 	}
 
-	return nil, errors.NewInternal().SetPath("composition/repository_mock.FindById").SetCode("NOT_FOUND")
+	return nil, errors.NewInternal("NOT_FOUND").SetPath("composition/repository_mock.FindById")
 }
 
 func (r *mockRepository) FindUses(id string) ([]*Composition, errors.Error) {
@@ -112,7 +112,7 @@ func (r *mockRepository) Update(c *Composition) errors.Error {
 	for _, comp := range r.compositions {
 		if comp.ID.Hex() == c.ID.Hex() {
 			if !comp.Enabled {
-				return errors.NewInternal().SetPath("composition/repository_mock.Update").SetCode("DISABLED")
+				return errors.NewInternal("DISABLED").SetPath("composition/repository_mock.Update")
 			}
 			*comp = *copyComposition(c)
 			comp.UpdatedAt = time.Now()
@@ -134,7 +134,7 @@ func (r *mockRepository) Delete(id string) errors.Error {
 		}
 	}
 
-	return errors.NewInternal().SetPath("composition/repository_mock.Delete").SetCode("NOT_FOUND")
+	return errors.NewInternal("NOT_FOUND").SetPath("composition/repository_mock.Delete")
 }
 
 func (r *mockRepository) Count() int {

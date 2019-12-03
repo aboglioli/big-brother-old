@@ -18,8 +18,8 @@ type Composition struct {
 	Dependencies []Dependency       `json:"dependencies" bson:"dependencies"`
 
 	AutoupdateCost             bool      `json:"autoupdateCost" bson:"autoupdateCost"`
-	Enabled                    bool      `json:"enabled" bson:"enabled" `
-	Validated                  bool      `json:"validated" bson:"validated"`
+	Enabled                    bool      `json:"-" bson:"enabled" `
+	Validated                  bool      `json:"-" bson:"validated"`
 	UsesUpdatedSinceLastChange bool      `json:"usesUpdatedSinceLastChange" bson:"usesUpdatedSinceLastChange"`
 	CreatedAt                  time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt                  time.Time `json:"updatedAt" bson:"updatedAt"`
@@ -122,7 +122,7 @@ func (c *Composition) ValidateSchema() error {
 	err := errors.NewValidation("VALIDATE_SCHEMA")
 
 	if c.Cost < 0 {
-		err.Add("cost", "NEGATIVE_COST")
+		err.Add("cost", "INVALID")
 	}
 	if !c.Unit.IsValid() {
 		err.Add("unit", "INVALID")

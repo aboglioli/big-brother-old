@@ -33,11 +33,7 @@ func NewService(r Repository, e events.Manager) Service {
 }
 
 func (s *service) GetByID(id string) (*Composition, error) {
-	comp, err := s.repository.FindByID(id)
-	if err != nil || !comp.Enabled {
-		return nil, errors.NewStatus("COMPOSITION_NOT_FOUND").SetPath("composition/service.GetByID").SetStatus(404).SetRef(err)
-	}
-	return comp, nil
+	return s.findByID(id)
 }
 
 type CreateRequest struct {
@@ -147,13 +143,9 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, error) {
 		return nil, errors.NewStatus("ID_DOES_NOT_MATCH").SetPath(path).SetMessage(fmt.Sprintf("%s != %s", *req.ID, id))
 	}
 
-	c, err := s.repository.FindByID(id)
+	c, err := s.findByID(id)
 	if err != nil {
-		return nil, errors.NewStatus("COMPOSITION_DOES_NOT_EXIST").SetPath(path).SetRef(err)
-	}
-
-	if !c.Enabled {
-		return nil, errors.NewStatus("COMPOSITION_IS_DELETED").SetPath(path)
+		return nil, err
 	}
 
 	savedUnit := c.Unit
@@ -247,9 +239,9 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, error) {
 func (s *service) Delete(id string) error {
 	path := "composition/service.Delete"
 
-	c, err := s.repository.FindByID(id)
+	c, err := s.findByID(id)
 	if err != nil {
-		return errors.NewStatus("DELETE").SetPath(path).SetRef(err)
+		return err
 	}
 
 	uses, _ := s.repository.FindUses(id)
@@ -258,7 +250,7 @@ func (s *service) Delete(id string) error {
 	}
 
 	if err := s.repository.Delete(id); err != nil {
-		return errors.NewStatus("NOT_FOUND").SetPath(path).SetRef(err)
+		return errors.NewStatus("DELETE").SetPath(path).SetRef(err)
 	}
 
 	// Publish event
@@ -328,6 +320,17 @@ func (s *service) Validate(compID string) error {
 	}
 
 	return nil
+}
+
+func (s *service) findByID(compID string) (*Composition, error) {
+	comp, err := s.repository.FindByID(compID)
+	if err != nil || !comp.Enabled {
+		return nil, errors.NewStatus("COMPOSITION_NOT_FOUND").SetPath("composition/service.GetByID").SetStatus(404).SetRef(err)
+	}
+	if !comp.Validated {
+		return nil, errors.NewStatus("COMPOSITION_NOT_VALIDATED").SetPath("composition/service.GetByID").SetStatus(404).SetRef(err)
+	}
+	return comp, nil
 }
 
 func (s *service) updateUses(c *Composition, cache map[string]*Composition) error {

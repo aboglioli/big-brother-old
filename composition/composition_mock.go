@@ -9,6 +9,7 @@ func newComposition() *Composition {
 	comp := NewComposition()
 	comp.Unit.Unit = "u"
 	comp.Stock.Unit = "u"
+	comp.Validated = true
 	return comp
 }
 
@@ -133,6 +134,7 @@ func makeMockedCompositions() []*Composition {
 	for _, c := range comps {
 		c.AutoupdateCost = true
 		c.Enabled = true
+		c.Validated = true
 		c.Stock = quantity.Quantity{
 			Quantity: 10 * c.Unit.Quantity,
 			Unit:     c.Unit.Unit,

@@ -23,8 +23,8 @@ type User struct {
 	Contact contact.Contact `json:"contact" bson:"contact"`
 	Social  contact.Social  `json:"social" bson:"social"`
 
-	Enabled   bool      `json:"enabled" bson:"enabled"`
-	Validated bool      `json:"validated" bson:"validated"`
+	Enabled   bool      `json:"-" bson:"enabled"`
+	Validated bool      `json:"-" bson:"validated"`
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
 }

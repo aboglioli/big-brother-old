@@ -48,6 +48,21 @@ func compToUpdateRequest(c *Composition) *UpdateRequest {
 	}
 }
 
+func TestGetByID(t *testing.T) {
+	repo, eventMgr := newMockRepository(), events.GetMockManager()
+	serv := NewService(repo, eventMgr)
+
+	_, err := serv.GetByID("123")
+	assert.ErrCode(t, err, "COMPOSITION_NOT_FOUND")
+
+	comp := newComposition()
+	comp.Validated = false
+	repo.Insert(comp)
+	_, err = serv.GetByID(comp.ID.Hex())
+	assert.ErrCode(t, err, "COMPOSITION_NOT_VALIDATED")
+
+}
+
 func TestCreateComposition(t *testing.T) {
 	repo, eventMgr := newMockRepository(), events.GetMockManager()
 	serv := NewService(repo, eventMgr)
@@ -104,7 +119,8 @@ func TestCreateComposition(t *testing.T) {
 		assert.Equal(t, savedComp.ID.Hex(), comp.ID.Hex())
 
 		assert.Ok(t, err, "Should be created")
-		assert.Equal(t, repo.Count(), 1, "Should be created")
+		total, _ := repo.Count()
+		assert.Equal(t, total, 1, "Should be created")
 		assert.Equal(t, eventMgr.Count(), 1, "Should emit an event")
 
 		msgs := eventMgr.Messages()
@@ -120,7 +136,7 @@ func TestCreateComposition(t *testing.T) {
 		createReq.Stock = nil
 		c, err := serv.Create(createReq)
 
-		assert.Ok(t, err, "No error")
+		assert.Ok(t, err)
 		assert.Assert(t, c.Stock.Equals(quantity.Quantity{0, c.Unit.Unit}), "Stock should be auto-assigned")
 	})
 
@@ -154,7 +170,8 @@ func TestCreateComposition(t *testing.T) {
 		assert.Equal(t, savedComp.ID.Hex(), comp.ID.Hex())
 
 		assert.Ok(t, err)
-		assert.Equal(t, repo.Count(), 2, "Composition with single dependency should be created")
+		total, _ := repo.Count()
+		assert.Equal(t, total, 2, "Composition with single dependency should be created")
 	})
 
 	t.Run("Calculate cost on creating and comparte with raised event", func(t *testing.T) {
@@ -208,6 +225,24 @@ func TestUpdateComposition(t *testing.T) {
 	repo, eventMgr := newMockRepository(), events.GetMockManager()
 	serv := NewService(repo, eventMgr)
 
+	t.Run("Composition disabled and not validated", func(t *testing.T) {
+		repo.Clean()
+		eventMgr.Clean()
+		comp := newComposition()
+
+		comp.Enabled = false
+		comp.Validated = true
+		repo.Insert(comp)
+		_, err := serv.Update(comp.ID.Hex(), compToUpdateRequest(comp))
+		assert.ErrCode(t, err, "COMPOSITION_NOT_FOUND")
+
+		comp.Enabled = true
+		comp.Validated = false
+		repo.Update(comp)
+		_, err = serv.Update(comp.ID.Hex(), compToUpdateRequest(comp))
+		assert.ErrCode(t, err, "COMPOSITION_NOT_VALIDATED")
+	})
+
 	t.Run("Update dependency and raise events", func(t *testing.T) {
 		repo.Clean()
 		eventMgr.Clean()
@@ -229,9 +264,9 @@ func TestUpdateComposition(t *testing.T) {
 		}
 
 		c, err := serv.Update(c.ID.Hex(), compToUpdateRequest(c))
-		assert.Ok(t, err, "No error")
+		assert.Ok(t, err)
 		updatedUses, err := serv.UpdateUses(c)
-		assert.Ok(t, err, "No error")
+		assert.Ok(t, err)
 
 		assert.Equal(t, len(updatedUses), 4, "Uses weren't updated")
 
@@ -267,11 +302,11 @@ func TestUpdateComposition(t *testing.T) {
 		assert.Assert(t, msgs[1].Type() == "CompositionsUpdatedAutomatically" && msgs[0].Key == "composition.updated", "Wrong event")
 
 		var compsUpdatedAutomaticallyEvent CompositionsUpdatedAutomaticallyEvent
-		assert.Ok(t, msgs[1].Decode(&compsUpdatedAutomaticallyEvent), "No error")
+		assert.Ok(t, msgs[1].Decode(&compsUpdatedAutomaticallyEvent))
 		assert.Equal(t, len(compsUpdatedAutomaticallyEvent.Compositions), 4, "Update automatically")
 	})
 
-	t.Run("Creating and updating", func(t *testing.T) {
+	t.Run("Creating, validating and updating", func(t *testing.T) {
 		repo.Clean()
 		comp := newComposition()
 		comp.Cost = 30
@@ -279,10 +314,12 @@ func TestUpdateComposition(t *testing.T) {
 		comp.Stock = quantity.Quantity{1, "u"}
 
 		createdComp, err := serv.Create(compToCreateRequest(comp))
-		assert.Ok(t, err, "No Error")
+		assert.Ok(t, err)
+		err = serv.Validate(createdComp.ID.Hex())
+		assert.Ok(t, err)
 
 		updatedComp, err := serv.Update(createdComp.ID.Hex(), compToUpdateRequest(createdComp))
-		assert.Ok(t, err, "No error")
+		assert.Ok(t, err)
 		assert.Equal(t, createdComp.ID.Hex(), updatedComp.ID.Hex(), "ID changed")
 	})
 
@@ -294,7 +331,9 @@ func TestUpdateComposition(t *testing.T) {
 		comp.Stock = quantity.Quantity{1, "u"}
 
 		createdComp, err := serv.Create(compToCreateRequest(comp))
-		assert.Ok(t, err, "No error")
+		assert.Ok(t, err)
+		err = serv.Validate(createdComp.ID.Hex())
+		assert.Ok(t, err)
 
 		createdComp.Unit = quantity.Quantity{1, "asd"}
 		_, err = serv.Update(createdComp.ID.Hex(), compToUpdateRequest(createdComp))
@@ -322,13 +361,13 @@ func TestUpdateComposition(t *testing.T) {
 		updateReq.Stock = nil
 
 		c, err := serv.Update(comp.ID.Hex(), updateReq)
-		assert.Ok(t, err, "No error")
+		assert.Ok(t, err)
 
 		assert.Assert(t, c.Stock.Equals(quantity.Quantity{25, "l"}), "Empty stock should be ignored")
 
 		updateReq.Stock = &quantity.Quantity{4000, "ml"}
 		c, err = serv.Update(comp.ID.Hex(), updateReq)
-		assert.Ok(t, err, "No error")
+		assert.Ok(t, err)
 
 		assert.Assert(t, c.Stock.Equals(quantity.Quantity{4000, "ml"}), "Non-empty stock should be assigned")
 	})
@@ -356,7 +395,9 @@ func TestCreateAndUpdateDependencies(t *testing.T) {
 
 	createReq := compToCreateRequest(comp)
 	comp, err := serv.Create(createReq)
-	assert.Ok(t, err, "No error")
+	assert.Ok(t, err)
+	err = serv.Validate(comp.ID.Hex())
+	assert.Ok(t, err)
 
 	assert.Equal(t, comp.Cost, 125.0, "Cost should be 125.0")
 
@@ -373,7 +414,7 @@ func TestCreateAndUpdateDependencies(t *testing.T) {
 
 		updateReq := compToUpdateRequest(comp)
 		comp, err := serv.Update(comp.ID.Hex(), updateReq)
-		assert.Ok(t, err, "No error")
+		assert.Ok(t, err)
 
 		assert.Equal(t, comp.Cost, 175.0, "Cost should be 175.0")
 	})
@@ -384,7 +425,7 @@ func TestCreateAndUpdateDependencies(t *testing.T) {
 
 		updateReq := compToUpdateRequest(comp)
 		comp, err := serv.Update(comp.ID.Hex(), updateReq)
-		assert.Ok(t, err, "No error")
+		assert.Ok(t, err)
 		assert.Equal(t, comp.Cost, 125.0, "Cost should be 125.0")
 	})
 
@@ -394,7 +435,7 @@ func TestCreateAndUpdateDependencies(t *testing.T) {
 
 		updateReq := compToUpdateRequest(comp)
 		comp, err := serv.Update(comp.ID.Hex(), updateReq)
-		assert.Ok(t, err, "No error")
+		assert.Ok(t, err)
 		assert.Equal(t, comp.Cost, 475.0, "Cost should be 475.0")
 	})
 }
@@ -416,9 +457,44 @@ func TestDeleteComposition(t *testing.T) {
 	repo.Insert(comp)
 
 	assert.ErrCode(t, serv.Delete(dep.ID.Hex()), "COMPOSITION_USED_AS_DEPENDENCY", "Used dependency cannot be deleted")
-	assert.Equal(t, repo.Count(), 2, "Used dependency cannot be deleted")
+	total, enabled := repo.Count()
+	assert.Equal(t, total, 2, "Used dependency cannot be deleted")
+	assert.Equal(t, total, enabled, "Used dependency cannot be deleted")
+
+	repo.Reset()
+	eventMgr.Reset()
 	assert.Ok(t, serv.Delete(comp.ID.Hex()), "Not used composition should be deleted")
-	assert.Equal(t, repo.Count(), 1, "Not used composition should be deleted")
+	total, enabled = repo.Count()
+	assert.Equal(t, total, 2, "Used dependency cannot be deleted")
+	assert.Equal(t, enabled, 1, "Not used composition should be deleted")
+
+	repo.Assert(t, []mock.Call{
+		mock.Call{"FindByID", []interface{}{comp.ID.Hex()}},
+		mock.Call{"FindUses", []interface{}{comp.ID.Hex()}},
+		mock.Call{"Delete", []interface{}{comp.ID.Hex()}},
+	})
+
+	eventMgr.Assert(t, []mock.Call{
+		mock.Call{"Publish", []interface{}{mock.NotNil, mock.NotNil}},
+	})
+
+	t.Run("Composition disabled and not validated", func(t *testing.T) {
+		repo.Clean()
+		eventMgr.Clean()
+
+		comp := newComposition()
+		comp.Enabled = false
+		comp.Validated = true
+		repo.Insert(comp)
+		err := serv.Delete(comp.ID.Hex())
+		assert.ErrCode(t, err, "COMPOSITION_NOT_FOUND")
+
+		comp.Enabled = true
+		comp.Validated = false
+		repo.Update(comp)
+		err = serv.Delete(comp.ID.Hex())
+		assert.ErrCode(t, err, "COMPOSITION_NOT_VALIDATED")
+	})
 }
 
 func TestCalculateDependenciesSubvalues(t *testing.T) {

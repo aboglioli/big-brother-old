@@ -3,6 +3,7 @@ package composition
 import (
 	"testing"
 
+	"github.com/aboglioli/big-brother/pkg/errors"
 	"github.com/aboglioli/big-brother/pkg/quantity"
 	"github.com/aboglioli/big-brother/pkg/tests/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -183,7 +184,7 @@ func TestValidateSchema(t *testing.T) {
 	t.Run("Negative cost", func(t *testing.T) {
 		comp := newComposition()
 		comp.Cost = -1.0
-		assert.Err(t, comp.ValidateSchema()) // TODO: check validation
+		assert.ErrValidation(t, comp.ValidateSchema(), "cost", "INVALID")
 	})
 
 	t.Run("Invalid units", func(t *testing.T) {
@@ -199,6 +200,24 @@ func TestValidateSchema(t *testing.T) {
 		comp.Unit.Unit = "kg"
 		comp.Stock.Unit = "l"
 		assert.ErrValidation(t, comp.ValidateSchema(), "stock", "INCOMPATIBLE_STOCK_AND_UNIT")
+	})
+
+	t.Run("All properties wrong", func(t *testing.T) {
+		comp := newComposition()
+		comp.Cost = -5.0
+		comp.Unit = quantity.Quantity{}
+		comp.Stock = quantity.Quantity{}
+
+		err := comp.ValidateSchema()
+		assert.Err(t, err)
+
+		vErr, ok := err.(*errors.Validation)
+		assert.Assert(t, ok)
+		assert.Equal(t, vErr.Size(), 4)
+		assert.ErrValidation(t, vErr, "cost", "INVALID")
+		assert.ErrValidation(t, vErr, "unit", "INVALID")
+		assert.ErrValidation(t, vErr, "stock", "INVALID")
+		assert.ErrValidation(t, vErr, "stock", "INCOMPATIBLE_STOCK_AND_UNIT")
 	})
 
 	t.Run("Invalid dependency quantity", func(t *testing.T) {

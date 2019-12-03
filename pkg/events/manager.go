@@ -1,9 +1,5 @@
 package events
 
-import (
-	"github.com/aboglioli/big-brother/pkg/errors"
-)
-
 type Options struct {
 	Exchange     string
 	ExchangeType string
@@ -12,6 +8,6 @@ type Options struct {
 }
 
 type Manager interface {
-	Publish(body interface{}, opts *Options) errors.Error
-	Consume(opts *Options) (<-chan Message, errors.Error)
+	Publish(body interface{}, opts *Options) error
+	Consume(opts *Options) (<-chan Message, error)
 }

@@ -6,10 +6,10 @@ import (
 )
 
 type Service interface {
-	GetByID(id string) (*User, errors.Error)
-	Create(req *CreateRequest) (*User, errors.Error)
-	Update(id string, req *UpdateRequest) (*User, errors.Error)
-	Delete(id string) errors.Error
+	GetByID(id string) (*User, error)
+	Create(req *CreateRequest) (*User, error)
+	Update(id string, req *UpdateRequest) (*User, error)
+	Delete(id string) error
 }
 
 type service struct {
@@ -24,7 +24,7 @@ func NewService(repo Repository, eventMgr events.Manager) Service {
 	}
 }
 
-func (s *service) GetByID(id string) (*User, errors.Error) {
+func (s *service) GetByID(id string) (*User, error) {
 	user, err := s.repository.FindByID(id)
 	if err != nil {
 		return nil, errors.NewStatus("USER_NOT_FOUND").SetPath("user/service.GetByID").SetRef(err)
@@ -43,7 +43,7 @@ type CreateRequest struct {
 	Email    string `json:"email" bson:"email" binding:"required"`
 }
 
-func (s *service) Create(req *CreateRequest) (*User, errors.Error) {
+func (s *service) Create(req *CreateRequest) (*User, error) {
 	path := "user/service.Create"
 	u := NewUser()
 
@@ -90,7 +90,7 @@ type UpdateRequest struct {
 	Email    *string `json:"email" bson:"email"`
 }
 
-func (s *service) Update(id string, req *UpdateRequest) (*User, errors.Error) {
+func (s *service) Update(id string, req *UpdateRequest) (*User, error) {
 	path := "user/service.Update"
 
 	u, err := s.repository.FindByID(id)
@@ -138,7 +138,7 @@ func (s *service) Update(id string, req *UpdateRequest) (*User, errors.Error) {
 	return u, nil
 }
 
-func (s *service) Delete(id string) errors.Error {
+func (s *service) Delete(id string) error {
 	path := "user/service.Delete"
 
 	_, err := s.repository.FindByID(id)

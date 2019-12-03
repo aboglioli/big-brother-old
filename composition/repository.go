@@ -12,22 +12,22 @@ import (
 )
 
 type Repository interface {
-	FindAll() ([]*Composition, errors.Error)
-	FindByID(id string) (*Composition, errors.Error)
-	FindUses(id string) ([]*Composition, errors.Error)
-	FindByUsesUpdatedSinceLastChange(usesUpdated bool) ([]*Composition, errors.Error)
+	FindAll() ([]*Composition, error)
+	FindByID(id string) (*Composition, error)
+	FindUses(id string) ([]*Composition, error)
+	FindByUsesUpdatedSinceLastChange(usesUpdated bool) ([]*Composition, error)
 
-	Insert(*Composition) errors.Error
-	InsertMany([]*Composition) errors.Error
-	Update(*Composition) errors.Error
-	Delete(id string) errors.Error
+	Insert(*Composition) error
+	InsertMany([]*Composition) error
+	Update(*Composition) error
+	Delete(id string) error
 }
 
 type repository struct {
 	collection *mongo.Collection
 }
 
-func NewRepository() (Repository, errors.Error) {
+func NewRepository() (Repository, error) {
 	db, err := db.Get("Composition")
 
 	if err != nil {
@@ -39,7 +39,7 @@ func NewRepository() (Repository, errors.Error) {
 	}, nil
 }
 
-func (r *repository) FindAll() ([]*Composition, errors.Error) {
+func (r *repository) FindAll() ([]*Composition, error) {
 	path := "composition/repository.FindAll"
 	ctx := context.Background()
 
@@ -67,7 +67,7 @@ func (r *repository) FindAll() ([]*Composition, errors.Error) {
 	return comps, nil
 }
 
-func (r *repository) FindByID(id string) (*Composition, errors.Error) {
+func (r *repository) FindByID(id string) (*Composition, error) {
 	path := "composition/repository.FindByID"
 	ctx := context.Background()
 
@@ -93,7 +93,7 @@ func (r *repository) FindByID(id string) (*Composition, errors.Error) {
 	return &comp, nil
 }
 
-func (r *repository) FindUses(id string) ([]*Composition, errors.Error) {
+func (r *repository) FindUses(id string) ([]*Composition, error) {
 	path := "composition/repository.FindUses"
 	ctx := context.Background()
 
@@ -128,7 +128,7 @@ func (r *repository) FindUses(id string) ([]*Composition, errors.Error) {
 	return comps, nil
 }
 
-func (r *repository) FindByUsesUpdatedSinceLastChange(usesUpdated bool) ([]*Composition, errors.Error) {
+func (r *repository) FindByUsesUpdatedSinceLastChange(usesUpdated bool) ([]*Composition, error) {
 	path := "composition/repository.FindByUsesUpdatedSinceLastChange"
 	ctx := context.Background()
 
@@ -160,7 +160,7 @@ func (r *repository) FindByUsesUpdatedSinceLastChange(usesUpdated bool) ([]*Comp
 	return comps, nil
 }
 
-func (r *repository) Insert(c *Composition) errors.Error {
+func (r *repository) Insert(c *Composition) error {
 	ctx := context.Background()
 
 	_, err := r.collection.InsertOne(ctx, c)
@@ -171,7 +171,7 @@ func (r *repository) Insert(c *Composition) errors.Error {
 	return nil
 }
 
-func (r *repository) InsertMany(comps []*Composition) errors.Error {
+func (r *repository) InsertMany(comps []*Composition) error {
 	ctx := context.Background()
 
 	rawComps := make([]interface{}, len(comps))
@@ -189,7 +189,7 @@ func (r *repository) InsertMany(comps []*Composition) errors.Error {
 	return nil
 }
 
-func (r *repository) Update(c *Composition) errors.Error {
+func (r *repository) Update(c *Composition) error {
 	path := "composition/repository.Update"
 	ctx := context.Background()
 
@@ -215,7 +215,7 @@ func (r *repository) Update(c *Composition) errors.Error {
 	return nil
 }
 
-func (r *repository) Delete(id string) errors.Error {
+func (r *repository) Delete(id string) error {
 	path := "composition/repository.Delete"
 
 	ctx := context.Background()

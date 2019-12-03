@@ -37,7 +37,7 @@ func connect() (*mongo.Client, error) {
 	return client, nil
 }
 
-func Get(database string) (*mongo.Database, errors.Error) {
+func Get(database string) (*mongo.Database, error) {
 	if client == nil {
 		c, err := connect()
 		if err != nil {

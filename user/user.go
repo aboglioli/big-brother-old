@@ -40,7 +40,7 @@ func NewUser() *User {
 	}
 }
 
-func (u *User) SetPassword(pwd string) errors.Error {
+func (u *User) SetPassword(pwd string) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(pwd), bcrypt.DefaultCost)
 	if err != nil {
 		return errors.NewStatus("SET_PASSWORD").SetPath("user/user.SetPassword").SetMessage(err.Error())
@@ -85,7 +85,7 @@ func (u *User) RemoveRole(role string) {
 
 var re = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
-func (u *User) ValidateSchema() errors.Error {
+func (u *User) ValidateSchema() error {
 	err := errors.NewValidation("VALIDATE_SCHEMA").SetPath("user/user.ValidateSchema")
 
 	if len(u.Username) < 6 || len(u.Username) > 64 {

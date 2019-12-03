@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func handleError(c *gin.Context, err errors.Error) {
+func handleError(c *gin.Context, err error) {
 	switch e := err.(type) {
 	case *errors.Internal:
 		fmt.Println("[Internal Error]")

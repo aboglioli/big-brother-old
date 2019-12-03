@@ -6,7 +6,7 @@ type Generic struct {
 	path      string
 	code      string
 	message   string
-	reference Error
+	reference error
 }
 
 func New(code string) *Generic {
@@ -37,7 +37,7 @@ func (c *Generic) SetMessage(msg string, args ...interface{}) *Generic {
 	return c
 }
 
-func (c *Generic) SetRef(err Error) *Generic {
+func (c *Generic) SetRef(err error) *Generic {
 	c.reference = err
 	return c
 }

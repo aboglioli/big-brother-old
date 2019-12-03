@@ -54,7 +54,7 @@ func (v *Validation) SetMessage(msg string, args ...interface{}) *Validation {
 	return v
 }
 
-func (v *Validation) SetRef(err Error) *Validation {
+func (v *Validation) SetRef(err error) *Validation {
 	v.Generic.SetRef(err)
 	return v
 }

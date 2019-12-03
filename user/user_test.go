@@ -3,16 +3,8 @@ package user
 import (
 	"testing"
 
-	"github.com/aboglioli/big-brother/pkg/errors"
 	"github.com/aboglioli/big-brother/pkg/tests/assert"
 )
-
-func hasErrCode(err errors.Error, code string) bool {
-	if err == nil {
-		return false
-	}
-	return err.Code() == code
-}
 
 func TestValidateSchema(t *testing.T) {
 	user := NewUser()

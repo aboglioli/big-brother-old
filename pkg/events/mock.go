@@ -1,7 +1,6 @@
 package events
 
 import (
-	"github.com/aboglioli/big-brother/pkg/errors"
 	"github.com/aboglioli/big-brother/pkg/tests/mock"
 )
 
@@ -27,7 +26,7 @@ func (d mockMessage) Type() string {
 	return e.Type
 }
 
-func (d mockMessage) Decode(dst interface{}) errors.Error {
+func (d mockMessage) Decode(dst interface{}) error {
 	return d.converter.Decode(d.Body(), dst)
 }
 
@@ -57,7 +56,7 @@ func GetMockManager() *mockManager {
 	return mockMgr
 }
 
-func (m *mockManager) Publish(body interface{}, opts *Options) errors.Error {
+func (m *mockManager) Publish(body interface{}, opts *Options) error {
 	m.Called("Publish", body, opts)
 
 	b, err := m.converter.Encode(body)
@@ -80,7 +79,7 @@ func (m *mockManager) Publish(body interface{}, opts *Options) errors.Error {
 	return nil
 }
 
-func (m *mockManager) Consume(opts *Options) (<-chan Message, errors.Error) {
+func (m *mockManager) Consume(opts *Options) (<-chan Message, error) {
 	m.Called("Consume", opts)
 
 	return m.ch, nil

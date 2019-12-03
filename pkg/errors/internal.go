@@ -18,7 +18,7 @@ func (i *Internal) SetMessage(msg string, args ...interface{}) *Internal {
 	return i
 }
 
-func (i *Internal) SetRef(err Error) *Internal {
+func (i *Internal) SetRef(err error) *Internal {
 	i.Generic.SetRef(err)
 	return i
 }

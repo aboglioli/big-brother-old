@@ -29,7 +29,7 @@ func (s *Status) SetMessage(msg string, args ...interface{}) *Status {
 	return s
 }
 
-func (s *Status) SetRef(err Error) *Status {
+func (s *Status) SetRef(err error) *Status {
 	s.Generic.SetRef(err)
 	return s
 }

@@ -79,7 +79,7 @@ func (c *Composition) UpsertDependency(d Dependency) {
 	c.calculateCostFromDependencies()
 }
 
-func (c *Composition) RemoveDependency(depID string) errors.Error {
+func (c *Composition) RemoveDependency(depID string) error {
 	removed := false
 	dependencies := make([]Dependency, 0, len(c.Dependencies))
 	for _, dep := range c.Dependencies {
@@ -118,7 +118,7 @@ func (c1 *Composition) CompareDependencies(deps []Dependency) (left []Dependency
 	return
 }
 
-func (c *Composition) ValidateSchema() errors.Error {
+func (c *Composition) ValidateSchema() error {
 	err := errors.NewValidation("VALIDATE_SCHEMA")
 
 	if c.Cost < 0 {

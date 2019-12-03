@@ -16,7 +16,7 @@ type Context struct {
 	serv     composition.Service
 }
 
-func (c *Context) UpdateUses(comp *composition.Composition) errors.Error {
+func (c *Context) UpdateUses(comp *composition.Composition) error {
 	path := "cmd/uses/main.Context.UpdateUses"
 
 	fmt.Printf("# Updating uses of %s (%s): ", comp.Name, comp.ID.Hex())

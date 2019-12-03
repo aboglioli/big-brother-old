@@ -11,13 +11,13 @@ import (
 )
 
 type Service interface {
-	GetByID(id string) (*Composition, errors.Error)
-	Create(req *CreateRequest) (*Composition, errors.Error)
-	Update(compID string, req *UpdateRequest) (*Composition, errors.Error)
-	Delete(id string) errors.Error
+	GetByID(id string) (*Composition, error)
+	Create(req *CreateRequest) (*Composition, error)
+	Update(compID string, req *UpdateRequest) (*Composition, error)
+	Delete(id string) error
 
-	UpdateUses(c *Composition) ([]*Composition, errors.Error)
-	Validate(id string) errors.Error
+	UpdateUses(c *Composition) ([]*Composition, error)
+	Validate(id string) error
 }
 
 type service struct {
@@ -32,7 +32,7 @@ func NewService(r Repository, e events.Manager) Service {
 	}
 }
 
-func (s *service) GetByID(id string) (*Composition, errors.Error) {
+func (s *service) GetByID(id string) (*Composition, error) {
 	comp, err := s.repository.FindByID(id)
 	if err != nil {
 		return nil, errors.NewStatus("COMPOSITION_NOT_FOUND").SetPath("composition/service.GetByID").SetRef(err)
@@ -69,7 +69,7 @@ type CreateRequest struct {
 * 	"payload": composition data
 * }
  */
-func (s *service) Create(req *CreateRequest) (*Composition, errors.Error) {
+func (s *service) Create(req *CreateRequest) (*Composition, error) {
 	path := "composition/service.Create"
 	c := NewComposition()
 
@@ -143,7 +143,7 @@ type UpdateRequest struct {
 * 	"payload": composition data
 * }
  */
-func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Error) {
+func (s *service) Update(id string, req *UpdateRequest) (*Composition, error) {
 	path := "composition/service.Update"
 
 	if req.ID != nil && *req.ID != id {
@@ -247,7 +247,7 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, errors.Er
 * 	"payload": composition data
 * }
  */
-func (s *service) Delete(id string) errors.Error {
+func (s *service) Delete(id string) error {
 	path := "composition/service.Delete"
 
 	c, err := s.repository.FindByID(id)
@@ -290,7 +290,7 @@ func (s *service) Delete(id string) errors.Error {
 * 	"payload": list of compositions
 * }
  */
-func (s *service) UpdateUses(c *Composition) ([]*Composition, errors.Error) {
+func (s *service) UpdateUses(c *Composition) ([]*Composition, error) {
 	path := "composition/service.UpdateUses"
 
 	cache := make(map[string]*Composition)
@@ -318,7 +318,7 @@ func (s *service) UpdateUses(c *Composition) ([]*Composition, errors.Error) {
 	return comps, nil
 }
 
-func (s *service) Validate(compID string) errors.Error {
+func (s *service) Validate(compID string) error {
 	comp, err := s.repository.FindByID(compID)
 	if err != nil {
 		return err
@@ -333,7 +333,7 @@ func (s *service) Validate(compID string) errors.Error {
 	return nil
 }
 
-func (s *service) updateUses(c *Composition, cache map[string]*Composition) errors.Error {
+func (s *service) updateUses(c *Composition, cache map[string]*Composition) error {
 	path := "composition/service.updateUses"
 
 	uses, _ := s.repository.FindUses(c.ID.Hex())
@@ -362,7 +362,7 @@ func (s *service) updateUses(c *Composition, cache map[string]*Composition) erro
 	return nil
 }
 
-func (s *service) validateSchema(c *Composition) errors.Error {
+func (s *service) validateSchema(c *Composition) error {
 	path := "composition/service.validateSchema"
 
 	if err := c.ValidateSchema(); err != nil {

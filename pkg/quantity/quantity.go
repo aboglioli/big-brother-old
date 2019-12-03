@@ -11,7 +11,7 @@ type Quantity struct {
 	Unit     string  `bson:"unit" json:"unit"`
 }
 
-func (q1 Quantity) Add(q2 Quantity) (Quantity, errors.Error) {
+func (q1 Quantity) Add(q2 Quantity) (Quantity, error) {
 	u1, err := referenceUnit(q1, q2)
 	if err != nil {
 		return Quantity{}, err
@@ -28,7 +28,7 @@ func (q1 Quantity) Add(q2 Quantity) (Quantity, errors.Error) {
 	}, nil
 }
 
-func (q1 Quantity) Subtract(q2 Quantity) (Quantity, errors.Error) {
+func (q1 Quantity) Subtract(q2 Quantity) (Quantity, error) {
 	u1, err := referenceUnit(q1, q2)
 	if err != nil {
 		return Quantity{}, err
@@ -89,7 +89,7 @@ func (q Quantity) IsEmpty() bool {
 	return q.Quantity == 0 && q.Unit == ""
 }
 
-func referenceUnit(q1, q2 Quantity) (*unit.Unit, errors.Error) {
+func referenceUnit(q1, q2 Quantity) (*unit.Unit, error) {
 	path := "quantity/quantity.referenceUnit"
 	repo := unit.GetRepository()
 

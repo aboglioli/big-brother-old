@@ -22,7 +22,7 @@ func (r *mockRepository) Clean() {
 }
 
 // Implementation
-func (r *mockRepository) FindByID(id string) (*User, errors.Error) {
+func (r *mockRepository) FindByID(id string) (*User, error) {
 	r.Called("FindByID", id)
 
 	for _, c := range r.users {
@@ -34,7 +34,7 @@ func (r *mockRepository) FindByID(id string) (*User, errors.Error) {
 	return nil, errors.NewInternal("NOT_FOUND").SetPath("user/repository_mock.FindById")
 }
 
-func (r *mockRepository) FindByUsername(username string) (*User, errors.Error) {
+func (r *mockRepository) FindByUsername(username string) (*User, error) {
 	r.Called("FindByUsername", username)
 
 	for _, c := range r.users {
@@ -46,7 +46,7 @@ func (r *mockRepository) FindByUsername(username string) (*User, errors.Error) {
 	return nil, errors.NewInternal("NOT_FOUND").SetPath("user/repository_mock.FindByUsername")
 }
 
-func (r *mockRepository) FindByEmail(email string) (*User, errors.Error) {
+func (r *mockRepository) FindByEmail(email string) (*User, error) {
 	r.Called("FindByEmail", email)
 
 	for _, c := range r.users {
@@ -58,7 +58,7 @@ func (r *mockRepository) FindByEmail(email string) (*User, errors.Error) {
 	return nil, errors.NewInternal("NOT_FOUND").SetPath("user/repository_mock.FindByEmail")
 }
 
-func (r *mockRepository) Insert(u *User) errors.Error {
+func (r *mockRepository) Insert(u *User) error {
 	r.Called("Insert", u)
 
 	u.UpdatedAt = time.Now()
@@ -67,7 +67,7 @@ func (r *mockRepository) Insert(u *User) errors.Error {
 	return nil
 }
 
-func (r *mockRepository) InsertMany(users []*User) errors.Error {
+func (r *mockRepository) InsertMany(users []*User) error {
 	r.Called("InsertMany", users)
 
 	newUsers := make([]*User, len(users))
@@ -80,7 +80,7 @@ func (r *mockRepository) InsertMany(users []*User) errors.Error {
 	return nil
 }
 
-func (r *mockRepository) Update(u *User) errors.Error {
+func (r *mockRepository) Update(u *User) error {
 	r.Called("Update", u)
 
 	for _, user := range r.users {
@@ -97,7 +97,7 @@ func (r *mockRepository) Update(u *User) errors.Error {
 	return nil
 }
 
-func (r *mockRepository) Delete(id string) errors.Error {
+func (r *mockRepository) Delete(id string) error {
 	r.Called("Delete", id)
 
 	for _, user := range r.users {

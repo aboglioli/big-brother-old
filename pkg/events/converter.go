@@ -8,8 +8,8 @@ import (
 
 // Converter is an interface
 type Converter interface {
-	Decode(src []byte, dst interface{}) errors.Error
-	Encode(src interface{}) ([]byte, errors.Error)
+	Decode(src []byte, dst interface{}) error
+	Encode(src interface{}) ([]byte, error)
 }
 
 // Default converter for json structures
@@ -20,14 +20,14 @@ func DefaultConverter() *jsonConverter {
 	return &jsonConverter{}
 }
 
-func (c *jsonConverter) Decode(src []byte, dst interface{}) errors.Error {
+func (c *jsonConverter) Decode(src []byte, dst interface{}) error {
 	if err := json.Unmarshal(src, dst); err != nil {
 		return errors.NewInternal("FAILED_TO_DECODE").SetPath("infrastructure/events/rabbit.Decode").SetMessage(err.Error())
 	}
 
 	return nil
 }
-func (c *jsonConverter) Encode(src interface{}) ([]byte, errors.Error) {
+func (c *jsonConverter) Encode(src interface{}) ([]byte, error) {
 	b, err := json.Marshal(src)
 	if err != nil {
 		return nil, errors.NewInternal("FAILTED_TO_CODE").SetPath("infrastructure/events/rabbit.Code").SetMessage(err.Error())

@@ -12,20 +12,20 @@ import (
 )
 
 type Repository interface {
-	FindByID(id string) (*User, errors.Error)
-	FindByUsername(username string) (*User, errors.Error)
-	FindByEmail(email string) (*User, errors.Error)
+	FindByID(id string) (*User, error)
+	FindByUsername(username string) (*User, error)
+	FindByEmail(email string) (*User, error)
 
-	Insert(u *User) errors.Error
-	Update(u *User) errors.Error
-	Delete(id string) errors.Error
+	Insert(u *User) error
+	Update(u *User) error
+	Delete(id string) error
 }
 
 type repository struct {
 	collection *mongo.Collection
 }
 
-func NewRepository() (Repository, errors.Error) {
+func NewRepository() (Repository, error) {
 	db, err := db.Get("User")
 
 	if err != nil {
@@ -37,7 +37,7 @@ func NewRepository() (Repository, errors.Error) {
 	}, nil
 }
 
-func (r *repository) FindByID(id string) (*User, errors.Error) {
+func (r *repository) FindByID(id string) (*User, error) {
 	path := "user/repository.FindByID"
 	ctx := context.Background()
 
@@ -63,7 +63,7 @@ func (r *repository) FindByID(id string) (*User, errors.Error) {
 	return &user, nil
 }
 
-func (r *repository) FindByUsername(username string) (*User, errors.Error) {
+func (r *repository) FindByUsername(username string) (*User, error) {
 	path := "user/repository.FindByUsername"
 	ctx := context.Background()
 
@@ -84,7 +84,7 @@ func (r *repository) FindByUsername(username string) (*User, errors.Error) {
 	return &user, nil
 }
 
-func (r *repository) FindByEmail(email string) (*User, errors.Error) {
+func (r *repository) FindByEmail(email string) (*User, error) {
 	path := "user/repository.FindByEmail"
 	ctx := context.Background()
 
@@ -105,7 +105,7 @@ func (r *repository) FindByEmail(email string) (*User, errors.Error) {
 	return &user, nil
 }
 
-func (r *repository) Insert(u *User) errors.Error {
+func (r *repository) Insert(u *User) error {
 	ctx := context.Background()
 
 	_, err := r.collection.InsertOne(ctx, u)
@@ -116,7 +116,7 @@ func (r *repository) Insert(u *User) errors.Error {
 	return nil
 }
 
-func (r *repository) Update(u *User) errors.Error {
+func (r *repository) Update(u *User) error {
 	path := "user/repository.Update"
 	ctx := context.Background()
 
@@ -142,7 +142,7 @@ func (r *repository) Update(u *User) errors.Error {
 	return nil
 }
 
-func (r *repository) Delete(id string) errors.Error {
+func (r *repository) Delete(id string) error {
 	path := "composition/repository.Delete"
 	ctx := context.Background()
 

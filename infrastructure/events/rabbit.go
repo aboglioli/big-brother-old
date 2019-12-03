@@ -29,7 +29,7 @@ func (d rabbitMessage) Type() string {
 	return e.Type
 }
 
-func (d rabbitMessage) Decode(dst interface{}) errors.Error {
+func (d rabbitMessage) Decode(dst interface{}) error {
 	return d.converter.Decode(d.Body(), dst)
 }
 
@@ -47,7 +47,7 @@ type manager struct {
 	converter  events.Converter
 }
 
-func GetManager() (events.Manager, errors.Error) {
+func GetManager() (events.Manager, error) {
 	if mgr == nil {
 		converter := events.DefaultConverter()
 		mgr = &manager{
@@ -70,7 +70,7 @@ func GetManager() (events.Manager, errors.Error) {
 	return mgr, nil
 }
 
-func (m *manager) connect() (*amqp.Connection, errors.Error) {
+func (m *manager) connect() (*amqp.Connection, error) {
 	if m.connection != nil {
 		m.connection.Close()
 	}
@@ -93,7 +93,7 @@ func (m *manager) disconnect() {
 	}
 }
 
-func (m *manager) Publish(body interface{}, opts *events.Options) errors.Error {
+func (m *manager) Publish(body interface{}, opts *events.Options) error {
 	if m.emitters[opts.Exchange] == nil {
 		ch, err := m.createChannelWithExchange(opts.Exchange, opts.ExchangeType)
 		if err != nil {
@@ -125,7 +125,7 @@ func (m *manager) Publish(body interface{}, opts *events.Options) errors.Error {
 	return nil
 }
 
-func (m *manager) Consume(opts *events.Options) (<-chan events.Message, errors.Error) {
+func (m *manager) Consume(opts *events.Options) (<-chan events.Message, error) {
 	path := "infrastructure/events/manager.Consume"
 
 	if m.emitters[opts.Exchange] == nil {
@@ -191,7 +191,7 @@ func (m *manager) Consume(opts *events.Options) (<-chan events.Message, errors.E
 	return msg, nil
 }
 
-func (m *manager) createChannelWithExchange(exchange string, eType string) (*amqp.Channel, errors.Error) {
+func (m *manager) createChannelWithExchange(exchange string, eType string) (*amqp.Channel, error) {
 	path := "infrastructure/events/manager.createChannelWithExchange"
 
 	ch, err := m.connection.Channel()

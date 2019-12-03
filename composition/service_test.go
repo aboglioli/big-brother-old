@@ -4,20 +4,12 @@ import (
 	"math"
 	"testing"
 
-	"github.com/aboglioli/big-brother/pkg/errors"
 	"github.com/aboglioli/big-brother/pkg/events"
 	"github.com/aboglioli/big-brother/pkg/quantity"
 	"github.com/aboglioli/big-brother/pkg/tests/assert"
 	"github.com/aboglioli/big-brother/pkg/tests/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
-func hasErrCode(err errors.Error, code string) bool {
-	if err == nil {
-		return false
-	}
-	return err.Code() == code
-}
 
 func checkCompCost(t *testing.T, comps []*Composition, index int, costShouldBe float64) {
 	costShouldBe = math.Round(costShouldBe*1000) / 1000

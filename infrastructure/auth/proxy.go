@@ -21,7 +21,7 @@ func NewUserProxy() *UserProxy {
 	return &UserProxy{c}
 }
 
-func (p *UserProxy) Validate(token string) (*user.User, errors.Error) {
+func (p *UserProxy) Validate(token string) (*user.User, error) {
 	if data := p.cache.Get(token); data != nil {
 		if user, ok := data.(*user.User); ok {
 			return user, nil

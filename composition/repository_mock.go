@@ -22,7 +22,7 @@ func (r *mockRepository) Clean() {
 }
 
 // Implementation
-func (r *mockRepository) FindAll() ([]*Composition, errors.Error) {
+func (r *mockRepository) FindAll() ([]*Composition, error) {
 	r.Called("FindAll")
 
 	comps := make([]*Composition, 0)
@@ -35,7 +35,7 @@ func (r *mockRepository) FindAll() ([]*Composition, errors.Error) {
 	return comps, nil
 }
 
-func (r *mockRepository) FindByID(id string) (*Composition, errors.Error) {
+func (r *mockRepository) FindByID(id string) (*Composition, error) {
 	r.Called("FindByID", id)
 
 	for _, c := range r.compositions {
@@ -47,7 +47,7 @@ func (r *mockRepository) FindByID(id string) (*Composition, errors.Error) {
 	return nil, errors.NewInternal("NOT_FOUND").SetPath("composition/repository_mock.FindById")
 }
 
-func (r *mockRepository) FindUses(id string) ([]*Composition, errors.Error) {
+func (r *mockRepository) FindUses(id string) ([]*Composition, error) {
 	r.Called("FindUses", id)
 
 	comps := make([]*Composition, 0)
@@ -67,7 +67,7 @@ func (r *mockRepository) FindUses(id string) ([]*Composition, errors.Error) {
 	return comps, nil
 }
 
-func (r *mockRepository) FindByUsesUpdatedSinceLastChange(usesUpdated bool) ([]*Composition, errors.Error) {
+func (r *mockRepository) FindByUsesUpdatedSinceLastChange(usesUpdated bool) ([]*Composition, error) {
 	r.Called("FindByUsesUpdatedSinceLastChange", usesUpdated)
 
 	comps := make([]*Composition, 0)
@@ -84,7 +84,7 @@ func (r *mockRepository) FindByUsesUpdatedSinceLastChange(usesUpdated bool) ([]*
 	return comps, nil
 }
 
-func (r *mockRepository) Insert(c *Composition) errors.Error {
+func (r *mockRepository) Insert(c *Composition) error {
 	r.Called("Insert", c)
 
 	c.UpdatedAt = time.Now()
@@ -93,7 +93,7 @@ func (r *mockRepository) Insert(c *Composition) errors.Error {
 	return nil
 }
 
-func (r *mockRepository) InsertMany(comps []*Composition) errors.Error {
+func (r *mockRepository) InsertMany(comps []*Composition) error {
 	r.Called("InsertMany", comps)
 
 	newComps := make([]*Composition, len(comps))
@@ -106,7 +106,7 @@ func (r *mockRepository) InsertMany(comps []*Composition) errors.Error {
 	return nil
 }
 
-func (r *mockRepository) Update(c *Composition) errors.Error {
+func (r *mockRepository) Update(c *Composition) error {
 	r.Called("Update", c)
 
 	for _, comp := range r.compositions {
@@ -123,7 +123,7 @@ func (r *mockRepository) Update(c *Composition) errors.Error {
 	return nil
 }
 
-func (r *mockRepository) Delete(id string) errors.Error {
+func (r *mockRepository) Delete(id string) error {
 	r.Called("Delete", id)
 
 	for _, comp := range r.compositions {

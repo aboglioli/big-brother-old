@@ -34,11 +34,8 @@ func NewService(r Repository, e events.Manager) Service {
 
 func (s *service) GetByID(id string) (*Composition, error) {
 	comp, err := s.repository.FindByID(id)
-	if err != nil {
-		return nil, errors.NewStatus("COMPOSITION_NOT_FOUND").SetPath("composition/service.GetByID").SetRef(err)
-	}
-	if !comp.Enabled {
-		return nil, errors.NewStatus("COMPOSITION_IS_DELETED").SetPath("composition/service.GetByID")
+	if err != nil || !comp.Enabled {
+		return nil, errors.NewStatus("COMPOSITION_NOT_FOUND").SetPath("composition/service.GetByID").SetStatus(404).SetRef(err)
 	}
 	return comp, nil
 }

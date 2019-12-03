@@ -1,5 +1,7 @@
 package errors
 
+import "fmt"
+
 type Status struct {
 	Generic
 	statusCode int
@@ -11,8 +13,9 @@ func NewStatus(code string) *Status {
 	}
 }
 
-func (s *Status) SetStatus(code int) {
+func (s *Status) SetStatus(code int) *Status {
 	s.statusCode = code
+	return s
 }
 
 func (s *Status) Status() int {
@@ -32,4 +35,13 @@ func (s *Status) SetMessage(msg string, args ...interface{}) *Status {
 func (s *Status) SetRef(err error) *Status {
 	s.Generic.SetRef(err)
 	return s
+}
+
+func (s *Status) Error() string {
+	g := s.Generic.Error()
+	if s.statusCode > 0 {
+		return fmt.Sprintf("%s\n\t- Status code: %d", g, s.statusCode)
+	}
+
+	return g
 }

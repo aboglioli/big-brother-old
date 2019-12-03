@@ -26,11 +26,8 @@ func NewService(repo Repository, eventMgr events.Manager) Service {
 
 func (s *service) GetByID(id string) (*User, error) {
 	user, err := s.repository.FindByID(id)
-	if err != nil {
-		return nil, errors.NewStatus("USER_NOT_FOUND").SetPath("user/service.GetByID").SetRef(err)
-	}
-	if !user.Enabled {
-		return nil, errors.NewStatus("USER_IS_DELETED").SetPath("user/service.GetByID")
+	if err != nil || !user.Enabled {
+		return nil, errors.NewStatus("USER_NOT_FOUND").SetPath("user/service.GetByID").SetStatus(404).SetRef(err)
 	}
 	return user, nil
 }

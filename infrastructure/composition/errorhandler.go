@@ -40,16 +40,11 @@ func handleError(c *gin.Context, err error) {
 		fmt.Println("[Validation Error]")
 		fmt.Println(e)
 
-		fields := make([]errors.Field, len(e.Fields()))
-		for _, f := range e.Fields() {
-			fields = append(fields, f)
-		}
-
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": gin.H{
 				"code":    e.Code(),
 				"message": e.Message(),
-				"fields":  fields,
+				"fields":  e.Fields(),
 			},
 		})
 	default:

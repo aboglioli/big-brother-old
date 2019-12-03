@@ -23,7 +23,7 @@ func (c *Context) UpdateUses(comp *composition.Composition) error {
 
 	uses, err := c.serv.UpdateUses(comp)
 	if err != nil {
-		return errors.NewInternal("UPDATE_USES").SetPath(path).SetMessage(err.Error())
+		return errors.NewInternal("UPDATE_USES").SetPath(path).SetRef(err)
 	}
 	fmt.Printf("updated %d dependencies\n", len(uses))
 
@@ -34,12 +34,12 @@ func (c *Context) UpdateUses(comp *composition.Composition) error {
 	// Update composition to set UsesUpdatedSinceLastChange
 	comp.UsesUpdatedSinceLastChange = true
 	if err := c.repo.Update(comp); err != nil {
-		return errors.NewInternal("UPDATE_UsesUpdatedSinceLastChange").SetPath(path).SetMessage(err.Error())
+		return errors.NewInternal("UPDATE_UsesUpdatedSinceLastChange").SetPath(path).SetRef(err)
 	}
 
 	event, opts := composition.NewCompositionUsesUpdatedSinceLastChangeEvent(comp)
 	if err := c.eventMgr.Publish(event, opts); err != nil {
-		return errors.NewInternal("PUBLISH_CompositionUsesUpdatedSinceLastChange").SetPath(path).SetMessage(err.Error())
+		return errors.NewInternal("PUBLISH_CompositionUsesUpdatedSinceLastChange").SetPath(path).SetRef(err)
 	}
 
 	return nil

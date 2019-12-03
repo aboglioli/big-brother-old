@@ -43,7 +43,7 @@ func NewUser() *User {
 func (u *User) SetPassword(pwd string) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(pwd), bcrypt.DefaultCost)
 	if err != nil {
-		return errors.NewStatus("SET_PASSWORD").SetPath("user/user.SetPassword").SetMessage(err.Error())
+		return errors.NewStatus("SET_PASSWORD").SetPath("user/user.SetPassword").SetRef(err)
 	}
 	u.Password = string(hash)
 	return nil

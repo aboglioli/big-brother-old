@@ -78,7 +78,7 @@ func (m *manager) connect() (*amqp.Connection, error) {
 	conf := config.Get()
 	conn, err := amqp.Dial(conf.RabbitURL)
 	if err != nil {
-		return nil, errors.NewInternal("FAILED_TO_CONNECT").SetPath("infrastructure/events/manager.Connect").SetMessage(err.Error())
+		return nil, errors.NewInternal("FAILED_TO_CONNECT").SetPath("infrastructure/events/manager.Connect").SetRef(err)
 	}
 
 	m.connection = conn
@@ -119,7 +119,7 @@ func (m *manager) Publish(body interface{}, opts *events.Options) error {
 			Body: b,
 		},
 	); err != nil {
-		return errors.NewInternal("FAILED_TO_PUBLISH_MESSAGE").SetPath("infrastructure/events/manager.Publish").SetMessage(err.Error())
+		return errors.NewInternal("FAILED_TO_PUBLISH_MESSAGE").SetPath("infrastructure/events/manager.Publish").SetRef(err)
 	}
 
 	return nil
@@ -153,7 +153,7 @@ func (m *manager) Consume(opts *events.Options) (<-chan events.Message, error) {
 		nil,
 	)
 	if err != nil {
-		return nil, errors.NewInternal("FAILED_TO_DECLARE_QUEUE").SetMessage(err.Error())
+		return nil, errors.NewInternal("FAILED_TO_DECLARE_QUEUE").SetRef(err)
 	}
 
 	err = ch.QueueBind(
@@ -164,7 +164,7 @@ func (m *manager) Consume(opts *events.Options) (<-chan events.Message, error) {
 		nil,
 	)
 	if err != nil {
-		return nil, errors.NewInternal("FAILED_TO_BIND_QUEUE").SetPath(path).SetMessage(err.Error())
+		return nil, errors.NewInternal("FAILED_TO_BIND_QUEUE").SetPath(path).SetRef(err)
 	}
 
 	delivery, err := ch.Consume(
@@ -177,7 +177,7 @@ func (m *manager) Consume(opts *events.Options) (<-chan events.Message, error) {
 		nil,
 	)
 	if err != nil {
-		return nil, errors.NewInternal("FAILED_TO_CONSUME").SetPath(path).SetMessage(err.Error())
+		return nil, errors.NewInternal("FAILED_TO_CONSUME").SetPath(path).SetRef(err)
 	}
 
 	msg := make(chan events.Message)
@@ -196,7 +196,7 @@ func (m *manager) createChannelWithExchange(exchange string, eType string) (*amq
 
 	ch, err := m.connection.Channel()
 	if err != nil {
-		return nil, errors.NewInternal("FAILED_TO_CREATE_CHANNEL").SetPath(path).SetMessage(err.Error())
+		return nil, errors.NewInternal("FAILED_TO_CREATE_CHANNEL").SetPath(path).SetRef(err)
 	}
 
 	err = ch.ExchangeDeclare(
@@ -209,7 +209,7 @@ func (m *manager) createChannelWithExchange(exchange string, eType string) (*amq
 		nil,
 	)
 	if err != nil {
-		return nil, errors.NewInternal("FAILED_TO_DECLARE_EXCHANGE").SetPath(path).SetMessage(err.Error())
+		return nil, errors.NewInternal("FAILED_TO_DECLARE_EXCHANGE").SetPath(path).SetRef(err)
 	}
 
 	return ch, nil

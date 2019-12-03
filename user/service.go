@@ -100,7 +100,7 @@ func (s *service) Update(id string, req *UpdateRequest) (*User, error) {
 
 	if req.Username != nil {
 		if existing, err := s.repository.FindByUsername(*req.Username); existing != nil || err == nil {
-			return nil, errors.NewStatus("EXISTING_USERNAME").SetPath(path).SetMessage(err.Error())
+			return nil, errors.NewStatus("EXISTING_USERNAME").SetPath(path).SetRef(err)
 		}
 		u.Username = *req.Username
 	}
@@ -122,7 +122,7 @@ func (s *service) Update(id string, req *UpdateRequest) (*User, error) {
 
 	if req.Email != nil {
 		if existing, err := s.repository.FindByEmail(*req.Email); existing != nil || err == nil {
-			return nil, errors.NewStatus("EXISTING_EMAIL").SetPath(path).SetMessage(err.Error())
+			return nil, errors.NewStatus("EXISTING_EMAIL").SetPath(path).SetRef(err)
 		}
 		u.Email = *req.Email
 	}

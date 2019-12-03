@@ -6,9 +6,9 @@ import (
 )
 
 type Field struct {
-	Path    string
-	Code    string
-	Message string
+	Path    string `json:"path"`
+	Code    string `json:"code"`
+	Message string `json:"message"`
 }
 
 type Validation struct {

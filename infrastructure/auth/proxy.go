@@ -2,7 +2,6 @@ package auth
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	infrCache "github.com/aboglioli/big-brother/infrastructure/cache"
@@ -30,7 +29,7 @@ func (p *UserProxy) Validate(token string) (*user.User, error) {
 
 	user, err := getFromApi(token)
 	if err != nil {
-		return nil, errors.NewInternal("AUTH_API").SetMessage(fmt.Sprintf("Couldn't request Auth API: %s", err.Error()))
+		return nil, errors.NewInternal("AUTH_API").SetRef(err)
 	}
 
 	p.cache.Set(token, user, infrCache.DefaultExpiration)

@@ -46,7 +46,7 @@ func (r *repository) FindAll() ([]*Composition, error) {
 	cur, err := r.collection.Find(ctx, bson.D{})
 	defer cur.Close(ctx)
 	if err != nil {
-		return nil, errors.NewInternal("FIND_ALL").SetPath(path).SetMessage(err.Error())
+		return nil, errors.NewInternal("FIND_ALL").SetPath(path).SetRef(err)
 	}
 
 	var comps []*Composition
@@ -54,14 +54,14 @@ func (r *repository) FindAll() ([]*Composition, error) {
 		var comp Composition
 
 		if err := cur.Decode(&comp); err != nil {
-			return nil, errors.NewInternal("CUR_DECODE").SetPath(path).SetMessage(err.Error())
+			return nil, errors.NewInternal("CUR_DECODE").SetPath(path).SetRef(err)
 		}
 
 		comps = append(comps, &comp)
 	}
 
 	if err := cur.Err(); err != nil {
-		return nil, errors.NewInternal("CUR").SetPath(path).SetMessage(err.Error())
+		return nil, errors.NewInternal("CUR").SetPath(path).SetRef(err)
 	}
 
 	return comps, nil
@@ -73,7 +73,7 @@ func (r *repository) FindByID(id string) (*Composition, error) {
 
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, errors.NewInternal("OBJECTID_FROM_HEX").SetPath(path).SetMessage(err.Error())
+		return nil, errors.NewInternal("OBJECTID_FROM_HEX").SetPath(path).SetRef(err)
 	}
 
 	filter := bson.M{
@@ -82,12 +82,12 @@ func (r *repository) FindByID(id string) (*Composition, error) {
 
 	res := r.collection.FindOne(ctx, filter)
 	if res.Err() != nil {
-		return nil, errors.NewInternal("FIND_ONE").SetPath(path).SetMessage(res.Err().Error())
+		return nil, errors.NewInternal("FIND_ONE").SetPath(path).SetRef(res.Err())
 	}
 
 	var comp Composition
 	if err := res.Decode(&comp); err != nil {
-		return nil, errors.NewInternal("DECODE").SetPath(path).SetMessage(err.Error())
+		return nil, errors.NewInternal("DECODE").SetPath(path).SetRef(err)
 	}
 
 	return &comp, nil
@@ -99,7 +99,7 @@ func (r *repository) FindUses(id string) ([]*Composition, error) {
 
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, errors.NewInternal("OBJECTID_FROM_HEX").SetPath(path).SetMessage(err.Error())
+		return nil, errors.NewInternal("OBJECTID_FROM_HEX").SetPath(path).SetRef(err)
 	}
 	filter := bson.M{
 		"dependencies.of": objID,
@@ -107,7 +107,7 @@ func (r *repository) FindUses(id string) ([]*Composition, error) {
 
 	cur, err := r.collection.Find(ctx, filter)
 	if err != nil {
-		return nil, errors.NewInternal("FIND").SetPath(path).SetMessage(err.Error())
+		return nil, errors.NewInternal("FIND").SetPath(path).SetRef(err)
 	}
 
 	var comps []*Composition
@@ -115,14 +115,14 @@ func (r *repository) FindUses(id string) ([]*Composition, error) {
 		var comp Composition
 
 		if err := cur.Decode(&comp); err != nil {
-			return nil, errors.NewInternal("DECODE").SetPath(path).SetMessage(err.Error())
+			return nil, errors.NewInternal("DECODE").SetPath(path).SetRef(err)
 		}
 
 		comps = append(comps, &comp)
 	}
 
 	if err := cur.Err(); err != nil {
-		return nil, errors.NewInternal("CUR").SetPath(path).SetMessage(err.Error())
+		return nil, errors.NewInternal("CUR").SetPath(path).SetRef(err)
 	}
 
 	return comps, nil
@@ -139,7 +139,7 @@ func (r *repository) FindByUsesUpdatedSinceLastChange(usesUpdated bool) ([]*Comp
 	cur, err := r.collection.Find(ctx, filter)
 	defer cur.Close(ctx)
 	if err != nil {
-		return nil, errors.NewInternal("FIND").SetPath(path).SetMessage(err.Error())
+		return nil, errors.NewInternal("FIND").SetPath(path).SetRef(err)
 	}
 
 	var comps []*Composition
@@ -147,14 +147,14 @@ func (r *repository) FindByUsesUpdatedSinceLastChange(usesUpdated bool) ([]*Comp
 		var comp Composition
 
 		if err := cur.Decode(&comp); err != nil {
-			return nil, errors.NewInternal("CUR_DECODE").SetPath(path).SetMessage(err.Error())
+			return nil, errors.NewInternal("CUR_DECODE").SetPath(path).SetRef(err)
 		}
 
 		comps = append(comps, &comp)
 	}
 
 	if err := cur.Err(); err != nil {
-		return nil, errors.NewInternal("CUR").SetPath(path).SetMessage(err.Error())
+		return nil, errors.NewInternal("CUR").SetPath(path).SetRef(err)
 	}
 
 	return comps, nil
@@ -165,7 +165,7 @@ func (r *repository) Insert(c *Composition) error {
 
 	_, err := r.collection.InsertOne(ctx, c)
 	if err != nil {
-		return errors.NewInternal("INSERT_ONE").SetPath("composition/repository.Insert").SetMessage(err.Error())
+		return errors.NewInternal("INSERT_ONE").SetPath("composition/repository.Insert").SetRef(err)
 	}
 
 	return nil
@@ -183,7 +183,7 @@ func (r *repository) InsertMany(comps []*Composition) error {
 
 	_, err := r.collection.InsertMany(ctx, rawComps)
 	if err != nil {
-		return errors.NewInternal("INSERT_MANY").SetPath("composition/repository.InsertMany").SetMessage(err.Error())
+		return errors.NewInternal("INSERT_MANY").SetPath("composition/repository.InsertMany").SetRef(err)
 	}
 
 	return nil
@@ -209,7 +209,7 @@ func (r *repository) Update(c *Composition) error {
 
 	_, err := r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		return errors.NewInternal("UPDATE_ONE").SetPath(path).SetMessage(err.Error())
+		return errors.NewInternal("UPDATE_ONE").SetPath(path).SetRef(err)
 	}
 
 	return nil
@@ -221,7 +221,7 @@ func (r *repository) Delete(id string) error {
 	ctx := context.Background()
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return errors.NewInternal("OBJECTID_FROM_HEX").SetPath(path).SetMessage(err.Error())
+		return errors.NewInternal("OBJECTID_FROM_HEX").SetPath(path).SetRef(err)
 	}
 
 	filter := bson.M{
@@ -237,7 +237,7 @@ func (r *repository) Delete(id string) error {
 
 	_, err = r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		return errors.NewInternal("UPDATE_ONE").SetPath(path).SetMessage(err.Error())
+		return errors.NewInternal("UPDATE_ONE").SetPath(path).SetRef(err)
 	}
 
 	return nil

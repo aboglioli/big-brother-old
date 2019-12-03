@@ -43,7 +43,7 @@ func (r *repository) FindByID(id string) (*User, error) {
 
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, errors.NewInternal("OBJECTID_FROM_HEX").SetPath(path).SetMessage(err.Error())
+		return nil, errors.NewInternal("OBJECTID_FROM_HEX").SetPath(path).SetRef(err)
 	}
 
 	filter := bson.M{
@@ -52,12 +52,12 @@ func (r *repository) FindByID(id string) (*User, error) {
 
 	res := r.collection.FindOne(ctx, filter)
 	if res.Err() != nil {
-		return nil, errors.NewInternal("FIND_ONE").SetPath(path).SetMessage(err.Error())
+		return nil, errors.NewInternal("FIND_ONE").SetPath(path).SetRef(err)
 	}
 
 	var user User
 	if err := res.Decode(&user); err != nil {
-		return nil, errors.NewInternal("DECODE").SetPath(path).SetMessage(err.Error())
+		return nil, errors.NewInternal("DECODE").SetPath(path).SetRef(err)
 	}
 
 	return &user, nil
@@ -73,12 +73,12 @@ func (r *repository) FindByUsername(username string) (*User, error) {
 
 	res := r.collection.FindOne(ctx, filter)
 	if res.Err() != nil {
-		return nil, errors.NewInternal("FIND_ONE").SetPath(path).SetMessage(res.Err().Error())
+		return nil, errors.NewInternal("FIND_ONE").SetPath(path).SetRef(res.Err())
 	}
 
 	var user User
 	if err := res.Decode(&user); err != nil {
-		return nil, errors.NewInternal("DECODE").SetPath(path).SetMessage(err.Error())
+		return nil, errors.NewInternal("DECODE").SetPath(path).SetRef(err)
 	}
 
 	return &user, nil
@@ -94,12 +94,12 @@ func (r *repository) FindByEmail(email string) (*User, error) {
 
 	res := r.collection.FindOne(ctx, filter)
 	if res.Err() != nil {
-		return nil, errors.NewInternal("FIND_ONE").SetPath(path).SetMessage(res.Err().Error())
+		return nil, errors.NewInternal("FIND_ONE").SetPath(path).SetRef(res.Err())
 	}
 
 	var user User
 	if err := res.Decode(&user); err != nil {
-		return nil, errors.NewInternal("DECODE").SetPath(path).SetMessage(err.Error())
+		return nil, errors.NewInternal("DECODE").SetPath(path).SetRef(err)
 	}
 
 	return &user, nil
@@ -110,7 +110,7 @@ func (r *repository) Insert(u *User) error {
 
 	_, err := r.collection.InsertOne(ctx, u)
 	if err != nil {
-		return errors.NewInternal("INSERT_ONE").SetPath("user/repository.Insert").SetMessage(err.Error())
+		return errors.NewInternal("INSERT_ONE").SetPath("user/repository.Insert").SetRef(err)
 	}
 
 	return nil
@@ -136,7 +136,7 @@ func (r *repository) Update(u *User) error {
 
 	_, err := r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		return errors.NewInternal("UPDATE_ONE").SetPath(path).SetMessage(err.Error())
+		return errors.NewInternal("UPDATE_ONE").SetPath(path).SetRef(err)
 	}
 
 	return nil
@@ -148,7 +148,7 @@ func (r *repository) Delete(id string) error {
 
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return errors.NewInternal("OBJECTID_FROM_HEX").SetPath(path).SetMessage(err.Error())
+		return errors.NewInternal("OBJECTID_FROM_HEX").SetPath(path).SetRef(err)
 	}
 
 	filter := bson.M{
@@ -164,7 +164,7 @@ func (r *repository) Delete(id string) error {
 
 	_, err = r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
-		return errors.NewInternal("UPDATE_ONE").SetPath(path).SetMessage(err.Error())
+		return errors.NewInternal("UPDATE_ONE").SetPath(path).SetRef(err)
 	}
 
 	return nil

@@ -76,7 +76,7 @@ func (s *service) Create(req *CreateRequest) (*Composition, error) {
 	if req.ID != nil {
 		id, err := primitive.ObjectIDFromHex(*req.ID)
 		if err != nil {
-			return nil, errors.NewStatus("INVALID_ID").SetPath(path).SetMessage(err.Error())
+			return nil, errors.NewStatus("INVALID_ID").SetPath(path).SetRef(err)
 		}
 		if existingComp, err := s.repository.FindByID(*req.ID); existingComp != nil || err == nil {
 			return nil, errors.NewStatus("COMPOSITION_ALREADY_EXISTS").SetPath(path).SetMessage(fmt.Sprintf("Composition with ID %s exists", *req.ID)).SetRef(err)

@@ -40,7 +40,7 @@ func (s *Status) SetRef(err error) *Status {
 func (s *Status) Error() string {
 	g := s.Generic.Error()
 	if s.statusCode > 0 {
-		return fmt.Sprintf("%s\n\t- Status code: %d", g, s.statusCode)
+		return fmt.Sprintf("%s\n\t- status code: %d", g, s.statusCode)
 	}
 
 	return g

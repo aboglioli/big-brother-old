@@ -10,7 +10,7 @@ import (
 )
 
 type Composition struct {
-	ID           primitive.ObjectID `json:"id" bson:"_id""`
+	ID           primitive.ObjectID `json:"id" bson:"_id"`
 	Name         string             `json:"name" bson:"name"`
 	Cost         float64            `json:"cost" bson:"cost"`
 	Unit         quantity.Quantity  `json:"unit" bson:"unit"`

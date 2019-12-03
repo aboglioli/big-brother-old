@@ -65,6 +65,23 @@ func ErrCode(t *testing.T, err error, code string, msgs ...string) {
 	}
 }
 
+func ErrMessage(t *testing.T, err error, msg string, msgs ...string) {
+	if err == nil {
+		t.Fatalf("ERR: %s\nexpected: error with message %s\nactual: nil error\n%s\n", msgs, msg, tests.PrintStackInfo())
+		return
+	}
+
+	m, ok := err.(errors.Message)
+	if !ok {
+		t.Fatalf("ERR: %s\nexpected: error with message %s\nactual: not an error with Message\n%s\n", msgs, msg, tests.PrintStackInfo())
+		return
+	}
+
+	if m.Message() != msg {
+		t.Fatalf("ERR: %s\nexpected: error with message %s\nactual: %s\n%s\n", msgs, msg, m.Message(), tests.PrintStackInfo())
+	}
+}
+
 func ErrValidation(t *testing.T, err error, path string, code string, msgs ...string) {
 	if err == nil {
 		t.Fatalf("ERR: %s\nexpected: Validation error\nactual: nil error\n%s\n", msgs, tests.PrintStackInfo())

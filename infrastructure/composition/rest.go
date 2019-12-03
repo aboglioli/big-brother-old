@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/aboglioli/big-brother/composition"
+	"github.com/aboglioli/big-brother/infrastructure/errors"
 	"github.com/aboglioli/big-brother/pkg/config"
 	"github.com/aboglioli/big-brother/pkg/events"
 	"github.com/gin-contrib/cors"
@@ -102,14 +103,14 @@ func (r *RESTContext) GetByID(c *gin.Context) {
 
 	if r.conf.AuthEnabled {
 		if err := validateAuthAndPermission(c, "composition"); err != nil {
-			handleError(c, err)
+			errors.Handle(c, err)
 			return
 		}
 	}
 
 	comp, err := r.compositionService.GetByID(compID)
 	if err != nil {
-		handleError(c, err)
+		errors.Handle(c, err)
 		return
 	}
 
@@ -221,7 +222,7 @@ func (r *RESTContext) GetByID(c *gin.Context) {
 func (r *RESTContext) Post(c *gin.Context) {
 	if r.conf.AuthEnabled {
 		if err := validateAuthAndPermission(c, "composition"); err != nil {
-			handleError(c, err)
+			errors.Handle(c, err)
 			return
 		}
 	}
@@ -237,7 +238,7 @@ func (r *RESTContext) Post(c *gin.Context) {
 
 	comp, err := r.compositionService.Create(&body)
 	if err != nil {
-		handleError(c, err)
+		errors.Handle(c, err)
 		return
 	}
 
@@ -342,7 +343,7 @@ func (r *RESTContext) Post(c *gin.Context) {
 func (r *RESTContext) Put(c *gin.Context) {
 	if r.conf.AuthEnabled {
 		if err := validateAuthAndPermission(c, "composition"); err != nil {
-			handleError(c, err)
+			errors.Handle(c, err)
 			return
 		}
 	}
@@ -359,7 +360,7 @@ func (r *RESTContext) Put(c *gin.Context) {
 
 	comp, err := r.compositionService.Update(compID, &body)
 	if err != nil {
-		handleError(c, err)
+		errors.Handle(c, err)
 		return
 	}
 
@@ -391,7 +392,7 @@ func (r *RESTContext) Put(c *gin.Context) {
 func (r *RESTContext) Delete(c *gin.Context) {
 	if r.conf.AuthEnabled {
 		if err := validateAuthAndPermission(c, "composition"); err != nil {
-			handleError(c, err)
+			errors.Handle(c, err)
 			return
 		}
 	}
@@ -399,7 +400,7 @@ func (r *RESTContext) Delete(c *gin.Context) {
 	compID := c.Param("compositionId")
 
 	if err := r.compositionService.Delete(compID); err != nil {
-		handleError(c, err)
+		errors.Handle(c, err)
 		return
 	}
 

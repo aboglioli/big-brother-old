@@ -11,3 +11,7 @@ type Path interface {
 type Message interface {
 	Message() string
 }
+
+type Reference interface {
+	Reference() error
+}

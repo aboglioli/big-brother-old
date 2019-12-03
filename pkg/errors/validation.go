@@ -65,6 +65,6 @@ func (v *Validation) Error() string {
 	for _, f := range v.fields {
 		fieldsStr = append(fieldsStr, fmt.Sprintf("{%s, %s}", f.Path, f.Code))
 	}
-	str += strings.Join(fieldsStr, ", ")
+	str += fmt.Sprintf("\t- fields: %s", strings.Join(fieldsStr, ", "))
 	return str
 }

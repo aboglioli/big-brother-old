@@ -25,9 +25,9 @@ func (r *mockRepository) Clean() {
 func (r *mockRepository) FindByID(id string) (*User, error) {
 	r.Called("FindByID", id)
 
-	for _, c := range r.users {
-		if c.ID.Hex() == id && c.Enabled {
-			return copyUser(c), nil
+	for _, u := range r.users {
+		if u.ID.Hex() == id {
+			return copyUser(u), nil
 		}
 	}
 
@@ -37,9 +37,9 @@ func (r *mockRepository) FindByID(id string) (*User, error) {
 func (r *mockRepository) FindByUsername(username string) (*User, error) {
 	r.Called("FindByUsername", username)
 
-	for _, c := range r.users {
-		if c.Username == username && c.Enabled {
-			return copyUser(c), nil
+	for _, u := range r.users {
+		if u.Username == username {
+			return copyUser(u), nil
 		}
 	}
 
@@ -49,9 +49,9 @@ func (r *mockRepository) FindByUsername(username string) (*User, error) {
 func (r *mockRepository) FindByEmail(email string) (*User, error) {
 	r.Called("FindByEmail", email)
 
-	for _, c := range r.users {
-		if c.Email == email && c.Enabled {
-			return copyUser(c), nil
+	for _, u := range r.users {
+		if u.Email == email {
+			return copyUser(u), nil
 		}
 	}
 
@@ -85,9 +85,6 @@ func (r *mockRepository) Update(u *User) error {
 
 	for _, user := range r.users {
 		if user.ID.Hex() == u.ID.Hex() {
-			if !user.Enabled {
-				return errors.NewInternal("DISABLED").SetPath("user/repository_mock.Update")
-			}
 			*user = *copyUser(u)
 			user.UpdatedAt = time.Now()
 			break
@@ -101,7 +98,7 @@ func (r *mockRepository) Delete(id string) error {
 	r.Called("Delete", id)
 
 	for _, user := range r.users {
-		if user.ID.Hex() == id && user.Enabled {
+		if user.ID.Hex() == id {
 			user.UpdatedAt = time.Now()
 			user.Enabled = false
 			return nil

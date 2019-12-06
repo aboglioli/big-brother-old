@@ -8,9 +8,9 @@ import (
 )
 
 const (
-	Any    = "tests.Anything"
-	Nil    = "tests.Nil"
-	NotNil = "tests.NotNil"
+	Any    = "mock.Anything"
+	Nil    = "mock.Nil"
+	NotNil = "mock.NotNil"
 )
 
 type Call struct {
@@ -42,11 +42,16 @@ func (m *Mock) CountCalls() int {
 
 func (m *Mock) Assert(t *testing.T, calls []Call) {
 	if len(m.Calls) != len(calls) {
-		calls := ""
-		for _, call := range m.Calls {
-			calls += fmt.Sprintf("- %s {%v}\n", call.Func, call.Args)
+		callsStr := "expected\n"
+		for _, call := range calls {
+			callsStr += fmt.Sprintf("- %s {%v}\n", call.Func, call.Args)
 		}
-		t.Fatalf("MOCK: Different number of calls\n%s%s\n", calls, tests.PrintStackInfo())
+
+		callsStr += "actual:\n"
+		for _, call := range m.Calls {
+			callsStr += fmt.Sprintf("- %s {%v}\n", call.Func, call.Args)
+		}
+		t.Fatalf("MOCK: Different number of calls\n%s%s\n", callsStr, tests.PrintStackInfo())
 	}
 
 	for i, call1 := range m.Calls {

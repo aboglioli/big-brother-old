@@ -3,10 +3,11 @@ package events
 import (
 	"github.com/aboglioli/big-brother/pkg/converter"
 	"github.com/aboglioli/big-brother/pkg/events"
+	"github.com/aboglioli/big-brother/pkg/tests/mock"
 )
 
 // Message
-type inmemoryMessage struct {
+type mockMessage struct {
 	converter    converter.Converter
 	Exchange     string
 	ExchangeType string
@@ -15,11 +16,11 @@ type inmemoryMessage struct {
 	body         []byte
 }
 
-func (d inmemoryMessage) Body() []byte {
+func (d mockMessage) Body() []byte {
 	return d.body
 }
 
-func (d inmemoryMessage) Type() string {
+func (d mockMessage) Type() string {
 	var e events.Event
 	if err := d.Decode(&e); err != nil {
 		return ""
@@ -27,37 +28,40 @@ func (d inmemoryMessage) Type() string {
 	return e.Type
 }
 
-func (d inmemoryMessage) Decode(dst interface{}) error {
+func (d mockMessage) Decode(dst interface{}) error {
 	return d.converter.Decode(d.Body(), dst)
 }
 
-func (d inmemoryMessage) Ack() {
+func (d mockMessage) Ack() {
 }
 
 // Manager
-type inmemoryManager struct {
+type mockManager struct {
+	mock.Mock
 	converter converter.Converter
 	ch        chan events.Message
-	buffer    []inmemoryMessage
+	buffer    []mockMessage
 }
 
-func InMemory() *inmemoryManager {
+func Mock() *mockManager {
 	converter := converter.DefaultConverter()
-	mockMgr := &inmemoryManager{
+	mockMgr := &mockManager{
 		converter: converter,
 		ch:        make(chan events.Message),
-		buffer:    make([]inmemoryMessage, 0),
+		buffer:    make([]mockMessage, 0),
 	}
 
 	return mockMgr
 }
 
-func (m *inmemoryManager) Publish(body interface{}, opts *events.Options) error {
+func (m *mockManager) Publish(body interface{}, opts *events.Options) error {
+	call := mock.Call("Publish", body, opts)
+
 	b, err := m.converter.Encode(body)
 	if err != nil {
 		return err
 	}
-	msg := inmemoryMessage{
+	msg := mockMessage{
 		converter:    m.converter,
 		Exchange:     opts.Exchange,
 		ExchangeType: opts.ExchangeType,
@@ -69,21 +73,25 @@ func (m *inmemoryManager) Publish(body interface{}, opts *events.Options) error 
 	go func() {
 		m.ch <- msg
 	}()
+
+	m.Called(call.Return(nil))
 	return nil
 }
 
-func (m *inmemoryManager) Consume(opts *events.Options) (<-chan events.Message, error) {
+func (m *mockManager) Consume(opts *events.Options) (<-chan events.Message, error) {
+	call := mock.Call("Consume", opts)
+	m.Called(call.Return(m.ch, nil))
 	return m.ch, nil
 }
 
-func (m *inmemoryManager) Messages() []inmemoryMessage {
+func (m *mockManager) Messages() []mockMessage {
 	return m.buffer
 }
 
-func (m *inmemoryManager) Count() int {
+func (m *mockManager) Count() int {
 	return len(m.buffer)
 }
 
-func (m *inmemoryManager) Clean() {
-	m.buffer = make([]inmemoryMessage, 0)
+func (m *mockManager) Clean() {
+	m.buffer = make([]mockMessage, 0)
 }

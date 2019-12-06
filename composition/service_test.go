@@ -47,7 +47,7 @@ func compToUpdateRequest(c *Composition) *UpdateRequest {
 }
 
 func TestGetByID(t *testing.T) {
-	repo, eventMgr := newMockRepository(), events.InMemory()
+	repo, eventMgr := newMockRepository(), events.Mock()
 	serv := NewService(repo, eventMgr)
 
 	// Errors
@@ -87,7 +87,7 @@ func TestGetByID(t *testing.T) {
 }
 
 func TestCreateComposition(t *testing.T) {
-	repo, eventMgr := newMockRepository(), events.InMemory()
+	repo, eventMgr := newMockRepository(), events.Mock()
 	serv := NewService(repo, eventMgr)
 
 	// Errors
@@ -282,7 +282,7 @@ func TestCreateComposition(t *testing.T) {
 }
 
 func TestUpdateComposition(t *testing.T) {
-	repo, eventMgr := newMockRepository(), events.InMemory()
+	repo, eventMgr := newMockRepository(), events.Mock()
 	serv := NewService(repo, eventMgr)
 
 	// Errors
@@ -486,7 +486,7 @@ func TestUpdateComposition(t *testing.T) {
 }
 
 func TestCreateAndUpdateDependencies(t *testing.T) {
-	repo, eventMgr := newMockRepository(), events.InMemory()
+	repo, eventMgr := newMockRepository(), events.Mock()
 	serv := NewService(repo, eventMgr)
 
 	repo.Clean()
@@ -553,7 +553,7 @@ func TestCreateAndUpdateDependencies(t *testing.T) {
 }
 
 func TestDeleteComposition(t *testing.T) {
-	repo, eventMgr := newMockRepository(), events.InMemory()
+	repo, eventMgr := newMockRepository(), events.Mock()
 	serv := NewService(repo, eventMgr)
 
 	comp, dep := newComposition(), newComposition()
@@ -610,7 +610,7 @@ func TestDeleteComposition(t *testing.T) {
 }
 
 func TestCalculateDependenciesSubvalues(t *testing.T) {
-	repo, eventMgr := newMockRepository(), events.InMemory()
+	repo, eventMgr := newMockRepository(), events.Mock()
 	serv := NewService(repo, eventMgr)
 
 	comps := makeMockedCompositions()

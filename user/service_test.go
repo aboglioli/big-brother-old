@@ -31,7 +31,7 @@ func userToUpdateRequest(u *User) *UpdateRequest {
 }
 
 func TestCreateUser(t *testing.T) {
-	repo, eventMgr := newMockRepository(), events.InMemory()
+	repo, eventMgr := newMockRepository(), events.Mock()
 	serv := NewService(repo, eventMgr)
 
 	// Errors
@@ -137,7 +137,7 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestUpdateUser(t *testing.T) {
-	repo, eventMgr := newMockRepository(), events.InMemory()
+	repo, eventMgr := newMockRepository(), events.Mock()
 	serv := NewService(repo, eventMgr)
 
 	// Errors

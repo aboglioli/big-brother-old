@@ -130,7 +130,7 @@ func (r *mockRepository) Clean() {
 }
 
 func (r *mockRepository) FindAll() ([]*Composition, error) {
-	r.Called(mock.Call("FindAll"))
+	call := mock.Call("FindAll")
 
 	comps := make([]*Composition, 0)
 	for _, c := range r.compositions {
@@ -139,23 +139,27 @@ func (r *mockRepository) FindAll() ([]*Composition, error) {
 		}
 	}
 
+	r.Called(call.Return(comps, nil))
 	return comps, nil
 }
 
 func (r *mockRepository) FindByID(id string) (*Composition, error) {
-	r.Called(mock.Call("FindByID", id))
+	call := mock.Call("FindByID", id)
 
 	for _, c := range r.compositions {
 		if c.ID.Hex() == id {
+			r.Called(call.Return(copyComposition(c), nil))
 			return copyComposition(c), nil
 		}
 	}
 
-	return nil, errors.NewInternal("NOT_FOUND").SetPath("composition/repository_mock.FindById")
+	err := errors.NewInternal("NOT_FOUND").SetPath("composition/repository_mock.FindById")
+	r.Called(call.Return(nil, err))
+	return nil, err
 }
 
 func (r *mockRepository) FindUses(id string) ([]*Composition, error) {
-	r.Called(mock.Call("FindUses", id))
+	call := mock.Call("FindUses", id)
 
 	comps := make([]*Composition, 0)
 	for _, c := range r.compositions {
@@ -167,11 +171,12 @@ func (r *mockRepository) FindUses(id string) ([]*Composition, error) {
 		}
 	}
 
+	r.Called(call.Return(comps, nil))
 	return comps, nil
 }
 
 func (r *mockRepository) FindByUsesUpdatedSinceLastChange(usesUpdated bool) ([]*Composition, error) {
-	r.Called(mock.Call("FindByUsesUpdatedSinceLastChange", usesUpdated))
+	call := mock.Call("FindByUsesUpdatedSinceLastChange", usesUpdated)
 
 	comps := make([]*Composition, 0)
 	for _, c := range r.compositions {
@@ -180,20 +185,22 @@ func (r *mockRepository) FindByUsesUpdatedSinceLastChange(usesUpdated bool) ([]*
 		}
 	}
 
+	r.Called(call.Return(comps, nil))
 	return comps, nil
 }
 
 func (r *mockRepository) Insert(c *Composition) error {
-	r.Called(mock.Call("Insert", c))
+	call := mock.Call("Insert", c)
 
 	c.UpdatedAt = time.Now()
 	r.compositions = append(r.compositions, copyComposition(c))
 
+	r.Called(call.Return(nil))
 	return nil
 }
 
 func (r *mockRepository) InsertMany(comps []*Composition) error {
-	r.Called(mock.Call("InsertMany", comps))
+	call := mock.Call("InsertMany", comps)
 
 	newComps := make([]*Composition, len(comps))
 	for i, c := range comps {
@@ -202,11 +209,12 @@ func (r *mockRepository) InsertMany(comps []*Composition) error {
 	}
 	r.compositions = append(r.compositions, newComps...)
 
+	r.Called(call.Return(nil))
 	return nil
 }
 
 func (r *mockRepository) Update(c *Composition) error {
-	r.Called(mock.Call("Update", c))
+	call := mock.Call("Update", c)
 
 	for _, comp := range r.compositions {
 		if comp.ID.Hex() == c.ID.Hex() {
@@ -216,21 +224,25 @@ func (r *mockRepository) Update(c *Composition) error {
 		}
 	}
 
+	r.Called(call.Return(nil))
 	return nil
 }
 
 func (r *mockRepository) Delete(id string) error {
-	r.Called(mock.Call("Delete", id))
+	call := mock.Call("Delete", id)
 
 	for _, comp := range r.compositions {
 		if comp.ID.Hex() == id {
 			comp.UpdatedAt = time.Now()
 			comp.Enabled = false
+			r.Called(call.Return(nil))
 			return nil
 		}
 	}
 
-	return errors.NewInternal("NOT_FOUND").SetPath("composition/repository_mock.Delete")
+	err := errors.NewInternal("NOT_FOUND").SetPath("composition/repository_mock.Delete")
+	r.Called(call.Return(err))
+	return err
 }
 
 func (r *mockRepository) Count() (int, int) {

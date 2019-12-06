@@ -4,9 +4,6 @@ import (
 	"github.com/aboglioli/big-brother/pkg/events"
 )
 
-var CompositionCreatedEventOptions = &events.Options{"composition", "topic", "composition.created", ""}
-var CompositionChangedEventOptions = &events.Options{"composition", "topic", "composition.created", ""}
-
 // CompositionChangedEvent is a single composition change
 type CompositionChangedEvent struct {
 	events.Event

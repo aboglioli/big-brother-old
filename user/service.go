@@ -44,16 +44,22 @@ func (s *service) Create(req *CreateRequest) (*User, error) {
 	path := "user/service.Create"
 	u := NewUser()
 
+	validErr := errors.NewValidation("VALIDATION").SetPath(path)
+
 	if existing, err := s.repository.FindByUsername(req.Username); existing != nil || err == nil {
-		return nil, errors.NewStatus("EXISTING_USERNAME").SetPath(path)
+		validErr.Add("username", "NOT_AVAILABLE")
 	}
 
 	if existing, err := s.repository.FindByEmail(req.Email); existing != nil || err == nil {
-		return nil, errors.NewStatus("EXISTING_EMAIL").SetPath(path)
+		validErr.Add("email", "NOT_AVAILABLE")
 	}
 
 	if len(req.Password) < 8 {
-		return nil, errors.NewStatus("PASSWORD_TOO_SHORT").SetPath(path)
+		validErr.Add("password", "TOO_SHORT")
+	}
+
+	if validErr.Size() > 0 {
+		return nil, validErr
 	}
 
 	u.Username = req.Username
@@ -70,11 +76,11 @@ func (s *service) Create(req *CreateRequest) (*User, error) {
 		return nil, errors.NewInternal("INSERT").SetPath(path).SetRef(err)
 	}
 
-	// Publish event: composition.created
-	// event, opts := NewCompositionCreatedEvent(c)
-	// if err := s.eventMgr.Publish(event, opts); err != nil {
-	// 	return nil, err
-	// }
+	// Publish event: uer.created
+	event, opts := NewUserCreatedEvent(u)
+	if err := s.eventMgr.Publish(event, opts); err != nil {
+		return nil, err
+	}
 
 	return u, nil
 }

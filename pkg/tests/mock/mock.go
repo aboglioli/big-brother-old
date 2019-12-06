@@ -53,7 +53,7 @@ func (m *Mock) Assert(t *testing.T, calls []Call) {
 		call2 := calls[i]
 
 		if call1.Func != call2.Func || !compareArgs(call1.Args, call2.Args) {
-			t.Fatalf("MOCK:\nexpected: %s {%v}\nactual: %s {%v}\n%s\n", call1.Func, call1.Args, call2.Func, call2.Args, tests.PrintStackInfo())
+			t.Fatalf("MOCK:\nexpected: %s {%v}\nactual: %s {%v}\n%s\n", call2.Func, call2.Args, call1.Func, call1.Args, tests.PrintStackInfo())
 		}
 	}
 }

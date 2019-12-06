@@ -1,0 +1,16 @@
+package user
+
+import (
+	"github.com/aboglioli/big-brother/pkg/events"
+)
+
+type UserChangedEvent struct {
+	events.Event
+	User *User `json:"user"`
+}
+
+func NewUserCreatedEvent(u *User) (*UserChangedEvent, *events.Options) {
+	event := UserChangedEvent{events.Event{"UserCreated"}, u}
+	opts := events.Options{"user", "topic", "user.created", ""}
+	return &event, &opts
+}

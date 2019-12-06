@@ -2,41 +2,31 @@ package user
 
 import (
 	"regexp"
-	"time"
 
 	"github.com/aboglioli/big-brother/pkg/contact"
 	"github.com/aboglioli/big-brother/pkg/errors"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/aboglioli/big-brother/pkg/models"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
-	ID       primitive.ObjectID `json:"id" bson:"_id"`
-	Username string             `json:"username" bson:"username"`
-	Password string             `json:"-" bson:"password"`
-	Name     string             `json:"name" bson:"name"`
-	Lastname string             `json:"lastname" bson:"lastname"`
-	Email    string             `json:"email" bson:"email"`
-	Roles    []string           `json:"roles" bson:"roles"`
+	models.Base
+	Username string   `json:"username" bson:"username"`
+	Password string   `json:"-" bson:"password"`
+	Name     string   `json:"name" bson:"name"`
+	Lastname string   `json:"lastname" bson:"lastname"`
+	Email    string   `json:"email" bson:"email"`
+	Roles    []string `json:"roles" bson:"roles"`
 
 	Address contact.Address `json:"address" bson:"address"`
 	Contact contact.Contact `json:"contact" bson:"contact"`
 	Social  contact.Social  `json:"social" bson:"social"`
-
-	Enabled   bool      `json:"-" bson:"enabled"`
-	Validated bool      `json:"-" bson:"validated"`
-	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
 }
 
 func NewUser() *User {
 	return &User{
-		ID:        primitive.NewObjectID(),
-		Enabled:   true,
-		Validated: false,
-		Roles:     []string{"user"},
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		Base:  models.NewBase(),
+		Roles: []string{"user"},
 	}
 }
 
@@ -86,7 +76,7 @@ func (u *User) RemoveRole(role string) {
 var re = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
 func (u *User) ValidateSchema() error {
-	err := errors.NewValidation("VALIDATE_SCHEMA").SetPath("user/user.ValidateSchema")
+	err := errors.NewValidation("SCHEMA").SetPath("user/user.ValidateSchema")
 
 	if len(u.Username) < 6 || len(u.Username) > 64 {
 		err.AddWithMessage("username", "INVALID_LENGTH", "%d", len(u.Username))

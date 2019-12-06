@@ -90,7 +90,7 @@ func (q Quantity) IsEmpty() bool {
 }
 
 func referenceUnit(q1, q2 Quantity) (*unit.Unit, error) {
-	path := "quantity/quantity.referenceUnit"
+	path := "pkg/quantity/quantity.referenceUnit"
 	repo := unit.GetRepository()
 
 	u1 := repo.FindByName(q1.Unit)

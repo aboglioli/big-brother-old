@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/aboglioli/big-brother/infrastructure/events"
+	"github.com/aboglioli/big-brother/impl/events"
 	"github.com/aboglioli/big-brother/pkg/quantity"
 	"github.com/aboglioli/big-brother/pkg/tests/assert"
 	"github.com/aboglioli/big-brother/pkg/tests/mock"

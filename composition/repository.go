@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/aboglioli/big-brother/infrastructure/db"
+	"github.com/aboglioli/big-brother/impl/db"
 	"github.com/aboglioli/big-brother/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"

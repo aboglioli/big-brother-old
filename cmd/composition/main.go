@@ -4,8 +4,8 @@ import (
 	"log"
 
 	"github.com/aboglioli/big-brother/composition"
-	infrComp "github.com/aboglioli/big-brother/infrastructure/composition"
-	"github.com/aboglioli/big-brother/infrastructure/events"
+	infrComp "github.com/aboglioli/big-brother/impl/composition"
+	"github.com/aboglioli/big-brother/impl/events"
 )
 
 func main() {

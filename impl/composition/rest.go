@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/aboglioli/big-brother/composition"
-	"github.com/aboglioli/big-brother/infrastructure/errors"
+	"github.com/aboglioli/big-brother/impl/errors"
 	"github.com/aboglioli/big-brother/pkg/config"
 	"github.com/aboglioli/big-brother/pkg/events"
 	"github.com/gin-contrib/cors"

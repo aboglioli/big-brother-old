@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/aboglioli/big-brother/composition"
-	infrEvents "github.com/aboglioli/big-brother/infrastructure/events"
+	infrEvents "github.com/aboglioli/big-brother/impl/events"
 	"github.com/aboglioli/big-brother/pkg/errors"
 	"github.com/aboglioli/big-brother/pkg/events"
 )

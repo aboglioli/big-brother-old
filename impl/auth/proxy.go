@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	infrCache "github.com/aboglioli/big-brother/infrastructure/cache"
+	infrCache "github.com/aboglioli/big-brother/impl/cache"
 	"github.com/aboglioli/big-brother/pkg/cache"
 	"github.com/aboglioli/big-brother/pkg/config"
 	"github.com/aboglioli/big-brother/pkg/errors"

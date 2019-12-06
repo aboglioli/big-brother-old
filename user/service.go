@@ -76,7 +76,7 @@ func (s *service) Create(req *CreateRequest) (*User, error) {
 		return nil, errors.NewInternal("INSERT").SetPath(path).SetRef(err)
 	}
 
-	// Publish event: uer.created
+	// Publish event: user.created
 	event, opts := NewUserCreatedEvent(u)
 	if err := s.eventMgr.Publish(event, opts); err != nil {
 		return nil, err
@@ -98,21 +98,34 @@ func (s *service) Update(id string, req *UpdateRequest) (*User, error) {
 
 	u, err := s.repository.FindByID(id)
 	if u == nil || err != nil {
-		return nil, errors.NewStatus("USER_DOES_NOT_EXIST").SetPath(path).SetRef(err)
+		return nil, errors.NewStatus("USER_NOT_FOUND").SetPath(path).SetRef(err)
 	}
 
+	validErr := errors.NewValidation("VALIDATION").SetPath(path)
+
 	if req.Username != nil {
-		if existing, err := s.repository.FindByUsername(*req.Username); existing != nil || err == nil {
-			return nil, errors.NewStatus("EXISTING_USERNAME").SetPath(path).SetRef(err)
+		if existing, _ := s.repository.FindByUsername(*req.Username); existing != nil && existing.ID.Hex() != u.ID.Hex() {
+			validErr.Add("username", "NOT_AVAILABLE")
 		}
 		u.Username = *req.Username
 	}
 
+	if req.Email != nil {
+		if existing, _ := s.repository.FindByEmail(*req.Email); existing != nil && existing.ID.Hex() != u.ID.Hex() {
+			validErr.Add("email", "NOT_AVAILABLE")
+		}
+		u.Email = *req.Email
+	}
+
 	if req.Password != nil {
 		if len(*req.Password) < 8 {
-			return nil, errors.NewStatus("PASSWORD_TOO_SHORT").SetPath(path)
+			validErr.Add("password", "TOO_SHORT")
 		}
 		u.SetPassword(*req.Password)
+	}
+
+	if validErr.Size() > 0 {
+		return nil, validErr
 	}
 
 	if req.Name != nil {
@@ -123,19 +136,18 @@ func (s *service) Update(id string, req *UpdateRequest) (*User, error) {
 		u.Lastname = *req.Lastname
 	}
 
-	if req.Email != nil {
-		if existing, err := s.repository.FindByEmail(*req.Email); existing != nil || err == nil {
-			return nil, errors.NewStatus("EXISTING_EMAIL").SetPath(path).SetRef(err)
-		}
-		u.Email = *req.Email
-	}
-
 	if err := u.ValidateSchema(); err != nil {
 		return nil, err
 	}
 
 	if err := s.repository.Update(u); err != nil {
 		return nil, errors.NewInternal("UPDATE").SetPath(path).SetRef(err)
+	}
+
+	// Publish event: user.updated
+	event, opts := NewUserUpdatedEvent(u)
+	if err := s.eventMgr.Publish(event, opts); err != nil {
+		return nil, err
 	}
 
 	return u, nil

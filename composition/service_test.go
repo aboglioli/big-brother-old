@@ -177,6 +177,7 @@ func TestCreateComposition(t *testing.T) {
 		assert.Assert(t, ok)
 		assert.Equal(t, savedComp.ID.Hex(), comp.ID.Hex())
 		assert.Equal(t, savedComp.Enabled, true)
+		assert.Equal(t, savedComp.Active, true)
 		assert.Equal(t, savedComp.Validated, false)
 
 		eventMgr.Mock.Assert(t,

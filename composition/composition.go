@@ -2,38 +2,29 @@ package composition
 
 import (
 	"math"
-	"time"
 
 	"github.com/aboglioli/big-brother/pkg/errors"
+	"github.com/aboglioli/big-brother/pkg/models"
 	"github.com/aboglioli/big-brother/pkg/quantity"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Composition struct {
-	ID           primitive.ObjectID `json:"id" bson:"_id"`
-	Name         string             `json:"name" bson:"name"`
-	Cost         float64            `json:"cost" bson:"cost"`
-	Unit         quantity.Quantity  `json:"unit" bson:"unit"`
-	Stock        quantity.Quantity  `json:"stock" bson:"stock"`
-	Dependencies []Dependency       `json:"dependencies" bson:"dependencies"`
+	models.Base
+	Name         string            `json:"name" bson:"name"`
+	Cost         float64           `json:"cost" bson:"cost"`
+	Unit         quantity.Quantity `json:"unit" bson:"unit"`
+	Stock        quantity.Quantity `json:"stock" bson:"stock"`
+	Dependencies []Dependency      `json:"dependencies" bson:"dependencies"`
 
-	AutoupdateCost             bool      `json:"autoupdateCost" bson:"autoupdateCost"`
-	Enabled                    bool      `json:"-" bson:"enabled" `
-	Validated                  bool      `json:"-" bson:"validated"`
-	UsesUpdatedSinceLastChange bool      `json:"usesUpdatedSinceLastChange" bson:"usesUpdatedSinceLastChange"`
-	CreatedAt                  time.Time `json:"createdAt" bson:"createdAt"`
-	UpdatedAt                  time.Time `json:"updatedAt" bson:"updatedAt"`
+	AutoupdateCost             bool `json:"autoupdateCost" bson:"autoupdateCost"`
+	UsesUpdatedSinceLastChange bool `json:"usesUpdatedSinceLastChange" bson:"usesUpdatedSinceLastChange"`
 }
 
 func NewComposition() *Composition {
 	return &Composition{
-		ID:                         primitive.NewObjectID(),
+		Base:                       models.NewBase(),
 		AutoupdateCost:             true,
-		Enabled:                    true,
-		Validated:                  false, // TODO: should be validated asynchronously
 		UsesUpdatedSinceLastChange: true,
-		CreatedAt:                  time.Now(),
-		UpdatedAt:                  time.Now(),
 	}
 }
 

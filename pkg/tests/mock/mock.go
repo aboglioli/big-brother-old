@@ -16,44 +16,39 @@ const (
 type call struct {
 	Func string
 	Args []interface{}
+	Ret  []interface{}
 }
 
 func Call(f string, args ...interface{}) call {
-	return call{f, args}
+	return call{
+		Func: f,
+		Args: args,
+	}
+}
+
+func (c call) Return(ret ...interface{}) call {
+	c.Ret = ret
+	return c
 }
 
 type Mock struct {
 	Calls []call
 }
 
-func (m *Mock) Called(f string, args ...interface{}) {
-	m.Calls = append(m.Calls, call{f, args})
-}
-
-func (m *Mock) CallsTo(f string) int {
-	count := 0
-	for _, c := range m.Calls {
-		if c.Func == f {
-			count++
-		}
-	}
-	return count
-}
-
-func (m *Mock) CountCalls() int {
-	return len(m.Calls)
+func (m *Mock) Called(c call) {
+	m.Calls = append(m.Calls, c)
 }
 
 func (m *Mock) Assert(t *testing.T, calls ...call) {
 	if len(m.Calls) != len(calls) {
 		callsStr := "expected\n"
 		for _, call := range calls {
-			callsStr += fmt.Sprintf("- %s {%v}\n", call.Func, call.Args)
+			callsStr += fmt.Sprintf("- %s {%v} -> {%v}\n", call.Func, call.Args, call.Ret)
 		}
 
 		callsStr += "actual:\n"
 		for _, call := range m.Calls {
-			callsStr += fmt.Sprintf("- %s {%v}\n", call.Func, call.Args)
+			callsStr += fmt.Sprintf("- %s {%v} -> {%v}\n", call.Func, call.Args, call.Ret)
 		}
 		t.Fatalf("MOCK: Different number of calls\n%s%s\n", callsStr, tests.PrintStackInfo())
 	}
@@ -61,8 +56,8 @@ func (m *Mock) Assert(t *testing.T, calls ...call) {
 	for i, call1 := range m.Calls {
 		call2 := calls[i]
 
-		if call1.Func != call2.Func || !compareArgs(call1.Args, call2.Args) {
-			t.Fatalf("MOCK:\nexpected: %s {%v}\nactual: %s {%v}\n%s\n", call2.Func, call2.Args, call1.Func, call1.Args, tests.PrintStackInfo())
+		if call1.Func != call2.Func || !compareArgs(call1.Args, call2.Args) || (len(call2.Ret) > 0 && !compareArgs(call1.Ret, call2.Ret)) {
+			t.Fatalf("MOCK:\nexpected: %s {%v} -> {%v}\nactual: %s {%v} -> {%v}\n%s\n", call2.Func, call2.Args, call2.Ret, call1.Func, call1.Args, call1.Ret, tests.PrintStackInfo())
 		}
 	}
 }

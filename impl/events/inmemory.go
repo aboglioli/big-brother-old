@@ -55,7 +55,7 @@ func InMemory() *mockManager {
 }
 
 func (m *mockManager) Publish(body interface{}, opts *events.Options) error {
-	m.Called("Publish", body, opts)
+	m.Called(mock.Call("Publish", body, opts))
 
 	b, err := m.converter.Encode(body)
 	if err != nil {
@@ -78,7 +78,7 @@ func (m *mockManager) Publish(body interface{}, opts *events.Options) error {
 }
 
 func (m *mockManager) Consume(opts *events.Options) (<-chan events.Message, error) {
-	m.Called("Consume", opts)
+	m.Called(mock.Call("Consume", opts))
 
 	return m.ch, nil
 }

@@ -33,7 +33,7 @@ func (r *mockRepository) Clean() {
 }
 
 func (r *mockRepository) FindByID(id string) (*User, error) {
-	r.Called("FindByID", id)
+	r.Called(mock.Call("FindByID", id))
 
 	for _, u := range r.users {
 		if u.ID.Hex() == id {
@@ -45,7 +45,7 @@ func (r *mockRepository) FindByID(id string) (*User, error) {
 }
 
 func (r *mockRepository) FindByUsername(username string) (*User, error) {
-	r.Called("FindByUsername", username)
+	r.Called(mock.Call("FindByUsername", username))
 
 	for _, u := range r.users {
 		if u.Username == username {
@@ -57,7 +57,7 @@ func (r *mockRepository) FindByUsername(username string) (*User, error) {
 }
 
 func (r *mockRepository) FindByEmail(email string) (*User, error) {
-	r.Called("FindByEmail", email)
+	r.Called(mock.Call("FindByEmail", email))
 
 	for _, u := range r.users {
 		if u.Email == email {
@@ -69,7 +69,7 @@ func (r *mockRepository) FindByEmail(email string) (*User, error) {
 }
 
 func (r *mockRepository) Insert(u *User) error {
-	r.Called("Insert", u)
+	r.Called(mock.Call("Insert", u))
 
 	u.UpdatedAt = time.Now()
 	r.users = append(r.users, copyUser(u))
@@ -78,7 +78,7 @@ func (r *mockRepository) Insert(u *User) error {
 }
 
 func (r *mockRepository) InsertMany(users []*User) error {
-	r.Called("InsertMany", users)
+	r.Called(mock.Call("InsertMany", users))
 
 	newUsers := make([]*User, len(users))
 	for i, u := range users {
@@ -91,7 +91,7 @@ func (r *mockRepository) InsertMany(users []*User) error {
 }
 
 func (r *mockRepository) Update(u *User) error {
-	r.Called("Update", u)
+	r.Called(mock.Call("Update", u))
 
 	for _, user := range r.users {
 		if user.ID.Hex() == u.ID.Hex() {
@@ -105,7 +105,7 @@ func (r *mockRepository) Update(u *User) error {
 }
 
 func (r *mockRepository) Delete(id string) error {
-	r.Called("Delete", id)
+	r.Called(mock.Call("Delete", id))
 
 	for _, user := range r.users {
 		if user.ID.Hex() == id {

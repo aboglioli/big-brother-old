@@ -13,17 +13,21 @@ const (
 	NotNil = "mock.NotNil"
 )
 
-type Call struct {
+type call struct {
 	Func string
 	Args []interface{}
 }
 
+func Call(f string, args ...interface{}) call {
+	return call{f, args}
+}
+
 type Mock struct {
-	Calls []Call
+	Calls []call
 }
 
 func (m *Mock) Called(f string, args ...interface{}) {
-	m.Calls = append(m.Calls, Call{f, args})
+	m.Calls = append(m.Calls, call{f, args})
 }
 
 func (m *Mock) CallsTo(f string) int {
@@ -40,7 +44,7 @@ func (m *Mock) CountCalls() int {
 	return len(m.Calls)
 }
 
-func (m *Mock) Assert(t *testing.T, calls []Call) {
+func (m *Mock) Assert(t *testing.T, calls ...call) {
 	if len(m.Calls) != len(calls) {
 		callsStr := "expected\n"
 		for _, call := range calls {
@@ -64,7 +68,7 @@ func (m *Mock) Assert(t *testing.T, calls []Call) {
 }
 
 func (m *Mock) Reset() {
-	m.Calls = []Call{}
+	m.Calls = []call{}
 }
 
 func compareArgs(args1 []interface{}, args2 []interface{}) bool {

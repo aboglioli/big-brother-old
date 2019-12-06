@@ -36,9 +36,7 @@ func compToCreateRequest(c *Composition) *CreateRequest {
 }
 
 func compToUpdateRequest(c *Composition) *UpdateRequest {
-	id := c.ID.Hex()
 	return &UpdateRequest{
-		ID:             &id,
 		Name:           &c.Name,
 		Cost:           &c.Cost,
 		Unit:           &c.Unit,
@@ -114,7 +112,7 @@ func TestCreateComposition(t *testing.T) {
 		assert.ErrCode(t, err, "COMPOSITION_ALREADY_EXISTS")
 	})
 	t.Run("Non-existing dependency", func(t *testing.T) {
-		repo.Reset()
+		repo.Mock.Reset()
 		comp := newComposition()
 		comp.Dependencies = []Dependency{
 			Dependency{
@@ -127,10 +125,10 @@ func TestCreateComposition(t *testing.T) {
 		}
 		_, err := serv.Create(compToCreateRequest(comp))
 		assert.ErrCode(t, err, "DEPENDENCY_DOES_NOT_EXIST", "Check dependency existence")
-		repo.Assert(t, []mock.Call{
-			mock.Call{"FindByID", []interface{}{comp.ID.Hex()}},
-			mock.Call{"FindByID", []interface{}{comp.Dependencies[0].On.Hex()}},
-		})
+		repo.Mock.Assert(t,
+			mock.Call("FindByID", comp.ID.Hex()),
+			mock.Call("FindByID", comp.Dependencies[0].On.Hex()),
+		)
 	})
 
 	t.Run("Incompatible dependency quantity", func(t *testing.T) {
@@ -138,7 +136,7 @@ func TestCreateComposition(t *testing.T) {
 		dep, comp := newComposition(), newComposition()
 		dep.Unit = quantity.Quantity{2, "kg"}
 		repo.Insert(dep)
-		repo.Reset()
+		repo.Mock.Reset()
 		comp.Dependencies = []Dependency{
 			Dependency{
 				On: dep.ID,
@@ -151,18 +149,18 @@ func TestCreateComposition(t *testing.T) {
 
 		_, err := serv.Create(compToCreateRequest(comp))
 		assert.ErrCode(t, err, "INCOMPATIBLE_DEPENDENCY_QUANTITY", "Dependency cannot be created with incompatible dependency quantity")
-		repo.Assert(t, []mock.Call{
-			mock.Call{"FindByID", []interface{}{comp.ID.Hex()}},
-			mock.Call{"FindByID", []interface{}{comp.Dependencies[0].On.Hex()}},
-		})
+		repo.Mock.Assert(t,
+			mock.Call("FindByID", comp.ID.Hex()),
+			mock.Call("FindByID", comp.Dependencies[0].On.Hex()),
+		)
 	})
 
 	// OK
 	t.Run("Default values with valid units and raise event 'CompositionCreated'", func(t *testing.T) {
 		repo.Clean()
-		repo.Reset()
+		repo.Mock.Reset()
 		eventMgr.Clean()
-		eventMgr.Reset()
+		eventMgr.Mock.Reset()
 		comp := newComposition()
 
 		_, err := serv.Create(compToCreateRequest(comp))
@@ -171,19 +169,19 @@ func TestCreateComposition(t *testing.T) {
 		assert.Equal(t, total, 1)
 		assert.Equal(t, eventMgr.Count(), 1)
 
-		repo.Assert(t, []mock.Call{
-			mock.Call{"FindByID", []interface{}{comp.ID.Hex()}},
-			mock.Call{"Insert", []interface{}{mock.NotNil}},
-		})
+		repo.Mock.Assert(t,
+			mock.Call("FindByID", comp.ID.Hex()),
+			mock.Call("Insert", mock.NotNil),
+		)
 		savedComp, ok := repo.Calls[1].Args[0].(*Composition)
 		assert.Assert(t, ok)
 		assert.Equal(t, savedComp.ID.Hex(), comp.ID.Hex())
 		assert.Equal(t, savedComp.Enabled, true)
 		assert.Equal(t, savedComp.Validated, false)
 
-		eventMgr.Assert(t, []mock.Call{
-			mock.Call{"Publish", []interface{}{mock.NotNil, mock.NotNil}},
-		})
+		eventMgr.Mock.Assert(t,
+			mock.Call("Publish", mock.NotNil, mock.NotNil),
+		)
 		msgs := eventMgr.Messages()
 		msg := msgs[0]
 		assert.Equal(t, msg.Type(), "CompositionCreated")
@@ -205,7 +203,7 @@ func TestCreateComposition(t *testing.T) {
 		repo.Clean()
 		dep, comp := newComposition(), newComposition()
 		repo.Insert(dep)
-		repo.Reset()
+		repo.Mock.Reset()
 		comp.Dependencies = []Dependency{
 			Dependency{
 				On: dep.ID,
@@ -218,11 +216,11 @@ func TestCreateComposition(t *testing.T) {
 
 		_, err := serv.Create(compToCreateRequest(comp))
 
-		repo.Assert(t, []mock.Call{
-			mock.Call{"FindByID", []interface{}{comp.ID.Hex()}},
-			mock.Call{"FindByID", []interface{}{dep.ID.Hex()}},
-			mock.Call{"Insert", []interface{}{mock.NotNil}},
-		})
+		repo.Mock.Assert(t,
+			mock.Call("FindByID", comp.ID.Hex()),
+			mock.Call("FindByID", dep.ID.Hex()),
+			mock.Call("Insert", mock.NotNil),
+		)
 		savedDepID, ok := repo.Calls[1].Args[0].(string)
 		assert.Assert(t, ok)
 		savedComp, ok := repo.Calls[2].Args[0].(*Composition)
@@ -254,7 +252,7 @@ func TestCreateComposition(t *testing.T) {
 			},
 		}
 		repo.Insert(dep)
-		eventMgr.Reset()
+		eventMgr.Mock.Reset()
 
 		c, err := serv.Create(compToCreateRequest(comp))
 
@@ -263,9 +261,9 @@ func TestCreateComposition(t *testing.T) {
 		assert.Equal(t, c.Cost, 37.5, "Cost not calculated")
 		assert.Equal(t, eventMgr.Count(), 1, "Should raise an event")
 
-		eventMgr.Assert(t, []mock.Call{
-			mock.Call{"Publish", []interface{}{mock.NotNil, mock.NotNil}},
-		})
+		eventMgr.Mock.Assert(t,
+			mock.Call("Publish", mock.NotNil, mock.NotNil),
+		)
 		actualEvent, ok := eventMgr.Calls[0].Args[0].(*CompositionChangedEvent)
 		assert.Assert(t, ok)
 		assert.Equal(t, actualEvent.Type, "CompositionCreated")
@@ -290,20 +288,16 @@ func TestUpdateComposition(t *testing.T) {
 	t.Run("Wrong ID", func(t *testing.T) {
 		comp := newComposition()
 		repo.Insert(comp)
-		repo.Reset()
+		repo.Mock.Reset()
 		req := compToUpdateRequest(comp)
 
 		_, err := serv.Update("123", req)
-		assert.ErrCode(t, err, "ID_DOES_NOT_MATCH")
-
-		id := "123"
-		req.ID = &id
-		_, err = serv.Update(id, req)
 		assert.ErrCode(t, err, "COMPOSITION_NOT_FOUND")
 
-		id = comp.ID.Hex()
-		req.ID = &id
-		updatedComp, err := serv.Update(id, req)
+		_, err = serv.Update(comp.ID.Hex()+"---", req)
+		assert.ErrCode(t, err, "COMPOSITION_NOT_FOUND")
+
+		updatedComp, err := serv.Update(comp.ID.Hex(), req)
 		assert.Ok(t, err)
 		assert.Equal(t, updatedComp.ID.Hex(), comp.ID.Hex())
 	})
@@ -397,7 +391,7 @@ func TestUpdateComposition(t *testing.T) {
 	t.Run("Update dependency and raise events", func(t *testing.T) {
 		repo.Clean()
 		eventMgr.Clean()
-		eventMgr.Reset()
+		eventMgr.Mock.Reset()
 
 		comps := makeMockedCompositions()
 		repo.InsertMany(comps)
@@ -443,10 +437,10 @@ func TestUpdateComposition(t *testing.T) {
 		checkCompCost(t, comps, 6, c7)
 
 		// Check events
-		eventMgr.Assert(t, []mock.Call{
-			mock.Call{"Publish", []interface{}{mock.NotNil, mock.NotNil}},
-			mock.Call{"Publish", []interface{}{mock.NotNil, mock.NotNil}},
-		})
+		eventMgr.Mock.Assert(t,
+			mock.Call("Publish", mock.NotNil, mock.NotNil),
+			mock.Call("Publish", mock.NotNil, mock.NotNil),
+		)
 		assert.Equal(t, eventMgr.Count(), 2, "Should raise events")
 
 		msgs := eventMgr.Messages()
@@ -471,14 +465,14 @@ func TestUpdateComposition(t *testing.T) {
 
 		createdComp, err := serv.Create(compToCreateRequest(comp))
 		assert.Ok(t, err)
-		repo.Reset()
+		repo.Mock.Reset()
 		err = serv.Validate(createdComp.ID.Hex())
 		assert.Ok(t, err)
 
-		repo.Assert(t, []mock.Call{
-			mock.Call{"FindByID", []interface{}{comp.ID.Hex()}},
-			mock.Call{"Update", []interface{}{mock.NotNil}},
-		})
+		repo.Mock.Assert(t,
+			mock.Call("FindByID", comp.ID.Hex()),
+			mock.Call("Update", mock.NotNil),
+		)
 		validatedComp := repo.Calls[1].Args[0].(*Composition)
 		assert.Equal(t, validatedComp.ID.Hex(), comp.ID.Hex())
 		assert.Equal(t, validatedComp.Validated, true)
@@ -578,22 +572,22 @@ func TestDeleteComposition(t *testing.T) {
 	assert.Equal(t, total, 2, "Used dependency cannot be deleted")
 	assert.Equal(t, total, enabled, "Used dependency cannot be deleted")
 
-	repo.Reset()
-	eventMgr.Reset()
+	repo.Mock.Reset()
+	eventMgr.Mock.Reset()
 	assert.Ok(t, serv.Delete(comp.ID.Hex()), "Not used composition should be deleted")
 	total, enabled = repo.Count()
 	assert.Equal(t, total, 2, "Used dependency cannot be deleted")
 	assert.Equal(t, enabled, 1, "Not used composition should be deleted")
 
-	repo.Assert(t, []mock.Call{
-		mock.Call{"FindByID", []interface{}{comp.ID.Hex()}},
-		mock.Call{"FindUses", []interface{}{comp.ID.Hex()}},
-		mock.Call{"Delete", []interface{}{comp.ID.Hex()}},
-	})
+	repo.Mock.Assert(t,
+		mock.Call("FindByID", comp.ID.Hex()),
+		mock.Call("FindUses", comp.ID.Hex()),
+		mock.Call("Delete", comp.ID.Hex()),
+	)
 
-	eventMgr.Assert(t, []mock.Call{
-		mock.Call{"Publish", []interface{}{mock.NotNil, mock.NotNil}},
-	})
+	eventMgr.Mock.Assert(t,
+		mock.Call("Publish", mock.NotNil, mock.NotNil),
+	)
 
 	t.Run("Composition disabled and not validated", func(t *testing.T) {
 		repo.Clean()

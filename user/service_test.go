@@ -49,10 +49,11 @@ func TestCreateUser(t *testing.T) {
 		assert.ErrValidation(t, err, "username", "NOT_AVAILABLE")
 		assert.ErrValidation(t, err, "password", "TOO_SHORT")
 		assert.ErrValidation(t, err, "email", "NOT_AVAILABLE")
-		repo.Mock.Assert(t, []mock.Call{
-			mock.Call{"FindByUsername", []interface{}{req.Username}},
-			mock.Call{"FindByEmail", []interface{}{req.Email}},
-		})
+		assert.Equal(t, err.(*errors.Validation).Size(), 3)
+		repo.Mock.Assert(t,
+			mock.Call("FindByUsername", req.Username),
+			mock.Call("FindByEmail", req.Email),
+		)
 
 		// Same username, short password
 		repo.Mock.Reset()
@@ -62,10 +63,11 @@ func TestCreateUser(t *testing.T) {
 		assert.ErrCode(t, err, "VALIDATION")
 		assert.ErrValidation(t, err, "username", "NOT_AVAILABLE")
 		assert.ErrValidation(t, err, "password", "TOO_SHORT")
-		repo.Mock.Assert(t, []mock.Call{
-			mock.Call{"FindByUsername", []interface{}{req.Username}},
-			mock.Call{"FindByEmail", []interface{}{req.Email}},
-		})
+		assert.Equal(t, err.(*errors.Validation).Size(), 3)
+		repo.Mock.Assert(t,
+			mock.Call("FindByUsername", req.Username),
+			mock.Call("FindByEmail", req.Email),
+		)
 
 		// Same username
 		repo.Mock.Reset()
@@ -74,10 +76,11 @@ func TestCreateUser(t *testing.T) {
 		_, err = serv.Create(req)
 		assert.ErrCode(t, err, "VALIDATION")
 		assert.ErrValidation(t, err, "username", "NOT_AVAILABLE")
-		repo.Mock.Assert(t, []mock.Call{
-			mock.Call{"FindByUsername", []interface{}{req.Username}},
-			mock.Call{"FindByEmail", []interface{}{req.Email}},
-		})
+		assert.Equal(t, err.(*errors.Validation).Size(), 1)
+		repo.Mock.Assert(t,
+			mock.Call("FindByUsername", req.Username),
+			mock.Call("FindByEmail", req.Email),
+		)
 	})
 
 	t.Run("Validate schema", func(t *testing.T) {
@@ -105,11 +108,11 @@ func TestCreateUser(t *testing.T) {
 		assert.NotNil(t, createdUser)
 		assert.Equal(t, user.Username, createdUser.Username)
 
-		repo.Assert(t, []mock.Call{
-			mock.Call{"FindByUsername", []interface{}{user.Username}},
-			mock.Call{"FindByEmail", []interface{}{user.Email}},
-			mock.Call{"Insert", []interface{}{mock.NotNil}},
-		})
+		repo.Mock.Assert(t,
+			mock.Call("FindByUsername", user.Username),
+			mock.Call("FindByEmail", user.Email),
+			mock.Call("Insert", mock.NotNil),
+		)
 		insertedUser, ok := repo.Calls[2].Args[0].(*User)
 		assert.Assert(t, ok)
 		assert.Equal(t, createdUser, insertedUser)
@@ -123,12 +126,13 @@ func TestCreateUser(t *testing.T) {
 		assert.Equal(t, createdUser.Validated, false)
 
 		// Events
-		eventMgr.Mock.Assert(t, []mock.Call{
-			mock.Call{"Publish", []interface{}{mock.NotNil, mock.NotNil}},
-		})
-		createdEvent, ok := eventMgr.Calls[0].Args[0].(*UserChangedEvent)
+		eventMgr.Mock.Assert(t,
+			mock.Call("Publish", mock.NotNil, mock.NotNil),
+		)
+		event, ok := eventMgr.Calls[0].Args[0].(*UserChangedEvent)
 		assert.Assert(t, ok)
-		assert.Equal(t, createdEvent.User.ID.Hex(), createdUser.ID.Hex())
+		assert.Equal(t, event.Type, "UserCreated")
+		assert.Equal(t, event.User.ID.Hex(), createdUser.ID.Hex())
 	})
 }
 
@@ -140,6 +144,121 @@ func TestUpdateUser(t *testing.T) {
 	t.Run("Non-existing user", func(t *testing.T) {
 		user := newUser()
 		_, err := serv.Update("123", userToUpdateRequest(user))
-		assert.ErrCode(t, err, "USER_DOES_NOT_EXIST")
+		assert.ErrCode(t, err, "USER_NOT_FOUND")
+	})
+
+	t.Run("Existing username or email, short password", func(t *testing.T) {
+		user := newUser()
+		repo.Insert(user)
+		repo.Mock.Reset()
+		req := userToUpdateRequest(user)
+
+		_, err := serv.Update(user.ID.Hex(), req)
+		assert.ErrCode(t, err, "VALIDATION")
+		assert.ErrValidation(t, err, "username", "NOT_AVAILABLE")
+		assert.ErrValidation(t, err, "email", "NOT_AVAILABLE")
+		assert.Equal(t, err.(*errors.Validation).Size(), 2)
+		repo.Mock.Assert(t,
+			mock.Call("FindByID", user.ID.Hex()),
+			mock.Call("FindByUsername", req.Username),
+			mock.Call("FindByEmail", req.Email),
+		)
+
+		user.Username = "another-user"
+		req = userToUpdateRequest(user)
+		_, err = serv.Update(user.ID.Hex(), req)
+		assert.ErrCode(t, err, "VALIDATION")
+		assert.ErrValidation(t, err, "email", "NOT_AVAILABLE")
+		assert.Equal(t, err.(*errors.Validation).Size(), 1)
+
+		user.Username = "another-user"
+		user.Email = "another@user.com"
+		req = userToUpdateRequest(user)
+		pwd := "1234567"
+		req.Password = &pwd
+		_, err = serv.Update(user.ID.Hex(), req)
+		assert.ErrCode(t, err, "VALIDATION")
+		assert.ErrValidation(t, err, "password", "TOO_SHORT")
+		assert.Equal(t, err.(*errors.Validation).Size(), 1)
+
+	})
+
+	t.Run("Validate schema", func(t *testing.T) {
+		repo.Clean()
+		user := new(User)
+		repo.Insert(user)
+		req := userToUpdateRequest(user)
+		_, err := serv.Update(user.ID.Hex(), req)
+		assert.ErrCode(t, err, "SCHEMA")
+		assert.ErrValidation(t, err, "username", "INVALID_LENGTH")
+		assert.ErrValidation(t, err, "name", "INVALID_LENGTH")
+		assert.ErrValidation(t, err, "lastname", "INVALID_LENGTH")
+		assert.ErrValidation(t, err, "email", "INVALID_LENGTH")
+		assert.ErrValidation(t, err, "email", "INVALID_ADDRESS")
+		assert.Equal(t, err.(*errors.Validation).Size(), 5)
+	})
+
+	// OK
+	t.Run("Update with default values", func(t *testing.T) {
+		repo.Clean()
+		user := newUser()
+		repo.Insert(user)
+		repo.Mock.Reset()
+		eventMgr.Clean()
+		eventMgr.Mock.Reset()
+
+		req := userToUpdateRequest(user)
+		updatedUser, err := serv.Update(user.ID.Hex(), req)
+		assert.Ok(t, err)
+		assert.Equal(t, updatedUser.ID.Hex(), user.ID.Hex())
+
+		repo.Mock.Assert(t,
+			mock.Call("FindByID", user.ID.Hex()),
+			mock.Call("FindByUsername", req.Username),
+			mock.Call("FindByEmail", req.Email),
+			mock.Call("Update", mock.NotNil),
+		)
+		userInDB := repo.Calls[2].Args[0].(*User)
+		assert.Equal(t, updatedUser, userInDB)
+
+		eventMgr.Mock.Assert(t,
+			mock.Call("Publish", mock.NotNil, mock.NotNil),
+		)
+		event, ok := eventMgr.Mock.Calls[0].Args[0].(*UserChangedEvent)
+		assert.Assert(t, ok)
+		assert.Equal(t, event.Type, "UserUpdated")
+		assert.Equal(t, updatedUser, event.User)
+	})
+
+	t.Run("Change username, email and password", func(t *testing.T) {
+		repo.Clean()
+		user := newUser()
+		repo.Insert(user)
+		repo.Mock.Reset()
+		eventMgr.Clean()
+		eventMgr.Mock.Reset()
+
+		req := userToUpdateRequest(user)
+		username := "another-user"
+		email := "another@user.com"
+		pwd := "88889999"
+		req.Username = &username
+		req.Email = &email
+		req.Password = &pwd
+		updatedUser, err := serv.Update(user.ID.Hex(), req)
+		assert.Ok(t, err)
+		assert.Equal(t, updatedUser.ID.Hex(), user.ID.Hex())
+		assert.Equal(t, updatedUser.Username, username)
+		assert.Equal(t, updatedUser.Email, email)
+		assert.Assert(t, updatedUser.ComparePassword(pwd))
+
+		repo.Mock.Assert(t,
+			mock.Call("FindByID", user.ID.Hex()),
+			mock.Call("FindByUsername", req.Username),
+			mock.Call("FindByEmail", req.Email),
+			mock.Call("Update", mock.NotNil),
+		)
+		userInDB := repo.Calls[2].Args[0].(*User)
+		assert.Equal(t, updatedUser, userInDB)
 	})
 }

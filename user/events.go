@@ -14,3 +14,9 @@ func NewUserCreatedEvent(u *User) (*UserChangedEvent, *events.Options) {
 	opts := events.Options{"user", "topic", "user.created", ""}
 	return &event, &opts
 }
+
+func NewUserUpdatedEvent(u *User) (*UserChangedEvent, *events.Options) {
+	event := UserChangedEvent{events.Event{"UserUpdated"}, u}
+	opts := events.Options{"user", "topic", "user.updated", ""}
+	return &event, &opts
+}

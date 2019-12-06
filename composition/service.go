@@ -109,7 +109,6 @@ func (s *service) Create(req *CreateRequest) (*Composition, error) {
 }
 
 type UpdateRequest struct {
-	ID           *string            `json:"id"`
 	Name         *string            `json:"name"`
 	Cost         *float64           `json:"cost"`
 	Unit         *quantity.Quantity `json:"unit"`
@@ -138,10 +137,6 @@ type UpdateRequest struct {
  */
 func (s *service) Update(id string, req *UpdateRequest) (*Composition, error) {
 	path := "composition/service.Update"
-
-	if req.ID != nil && *req.ID != id {
-		return nil, errors.NewStatus("ID_DOES_NOT_MATCH").SetPath(path).SetMessage(fmt.Sprintf("%s != %s", *req.ID, id))
-	}
 
 	c, err := s.findByID(id)
 	if err != nil {

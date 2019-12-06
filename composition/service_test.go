@@ -54,6 +54,9 @@ func TestGetByID(t *testing.T) {
 	t.Run("Not existing", func(t *testing.T) {
 		_, err := serv.GetByID("123")
 		assert.ErrCode(t, err, "COMPOSITION_NOT_FOUND")
+		repo.Mock.Assert(t,
+			mock.Call("FindByID", "123").Return(nil, mock.NotNil),
+		)
 	})
 
 	t.Run("Disabled", func(t *testing.T) {
@@ -61,8 +64,15 @@ func TestGetByID(t *testing.T) {
 		comp.Enabled = false
 		comp.Validated = true
 		repo.Insert(comp)
+		repo.Mock.Reset()
+
 		_, err := serv.GetByID(comp.ID.Hex())
 		assert.ErrCode(t, err, "COMPOSITION_NOT_FOUND")
+		repo.Mock.Assert(t,
+			mock.Call("FindByID", comp.ID.Hex()).Return(mock.NotNil, nil),
+		)
+		compInDB := repo.Mock.Calls[0].Ret[0].(*Composition)
+		assert.Equal(t, compInDB.Enabled, false)
 	})
 
 	t.Run("Not validated", func(t *testing.T) {
@@ -70,8 +80,15 @@ func TestGetByID(t *testing.T) {
 		comp.Enabled = true
 		comp.Validated = false
 		repo.Insert(comp)
+		repo.Mock.Reset()
+
 		_, err := serv.GetByID(comp.ID.Hex())
 		assert.ErrCode(t, err, "COMPOSITION_NOT_VALIDATED")
+		repo.Mock.Assert(t,
+			mock.Call("FindByID", comp.ID.Hex()).Return(mock.NotNil, nil),
+		)
+		compInDB := repo.Mock.Calls[0].Ret[0].(*Composition)
+		assert.Equal(t, compInDB.Validated, false)
 	})
 
 	// OK
@@ -80,9 +97,17 @@ func TestGetByID(t *testing.T) {
 		comp.Enabled = true
 		comp.Validated = true
 		repo.Insert(comp)
+		repo.Mock.Reset()
+
 		saved, err := serv.GetByID(comp.ID.Hex())
 		assert.Ok(t, err)
 		assert.Equal(t, saved.ID.Hex(), comp.ID.Hex())
+		repo.Mock.Assert(t,
+			mock.Call("FindByID", comp.ID.Hex()).Return(mock.NotNil, nil),
+		)
+		compInDB := repo.Mock.Calls[0].Ret[0].(*Composition)
+		assert.Equal(t, compInDB.Enabled, true)
+		assert.Equal(t, compInDB.Validated, true)
 	})
 }
 
@@ -126,8 +151,8 @@ func TestCreateComposition(t *testing.T) {
 		_, err := serv.Create(compToCreateRequest(comp))
 		assert.ErrCode(t, err, "DEPENDENCY_DOES_NOT_EXIST", "Check dependency existence")
 		repo.Mock.Assert(t,
-			mock.Call("FindByID", comp.ID.Hex()),
-			mock.Call("FindByID", comp.Dependencies[0].On.Hex()),
+			mock.Call("FindByID", comp.ID.Hex()).Return(nil, mock.NotNil),
+			mock.Call("FindByID", comp.Dependencies[0].On.Hex()).Return(nil, mock.NotNil),
 		)
 	})
 
@@ -173,7 +198,7 @@ func TestCreateComposition(t *testing.T) {
 			mock.Call("FindByID", comp.ID.Hex()),
 			mock.Call("Insert", mock.NotNil),
 		)
-		savedComp, ok := repo.Calls[1].Args[0].(*Composition)
+		savedComp, ok := repo.Mock.Calls[1].Args[0].(*Composition)
 		assert.Assert(t, ok)
 		assert.Equal(t, savedComp.ID.Hex(), comp.ID.Hex())
 		assert.Equal(t, savedComp.Enabled, true)
@@ -218,13 +243,13 @@ func TestCreateComposition(t *testing.T) {
 		_, err := serv.Create(compToCreateRequest(comp))
 
 		repo.Mock.Assert(t,
-			mock.Call("FindByID", comp.ID.Hex()),
-			mock.Call("FindByID", dep.ID.Hex()),
-			mock.Call("Insert", mock.NotNil),
+			mock.Call("FindByID", comp.ID.Hex()).Return(nil, mock.NotNil),
+			mock.Call("FindByID", dep.ID.Hex()).Return(mock.NotNil, nil),
+			mock.Call("Insert", mock.NotNil).Return(nil),
 		)
-		savedDepID, ok := repo.Calls[1].Args[0].(string)
+		savedDepID, ok := repo.Mock.Calls[1].Args[0].(string)
 		assert.Assert(t, ok)
-		savedComp, ok := repo.Calls[2].Args[0].(*Composition)
+		savedComp, ok := repo.Mock.Calls[2].Args[0].(*Composition)
 		assert.Assert(t, ok)
 		assert.Equal(t, savedDepID, dep.ID.Hex())
 		assert.Equal(t, savedComp.ID.Hex(), comp.ID.Hex())
@@ -265,7 +290,7 @@ func TestCreateComposition(t *testing.T) {
 		eventMgr.Mock.Assert(t,
 			mock.Call("Publish", mock.NotNil, mock.NotNil),
 		)
-		actualEvent, ok := eventMgr.Calls[0].Args[0].(*CompositionChangedEvent)
+		actualEvent, ok := eventMgr.Mock.Calls[0].Args[0].(*CompositionChangedEvent)
 		assert.Assert(t, ok)
 		assert.Equal(t, actualEvent.Type, "CompositionCreated")
 		assert.NotNil(t, actualEvent.Composition)
@@ -474,7 +499,7 @@ func TestUpdateComposition(t *testing.T) {
 			mock.Call("FindByID", comp.ID.Hex()),
 			mock.Call("Update", mock.NotNil),
 		)
-		validatedComp := repo.Calls[1].Args[0].(*Composition)
+		validatedComp := repo.Mock.Calls[1].Args[0].(*Composition)
 		assert.Equal(t, validatedComp.ID.Hex(), comp.ID.Hex())
 		assert.Equal(t, validatedComp.Validated, true)
 

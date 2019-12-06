@@ -51,8 +51,8 @@ func TestCreateUser(t *testing.T) {
 		assert.ErrValidation(t, err, "email", "NOT_AVAILABLE")
 		assert.Equal(t, err.(*errors.Validation).Size(), 3)
 		repo.Mock.Assert(t,
-			mock.Call("FindByUsername", req.Username),
-			mock.Call("FindByEmail", req.Email),
+			mock.Call("FindByUsername", req.Username).Return(mock.NotNil, nil),
+			mock.Call("FindByEmail", req.Email).Return(mock.NotNil, nil),
 		)
 
 		// Same username, short password
@@ -65,8 +65,8 @@ func TestCreateUser(t *testing.T) {
 		assert.ErrValidation(t, err, "password", "TOO_SHORT")
 		assert.Equal(t, err.(*errors.Validation).Size(), 2)
 		repo.Mock.Assert(t,
-			mock.Call("FindByUsername", req.Username),
-			mock.Call("FindByEmail", req.Email),
+			mock.Call("FindByUsername", req.Username).Return(mock.NotNil, nil),
+			mock.Call("FindByEmail", req.Email).Return(nil, mock.NotNil),
 		)
 
 		// Same username
@@ -113,7 +113,7 @@ func TestCreateUser(t *testing.T) {
 			mock.Call("FindByEmail", user.Email),
 			mock.Call("Insert", mock.NotNil),
 		)
-		insertedUser, ok := repo.Calls[2].Args[0].(*User)
+		insertedUser, ok := repo.Mock.Calls[2].Args[0].(*User)
 		assert.Assert(t, ok)
 		assert.Equal(t, createdUser, insertedUser)
 		assert.Equal(t, createdUser.ID.Hex(), insertedUser.ID.Hex())
@@ -129,7 +129,7 @@ func TestCreateUser(t *testing.T) {
 		eventMgr.Mock.Assert(t,
 			mock.Call("Publish", mock.NotNil, mock.NotNil),
 		)
-		event, ok := eventMgr.Calls[0].Args[0].(*UserChangedEvent)
+		event, ok := eventMgr.Mock.Calls[0].Args[0].(*UserChangedEvent)
 		assert.Assert(t, ok)
 		assert.Equal(t, event.Type, "UserCreated")
 		assert.Equal(t, event.User.ID.Hex(), createdUser.ID.Hex())
@@ -227,7 +227,7 @@ func TestUpdateUser(t *testing.T) {
 			mock.Call("FindByEmail", *req.Email),
 			mock.Call("Update", mock.NotNil),
 		)
-		userInDB := repo.Calls[3].Args[0].(*User)
+		userInDB := repo.Mock.Calls[3].Args[0].(*User)
 		assert.Equal(t, updatedUser, userInDB)
 
 		eventMgr.Mock.Assert(t,
@@ -267,7 +267,7 @@ func TestUpdateUser(t *testing.T) {
 			mock.Call("FindByEmail", *req.Email),
 			mock.Call("Update", mock.NotNil),
 		)
-		userInDB := repo.Calls[3].Args[0].(*User)
+		userInDB := repo.Mock.Calls[3].Args[0].(*User)
 		assert.Equal(t, updatedUser, userInDB)
 	})
 }

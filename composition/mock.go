@@ -153,7 +153,7 @@ func (r *mockRepository) FindByID(id string) (*Composition, error) {
 		}
 	}
 
-	err := errors.NewInternal("NOT_FOUND").SetPath("composition/repository_mock.FindById")
+	err := errors.NewInternal("NOT_FOUND").SetPath("composition/mock.FindById")
 	r.Called(call.Return(nil, err))
 	return nil, err
 }
@@ -240,7 +240,7 @@ func (r *mockRepository) Delete(id string) error {
 		}
 	}
 
-	err := errors.NewInternal("NOT_FOUND").SetPath("composition/repository_mock.Delete")
+	err := errors.NewInternal("NOT_FOUND").SetPath("composition/mock.Delete")
 	r.Called(call.Return(err))
 	return err
 }

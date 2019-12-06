@@ -33,52 +33,62 @@ func (r *mockRepository) Clean() {
 }
 
 func (r *mockRepository) FindByID(id string) (*User, error) {
-	r.Called(mock.Call("FindByID", id))
+	call := mock.Call("FindByID", id)
 
 	for _, u := range r.users {
 		if u.ID.Hex() == id {
+			r.Called(call.Return(copyUser(u), nil))
 			return copyUser(u), nil
 		}
 	}
 
-	return nil, errors.NewInternal("NOT_FOUND").SetPath("user/repository_mock.FindById")
+	err := errors.NewInternal("NOT_FOUND").SetPath("user/mock.FindById")
+	r.Called(call.Return(nil, err))
+	return nil, err
 }
 
 func (r *mockRepository) FindByUsername(username string) (*User, error) {
-	r.Called(mock.Call("FindByUsername", username))
+	call := mock.Call("FindByUsername", username)
 
 	for _, u := range r.users {
 		if u.Username == username {
+			r.Called(call.Return(copyUser(u), nil))
 			return copyUser(u), nil
 		}
 	}
 
-	return nil, errors.NewInternal("NOT_FOUND").SetPath("user/repository_mock.FindByUsername")
+	err := errors.NewInternal("NOT_FOUND").SetPath("user/mock.FindByUsername")
+	r.Called(call.Return(nil, err))
+	return nil, err
 }
 
 func (r *mockRepository) FindByEmail(email string) (*User, error) {
-	r.Called(mock.Call("FindByEmail", email))
+	call := mock.Call("FindByEmail", email)
 
 	for _, u := range r.users {
 		if u.Email == email {
+			r.Called(call.Return(copyUser(u), nil))
 			return copyUser(u), nil
 		}
 	}
 
-	return nil, errors.NewInternal("NOT_FOUND").SetPath("user/repository_mock.FindByEmail")
+	err := errors.NewInternal("NOT_FOUND").SetPath("user/mock.FindByEmail")
+	r.Called(call.Return(nil, err))
+	return nil, err
 }
 
 func (r *mockRepository) Insert(u *User) error {
-	r.Called(mock.Call("Insert", u))
+	call := mock.Call("Insert", u)
 
 	u.UpdatedAt = time.Now()
 	r.users = append(r.users, copyUser(u))
 
+	r.Called(call.Return(nil))
 	return nil
 }
 
 func (r *mockRepository) InsertMany(users []*User) error {
-	r.Called(mock.Call("InsertMany", users))
+	call := mock.Call("InsertMany", users)
 
 	newUsers := make([]*User, len(users))
 	for i, u := range users {
@@ -87,11 +97,12 @@ func (r *mockRepository) InsertMany(users []*User) error {
 	}
 	r.users = append(r.users, newUsers...)
 
+	r.Called(call.Return(nil))
 	return nil
 }
 
 func (r *mockRepository) Update(u *User) error {
-	r.Called(mock.Call("Update", u))
+	call := mock.Call("Update", u)
 
 	for _, user := range r.users {
 		if user.ID.Hex() == u.ID.Hex() {
@@ -101,21 +112,25 @@ func (r *mockRepository) Update(u *User) error {
 		}
 	}
 
+	r.Called(call.Return(nil))
 	return nil
 }
 
 func (r *mockRepository) Delete(id string) error {
-	r.Called(mock.Call("Delete", id))
+	call := mock.Call("Delete", id)
 
 	for _, user := range r.users {
 		if user.ID.Hex() == id {
 			user.UpdatedAt = time.Now()
 			user.Enabled = false
+			r.Called(call.Return(nil))
 			return nil
 		}
 	}
 
-	return errors.NewInternal("NOT_FOUND").SetPath("user/repository_mock.Delete")
+	err := errors.NewInternal("NOT_FOUND").SetPath("user/mock.Delete")
+	r.Called(call.Return(err))
+	return err
 }
 
 func (r *mockRepository) Count() int {

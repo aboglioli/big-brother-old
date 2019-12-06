@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	eventMgr, err := infrEvents.GetManager()
+	eventMgr, err := infrEvents.Rabbit()
 	if err != nil {
 		fmt.Println(err)
 		return

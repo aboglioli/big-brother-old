@@ -1,4 +1,4 @@
-package events
+package converter
 
 import (
 	"encoding/json"

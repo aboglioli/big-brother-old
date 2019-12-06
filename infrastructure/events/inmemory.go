@@ -1,12 +1,14 @@
 package events
 
 import (
+	"github.com/aboglioli/big-brother/pkg/converter"
+	"github.com/aboglioli/big-brother/pkg/events"
 	"github.com/aboglioli/big-brother/pkg/tests/mock"
 )
 
 // Message
 type mockMessage struct {
-	converter    Converter
+	converter    converter.Converter
 	Exchange     string
 	ExchangeType string
 	Queue        string
@@ -19,7 +21,7 @@ func (d mockMessage) Body() []byte {
 }
 
 func (d mockMessage) Type() string {
-	var e Event
+	var e events.Event
 	if err := d.Decode(&e); err != nil {
 		return ""
 	}
@@ -34,29 +36,25 @@ func (d mockMessage) Ack() {
 }
 
 // Manager
-var mockMgr *mockManager
-
 type mockManager struct {
 	mock.Mock
-	converter Converter
-	ch        chan Message
+	converter converter.Converter
+	ch        chan events.Message
 	buffer    []mockMessage
 }
 
-func GetMockManager() *mockManager {
-	if mockMgr == nil {
-		converter := DefaultConverter()
-		mockMgr = &mockManager{
-			converter: converter,
-			ch:        make(chan Message),
-			buffer:    make([]mockMessage, 0),
-		}
+func InMemory() *mockManager {
+	converter := converter.DefaultConverter()
+	mockMgr := &mockManager{
+		converter: converter,
+		ch:        make(chan events.Message),
+		buffer:    make([]mockMessage, 0),
 	}
 
 	return mockMgr
 }
 
-func (m *mockManager) Publish(body interface{}, opts *Options) error {
+func (m *mockManager) Publish(body interface{}, opts *events.Options) error {
 	m.Called("Publish", body, opts)
 
 	b, err := m.converter.Encode(body)
@@ -79,7 +77,7 @@ func (m *mockManager) Publish(body interface{}, opts *Options) error {
 	return nil
 }
 
-func (m *mockManager) Consume(opts *Options) (<-chan Message, error) {
+func (m *mockManager) Consume(opts *events.Options) (<-chan events.Message, error) {
 	m.Called("Consume", opts)
 
 	return m.ch, nil

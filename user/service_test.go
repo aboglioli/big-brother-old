@@ -3,8 +3,8 @@ package user
 import (
 	"testing"
 
+	"github.com/aboglioli/big-brother/infrastructure/events"
 	"github.com/aboglioli/big-brother/pkg/errors"
-	"github.com/aboglioli/big-brother/pkg/events"
 	"github.com/aboglioli/big-brother/pkg/tests/assert"
 	"github.com/aboglioli/big-brother/pkg/tests/mock"
 )
@@ -20,7 +20,7 @@ func userToCreateRequest(u *User) *CreateRequest {
 }
 
 func TestCreateUser(t *testing.T) {
-	repo, eventMgr := newMockRepository(), events.GetMockManager()
+	repo, eventMgr := newMockRepository(), events.InMemory()
 	serv := NewService(repo, eventMgr)
 
 	// Errors
@@ -34,6 +34,7 @@ func TestCreateUser(t *testing.T) {
 		req := userToCreateRequest(user)
 		req.Password = "1234"
 		_, err := serv.Create(req)
+		assert.ErrCode(t, err, "VALIDATION")
 		assert.ErrValidation(t, err, "username", "NOT_AVAILABLE")
 		assert.ErrValidation(t, err, "password", "TOO_SHORT")
 		assert.ErrValidation(t, err, "email", "NOT_AVAILABLE")
@@ -47,6 +48,7 @@ func TestCreateUser(t *testing.T) {
 		req.Password = "1234567"
 		req.Email = "antoher@user.com"
 		_, err = serv.Create(req)
+		assert.ErrCode(t, err, "VALIDATION")
 		assert.ErrValidation(t, err, "username", "NOT_AVAILABLE")
 		assert.ErrValidation(t, err, "password", "TOO_SHORT")
 		repo.Mock.Assert(t, []mock.Call{
@@ -59,6 +61,7 @@ func TestCreateUser(t *testing.T) {
 		req.Password = "12345678"
 		req.Email = "antoher@user.com"
 		_, err = serv.Create(req)
+		assert.ErrCode(t, err, "VALIDATION")
 		assert.ErrValidation(t, err, "username", "NOT_AVAILABLE")
 		repo.Mock.Assert(t, []mock.Call{
 			mock.Call{"FindByUsername", []interface{}{req.Username}},
@@ -116,4 +119,9 @@ func TestCreateUser(t *testing.T) {
 		assert.Assert(t, ok)
 		assert.Equal(t, createdEvent.User.ID.Hex(), createdUser.ID.Hex())
 	})
+}
+
+func TestUpdateUser(t *testing.T) {
+	repo, eventMgr := newMockRepository(), events.InMemory()
+	_ = NewService(repo, eventMgr)
 }

@@ -2,6 +2,7 @@ package events
 
 import (
 	"github.com/aboglioli/big-brother/pkg/config"
+	"github.com/aboglioli/big-brother/pkg/converter"
 	"github.com/aboglioli/big-brother/pkg/errors"
 	"github.com/aboglioli/big-brother/pkg/events"
 	"github.com/streadway/amqp"
@@ -10,10 +11,10 @@ import (
 // Message
 type rabbitMessage struct {
 	amqp.Delivery
-	converter events.Converter
+	converter converter.Converter
 }
 
-func newMessage(d amqp.Delivery, c events.Converter) events.Message {
+func newMessage(d amqp.Delivery, c converter.Converter) events.Message {
 	return rabbitMessage{d, c}
 }
 
@@ -38,34 +39,30 @@ func (d rabbitMessage) Ack() {
 }
 
 // Manager
-var mgr *manager
-
 type manager struct {
 	connection *amqp.Connection
 	emitters   map[string]*amqp.Channel
 	consumers  map[string]*amqp.Channel
-	converter  events.Converter
+	converter  converter.Converter
 }
 
-func GetManager() (events.Manager, error) {
-	if mgr == nil {
-		converter := events.DefaultConverter()
-		mgr = &manager{
-			emitters:  make(map[string]*amqp.Channel),
-			consumers: make(map[string]*amqp.Channel),
-			converter: converter,
-		}
-		_, err := mgr.connect()
-		if err != nil {
-			return nil, err
-		}
-		go func() {
-			for {
-				<-mgr.connection.NotifyClose(make(chan *amqp.Error))
-				mgr.connect()
-			}
-		}()
+func Rabbit() (events.Manager, error) {
+	converter := converter.DefaultConverter()
+	mgr := &manager{
+		emitters:  make(map[string]*amqp.Channel),
+		consumers: make(map[string]*amqp.Channel),
+		converter: converter,
 	}
+	_, err := mgr.connect()
+	if err != nil {
+		return nil, err
+	}
+	go func() {
+		for {
+			<-mgr.connection.NotifyClose(make(chan *amqp.Error))
+			mgr.connect()
+		}
+	}()
 
 	return mgr, nil
 }

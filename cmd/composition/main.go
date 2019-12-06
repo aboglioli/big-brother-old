@@ -5,12 +5,12 @@ import (
 
 	"github.com/aboglioli/big-brother/composition"
 	infrComp "github.com/aboglioli/big-brother/infrastructure/composition"
-	infrEvents "github.com/aboglioli/big-brother/infrastructure/events"
+	"github.com/aboglioli/big-brother/infrastructure/events"
 )
 
 func main() {
 	// Dendencies resolution
-	eventMgr, err := infrEvents.GetManager()
+	eventMgr, err := events.Rabbit()
 	if err != nil {
 		log.Fatal(err)
 		return

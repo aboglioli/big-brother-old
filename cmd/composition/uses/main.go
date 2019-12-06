@@ -47,7 +47,7 @@ func (c *Context) UpdateUses(comp *composition.Composition) error {
 
 func main() {
 	// Dendencies resolution
-	eventMgr, err := infrEvents.GetManager()
+	eventMgr, err := infrEvents.Rabbit()
 	if err != nil {
 		log.Fatal(err)
 	}

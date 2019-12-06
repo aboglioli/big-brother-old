@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/aboglioli/big-brother/pkg/events"
+	"github.com/aboglioli/big-brother/infrastructure/events"
 	"github.com/aboglioli/big-brother/pkg/quantity"
 	"github.com/aboglioli/big-brother/pkg/tests/assert"
 	"github.com/aboglioli/big-brother/pkg/tests/mock"
@@ -49,7 +49,7 @@ func compToUpdateRequest(c *Composition) *UpdateRequest {
 }
 
 func TestGetByID(t *testing.T) {
-	repo, eventMgr := newMockRepository(), events.GetMockManager()
+	repo, eventMgr := newMockRepository(), events.InMemory()
 	serv := NewService(repo, eventMgr)
 
 	// Errors
@@ -89,7 +89,7 @@ func TestGetByID(t *testing.T) {
 }
 
 func TestCreateComposition(t *testing.T) {
-	repo, eventMgr := newMockRepository(), events.GetMockManager()
+	repo, eventMgr := newMockRepository(), events.InMemory()
 	serv := NewService(repo, eventMgr)
 
 	// Errors
@@ -283,7 +283,7 @@ func TestCreateComposition(t *testing.T) {
 }
 
 func TestUpdateComposition(t *testing.T) {
-	repo, eventMgr := newMockRepository(), events.GetMockManager()
+	repo, eventMgr := newMockRepository(), events.InMemory()
 	serv := NewService(repo, eventMgr)
 
 	// Errors
@@ -491,7 +491,7 @@ func TestUpdateComposition(t *testing.T) {
 }
 
 func TestCreateAndUpdateDependencies(t *testing.T) {
-	repo, eventMgr := newMockRepository(), events.GetMockManager()
+	repo, eventMgr := newMockRepository(), events.InMemory()
 	serv := NewService(repo, eventMgr)
 
 	repo.Clean()
@@ -558,7 +558,7 @@ func TestCreateAndUpdateDependencies(t *testing.T) {
 }
 
 func TestDeleteComposition(t *testing.T) {
-	repo, eventMgr := newMockRepository(), events.GetMockManager()
+	repo, eventMgr := newMockRepository(), events.InMemory()
 	serv := NewService(repo, eventMgr)
 
 	comp, dep := newComposition(), newComposition()
@@ -615,7 +615,7 @@ func TestDeleteComposition(t *testing.T) {
 }
 
 func TestCalculateDependenciesSubvalues(t *testing.T) {
-	repo, eventMgr := newMockRepository(), events.GetMockManager()
+	repo, eventMgr := newMockRepository(), events.InMemory()
 	serv := NewService(repo, eventMgr)
 
 	comps := makeMockedCompositions()

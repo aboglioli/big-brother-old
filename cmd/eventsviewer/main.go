@@ -4,12 +4,12 @@ import (
 	"fmt"
 
 	"github.com/aboglioli/big-brother/composition"
-	infrEvents "github.com/aboglioli/big-brother/impl/events"
+	implEvents "github.com/aboglioli/big-brother/impl/events"
 	"github.com/aboglioli/big-brother/pkg/events"
 )
 
 func main() {
-	eventMgr, err := infrEvents.Rabbit()
+	eventMgr, err := implEvents.Rabbit()
 	if err != nil {
 		fmt.Println(err)
 		return

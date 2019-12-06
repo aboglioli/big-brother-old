@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/aboglioli/big-brother/composition"
-	infrComp "github.com/aboglioli/big-brother/impl/composition"
+	implComp "github.com/aboglioli/big-brother/impl/composition"
 	"github.com/aboglioli/big-brother/impl/events"
 )
 
@@ -24,5 +24,5 @@ func main() {
 
 	compositionService := composition.NewService(compositionRepository, eventMgr)
 
-	infrComp.StartREST(eventMgr, compositionService)
+	implComp.StartREST(eventMgr, compositionService)
 }

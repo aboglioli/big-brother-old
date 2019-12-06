@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/aboglioli/big-brother/composition"
-	infrEvents "github.com/aboglioli/big-brother/impl/events"
+	implEvents "github.com/aboglioli/big-brother/impl/events"
 	"github.com/aboglioli/big-brother/pkg/errors"
 	"github.com/aboglioli/big-brother/pkg/events"
 )
@@ -47,7 +47,7 @@ func (c *Context) UpdateUses(comp *composition.Composition) error {
 
 func main() {
 	// Dendencies resolution
-	eventMgr, err := infrEvents.Rabbit()
+	eventMgr, err := implEvents.Rabbit()
 	if err != nil {
 		log.Fatal(err)
 	}

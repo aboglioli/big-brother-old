@@ -7,6 +7,18 @@ import (
 	"github.com/aboglioli/big-brother/pkg/tests/mock"
 )
 
+// User
+func newUser() *User {
+	u := NewUser()
+	u.Username = "test-user"
+	u.SetPassword("12345678")
+	u.Name = "Name"
+	u.Lastname = "Lastname"
+	u.Email = "test@user.com"
+	return u
+}
+
+// Repository
 type mockRepository struct {
 	mock.Mock
 	users []*User
@@ -16,12 +28,10 @@ func newMockRepository() *mockRepository {
 	return &mockRepository{}
 }
 
-// Helpers
 func (r *mockRepository) Clean() {
 	r.users = make([]*User, 0)
 }
 
-// Implementation
 func (r *mockRepository) FindByID(id string) (*User, error) {
 	r.Called("FindByID", id)
 

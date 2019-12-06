@@ -19,6 +19,17 @@ func userToCreateRequest(u *User) *CreateRequest {
 	}
 }
 
+func userToUpdateRequest(u *User) *UpdateRequest {
+	password := "12345678"
+	return &UpdateRequest{
+		Username: &u.Username,
+		Password: &password,
+		Name:     &u.Name,
+		Lastname: &u.Lastname,
+		Email:    &u.Email,
+	}
+}
+
 func TestCreateUser(t *testing.T) {
 	repo, eventMgr := newMockRepository(), events.InMemory()
 	serv := NewService(repo, eventMgr)
@@ -123,5 +134,12 @@ func TestCreateUser(t *testing.T) {
 
 func TestUpdateUser(t *testing.T) {
 	repo, eventMgr := newMockRepository(), events.InMemory()
-	_ = NewService(repo, eventMgr)
+	serv := NewService(repo, eventMgr)
+
+	// Errors
+	t.Run("Non-existing user", func(t *testing.T) {
+		user := newUser()
+		_, err := serv.Update("123", userToUpdateRequest(user))
+		assert.ErrCode(t, err, "USER_DOES_NOT_EXIST")
+	})
 }

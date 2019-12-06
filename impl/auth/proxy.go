@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	infrCache "github.com/aboglioli/big-brother/impl/cache"
+	implCache "github.com/aboglioli/big-brother/impl/cache"
 	"github.com/aboglioli/big-brother/pkg/cache"
 	"github.com/aboglioli/big-brother/pkg/config"
 	"github.com/aboglioli/big-brother/pkg/errors"
@@ -16,7 +16,7 @@ type UserProxy struct {
 }
 
 func NewUserProxy() *UserProxy {
-	c := infrCache.InMemory()
+	c := implCache.InMemory()
 	return &UserProxy{c}
 }
 
@@ -32,7 +32,7 @@ func (p *UserProxy) Validate(token string) (*user.User, error) {
 		return nil, errors.NewInternal("AUTH_API").SetRef(err)
 	}
 
-	p.cache.Set(token, user, infrCache.DefaultExpiration)
+	p.cache.Set(token, user, implCache.DefaultExpiration)
 
 	return user, nil
 }

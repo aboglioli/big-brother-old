@@ -106,6 +106,7 @@ func makeMockedCompositions() []*Composition {
 		c.AutoupdateCost = true
 		c.Enabled = true
 		c.Validated = true
+		c.UpdateUses = false
 		c.Stock = quantity.Quantity{
 			Quantity: 10 * c.Unit.Quantity,
 			Unit:     c.Unit.Unit,
@@ -175,12 +176,12 @@ func (r *mockRepository) FindUses(id string) ([]*Composition, error) {
 	return comps, nil
 }
 
-func (r *mockRepository) FindByUsesUpdatedSinceLastChange(usesUpdated bool) ([]*Composition, error) {
-	call := mock.Call("FindByUsesUpdatedSinceLastChange", usesUpdated)
+func (r *mockRepository) FindByUpdateUses(updateUses bool) ([]*Composition, error) {
+	call := mock.Call("FindByUpdateUses", updateUses)
 
 	comps := make([]*Composition, 0)
 	for _, c := range r.compositions {
-		if c.UsesUpdatedSinceLastChange == usesUpdated {
+		if c.UpdateUses == updateUses {
 			comps = append(comps, copyComposition(c))
 		}
 	}
@@ -220,6 +221,21 @@ func (r *mockRepository) Update(c *Composition) error {
 		if comp.ID.Hex() == c.ID.Hex() {
 			*comp = *copyComposition(c)
 			comp.UpdatedAt = time.Now()
+			break
+		}
+	}
+
+	r.Called(call.Return(nil))
+	return nil
+}
+
+func (r *mockRepository) SetUpdateUses(id string, updateUses bool) error {
+	call := mock.Call("SetUpdateUses", id, updateUses)
+
+	for _, comp := range r.compositions {
+		if comp.ID.Hex() == id {
+			comp.UpdatedAt = time.Now()
+			comp.UpdateUses = updateUses
 			break
 		}
 	}

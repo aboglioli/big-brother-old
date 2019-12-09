@@ -202,8 +202,7 @@ func (s *service) Update(id string, req *UpdateRequest) (*Composition, error) {
 		}
 	}
 
-	c.UsesUpdatedSinceLastChange = false
-
+	c.UpdateUses = true
 	if err := s.repository.Update(c); err != nil {
 		return nil, errors.NewStatus("UPDATE").SetRef(err)
 	}
@@ -297,6 +296,11 @@ func (s *service) UpdateUses(c *Composition) ([]*Composition, error) {
 		if err := s.eventMgr.Publish(event, opts); err != nil {
 			return nil, err
 		}
+	}
+
+	c.UpdateUses = false
+	if err := s.repository.Update(c); err != nil {
+		return nil, errors.NewStatus("UPDATE_COMPOSITION").SetPath(path).SetRef(err)
 	}
 
 	return comps, nil

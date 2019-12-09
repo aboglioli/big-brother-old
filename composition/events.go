@@ -39,9 +39,3 @@ func NewCompositionsUpdatedAutomaticallyEvent(comps []*Composition) (*Compositio
 	opts := events.Options{"composition", "topic", "composition.updated", ""}
 	return &event, &opts
 }
-
-func NewCompositionUsesUpdatedSinceLastChangeEvent(c *Composition) (*CompositionChangedEvent, *events.Options) {
-	event := CompositionChangedEvent{events.Event{"CompositionUsesUpdatedSinceLastChange"}, c}
-	opts := events.Options{"composition", "topic", "composition.updated", ""}
-	return &event, &opts
-}

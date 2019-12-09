@@ -435,6 +435,8 @@ func TestUpdateComposition(t *testing.T) {
 			Unit:     "g",
 		}
 
+		repo.Mock.Reset()
+
 		c, err := serv.Update(c.ID.Hex(), compToUpdateRequest(c))
 		assert.Ok(t, err)
 		updatedUses, err := serv.UpdateUses(c)

@@ -16,15 +16,15 @@ type Composition struct {
 	Stock        quantity.Quantity `json:"stock" bson:"stock"`
 	Dependencies []Dependency      `json:"dependencies" bson:"dependencies"`
 
-	AutoupdateCost             bool `json:"autoupdateCost" bson:"autoupdateCost"`
-	UsesUpdatedSinceLastChange bool `json:"usesUpdatedSinceLastChange" bson:"usesUpdatedSinceLastChange"`
+	AutoupdateCost bool `json:"autoupdateCost" bson:"autoupdateCost"`
+	UpdateUses     bool `json:"updateUses" bson:"updateUses"`
 }
 
 func NewComposition() *Composition {
 	return &Composition{
-		Base:                       models.NewBase(),
-		AutoupdateCost:             true,
-		UsesUpdatedSinceLastChange: true,
+		Base:           models.NewBase(),
+		AutoupdateCost: true,
+		UpdateUses:     false,
 	}
 }
 

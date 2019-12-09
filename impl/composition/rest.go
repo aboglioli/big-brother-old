@@ -92,7 +92,7 @@ type RESTContext struct {
 *     "autoupdateCost": true,
 *     "enabled": true,
 *     "validated": true,
-*     "usesUpdatedSinceLastChange": true,
+*     "updateUses": false,
 *     "createdAt": "2019-11-11T22:15:59.301Z",
 *     "updatedAt": "2019-11-15T01:35:19.024Z"
 *  }
@@ -212,7 +212,7 @@ func (r *RESTContext) GetByID(c *gin.Context) {
 *     "autoupdateCost": true,
 *     "enabled": true,
 *     "validated": false,
-*     "usesUpdatedSinceLastChange": true,
+*     "updateUses": false,
 *     "createdAt": "2019-11-11T22:15:59.301Z",
 *     "updatedAt": "2019-11-15T01:35:19.024Z"
 *   },
@@ -333,7 +333,7 @@ func (r *RESTContext) Post(c *gin.Context) {
 *     "autoupdateCost": true,
 *     "enabled": true,
 *     "validated": true,
-*     "usesUpdatedSinceLastChange": false,
+*     "updateUses": true,
 *     "createdAt": "2019-11-11T22:15:59.301Z",
 *     "updatedAt": "2019-11-15T01:35:19.024Z"
 *   },

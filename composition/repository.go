@@ -15,11 +15,12 @@ type Repository interface {
 	FindAll() ([]*Composition, error)
 	FindByID(id string) (*Composition, error)
 	FindUses(id string) ([]*Composition, error)
-	FindByUsesUpdatedSinceLastChange(usesUpdated bool) ([]*Composition, error)
+	FindByUpdateUses(upateUses bool) ([]*Composition, error)
 
 	Insert(*Composition) error
 	InsertMany([]*Composition) error
 	Update(*Composition) error
+	SetUpdateUses(id string, updateUses bool) error
 	Delete(id string) error
 }
 
@@ -73,7 +74,7 @@ func (r *repository) FindByID(id string) (*Composition, error) {
 
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, errors.NewInternal("OBJECTID_FROM_HEX").SetPath(path).SetRef(err)
+		return nil, errors.NewInternal("OBJECTID").SetPath(path).SetRef(err)
 	}
 
 	filter := bson.M{
@@ -99,7 +100,7 @@ func (r *repository) FindUses(id string) ([]*Composition, error) {
 
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, errors.NewInternal("OBJECTID_FROM_HEX").SetPath(path).SetRef(err)
+		return nil, errors.NewInternal("OBJECTID").SetPath(path).SetRef(err)
 	}
 	filter := bson.M{
 		"dependencies.of": objID,
@@ -128,12 +129,12 @@ func (r *repository) FindUses(id string) ([]*Composition, error) {
 	return comps, nil
 }
 
-func (r *repository) FindByUsesUpdatedSinceLastChange(usesUpdated bool) ([]*Composition, error) {
-	path := "composition/repository.FindByUsesUpdatedSinceLastChange"
+func (r *repository) FindByUpdateUses(updateUses bool) ([]*Composition, error) {
+	path := "composition/repository.FindByUpdateUses"
 	ctx := context.Background()
 
 	filter := bson.M{
-		"usesUpdatedSinceLastChange": usesUpdated,
+		"updateUses": updateUses,
 	}
 
 	cur, err := r.collection.Find(ctx, filter)
@@ -194,7 +195,7 @@ func (r *repository) Update(c *Composition) error {
 	ctx := context.Background()
 
 	if c.ID.IsZero() {
-		return errors.NewInternal("INVALID_OBJECTID").SetPath(path)
+		return errors.NewInternal("OBJECTID").SetPath(path)
 	}
 
 	c.UpdatedAt = time.Now()
@@ -215,13 +216,41 @@ func (r *repository) Update(c *Composition) error {
 	return nil
 }
 
-func (r *repository) Delete(id string) error {
-	path := "composition/repository.Delete"
-
+func (r *repository) SetUpdateUses(id string, updateUses bool) error {
+	path := "composition/repository.SetUpdateUses"
 	ctx := context.Background()
+
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return errors.NewInternal("OBJECTID_FROM_HEX").SetPath(path).SetRef(err)
+		return errors.NewInternal("OBJECTID").SetPath(path).SetRef(err)
+	}
+
+	filter := bson.M{
+		"_id": objID,
+	}
+
+	update := bson.D{
+		{"$set", bson.D{
+			{"updatedAt", time.Now()},
+			{"updateUses", updateUses},
+		}},
+	}
+
+	_, err = r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return errors.NewInternal("UPDATE_ONE").SetPath(path).SetRef(err)
+	}
+
+	return nil
+}
+
+func (r *repository) Delete(id string) error {
+	path := "composition/repository.Delete"
+	ctx := context.Background()
+
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return errors.NewInternal("OBJECTID").SetPath(path).SetRef(err)
 	}
 
 	filter := bson.M{

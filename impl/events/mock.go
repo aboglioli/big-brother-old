@@ -74,13 +74,13 @@ func (m *mockManager) Publish(body interface{}, opts *events.Options) error {
 		m.ch <- msg
 	}()
 
-	m.Called(call.Return(nil))
+	m.Mock.Called(call.Return(nil))
 	return nil
 }
 
 func (m *mockManager) Consume(opts *events.Options) (<-chan events.Message, error) {
 	call := mock.Call("Consume", opts)
-	m.Called(call.Return(m.ch, nil))
+	m.Mock.Called(call.Return(m.ch, nil))
 	return m.ch, nil
 }
 

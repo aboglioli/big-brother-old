@@ -37,13 +37,13 @@ func (r *mockRepository) FindByID(id string) (*User, error) {
 
 	for _, u := range r.users {
 		if u.ID.Hex() == id {
-			r.Called(call.Return(copyUser(u), nil))
+			r.Mock.Called(call.Return(copyUser(u), nil))
 			return copyUser(u), nil
 		}
 	}
 
 	err := errors.NewInternal("NOT_FOUND").SetPath("user/mock.FindById")
-	r.Called(call.Return(nil, err))
+	r.Mock.Called(call.Return(nil, err))
 	return nil, err
 }
 
@@ -52,13 +52,13 @@ func (r *mockRepository) FindByUsername(username string) (*User, error) {
 
 	for _, u := range r.users {
 		if u.Username == username {
-			r.Called(call.Return(copyUser(u), nil))
+			r.Mock.Called(call.Return(copyUser(u), nil))
 			return copyUser(u), nil
 		}
 	}
 
 	err := errors.NewInternal("NOT_FOUND").SetPath("user/mock.FindByUsername")
-	r.Called(call.Return(nil, err))
+	r.Mock.Called(call.Return(nil, err))
 	return nil, err
 }
 
@@ -67,13 +67,13 @@ func (r *mockRepository) FindByEmail(email string) (*User, error) {
 
 	for _, u := range r.users {
 		if u.Email == email {
-			r.Called(call.Return(copyUser(u), nil))
+			r.Mock.Called(call.Return(copyUser(u), nil))
 			return copyUser(u), nil
 		}
 	}
 
 	err := errors.NewInternal("NOT_FOUND").SetPath("user/mock.FindByEmail")
-	r.Called(call.Return(nil, err))
+	r.Mock.Called(call.Return(nil, err))
 	return nil, err
 }
 
@@ -83,7 +83,7 @@ func (r *mockRepository) Insert(u *User) error {
 	u.UpdatedAt = time.Now()
 	r.users = append(r.users, copyUser(u))
 
-	r.Called(call.Return(nil))
+	r.Mock.Called(call.Return(nil))
 	return nil
 }
 
@@ -97,7 +97,7 @@ func (r *mockRepository) InsertMany(users []*User) error {
 	}
 	r.users = append(r.users, newUsers...)
 
-	r.Called(call.Return(nil))
+	r.Mock.Called(call.Return(nil))
 	return nil
 }
 
@@ -112,7 +112,7 @@ func (r *mockRepository) Update(u *User) error {
 		}
 	}
 
-	r.Called(call.Return(nil))
+	r.Mock.Called(call.Return(nil))
 	return nil
 }
 
@@ -123,13 +123,13 @@ func (r *mockRepository) Delete(id string) error {
 		if user.ID.Hex() == id {
 			user.UpdatedAt = time.Now()
 			user.Enabled = false
-			r.Called(call.Return(nil))
+			r.Mock.Called(call.Return(nil))
 			return nil
 		}
 	}
 
 	err := errors.NewInternal("NOT_FOUND").SetPath("user/mock.Delete")
-	r.Called(call.Return(err))
+	r.Mock.Called(call.Return(err))
 	return err
 }
 

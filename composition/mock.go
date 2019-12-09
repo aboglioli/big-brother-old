@@ -140,7 +140,7 @@ func (r *mockRepository) FindAll() ([]*Composition, error) {
 		}
 	}
 
-	r.Called(call.Return(comps, nil))
+	r.Mock.Called(call.Return(comps, nil))
 	return comps, nil
 }
 
@@ -149,13 +149,13 @@ func (r *mockRepository) FindByID(id string) (*Composition, error) {
 
 	for _, c := range r.compositions {
 		if c.ID.Hex() == id {
-			r.Called(call.Return(copyComposition(c), nil))
+			r.Mock.Called(call.Return(copyComposition(c), nil))
 			return copyComposition(c), nil
 		}
 	}
 
 	err := errors.NewInternal("NOT_FOUND").SetPath("composition/mock.FindById")
-	r.Called(call.Return(nil, err))
+	r.Mock.Called(call.Return(nil, err))
 	return nil, err
 }
 
@@ -172,7 +172,7 @@ func (r *mockRepository) FindUses(id string) ([]*Composition, error) {
 		}
 	}
 
-	r.Called(call.Return(comps, nil))
+	r.Mock.Called(call.Return(comps, nil))
 	return comps, nil
 }
 
@@ -186,7 +186,7 @@ func (r *mockRepository) FindByUpdateUses(updateUses bool) ([]*Composition, erro
 		}
 	}
 
-	r.Called(call.Return(comps, nil))
+	r.Mock.Called(call.Return(comps, nil))
 	return comps, nil
 }
 
@@ -196,7 +196,7 @@ func (r *mockRepository) Insert(c *Composition) error {
 	c.UpdatedAt = time.Now()
 	r.compositions = append(r.compositions, copyComposition(c))
 
-	r.Called(call.Return(nil))
+	r.Mock.Called(call.Return(nil))
 	return nil
 }
 
@@ -210,7 +210,7 @@ func (r *mockRepository) InsertMany(comps []*Composition) error {
 	}
 	r.compositions = append(r.compositions, newComps...)
 
-	r.Called(call.Return(nil))
+	r.Mock.Called(call.Return(nil))
 	return nil
 }
 
@@ -225,22 +225,7 @@ func (r *mockRepository) Update(c *Composition) error {
 		}
 	}
 
-	r.Called(call.Return(nil))
-	return nil
-}
-
-func (r *mockRepository) SetUpdateUses(id string, updateUses bool) error {
-	call := mock.Call("SetUpdateUses", id, updateUses)
-
-	for _, comp := range r.compositions {
-		if comp.ID.Hex() == id {
-			comp.UpdatedAt = time.Now()
-			comp.UpdateUses = updateUses
-			break
-		}
-	}
-
-	r.Called(call.Return(nil))
+	r.Mock.Called(call.Return(nil))
 	return nil
 }
 
@@ -251,13 +236,13 @@ func (r *mockRepository) Delete(id string) error {
 		if comp.ID.Hex() == id {
 			comp.UpdatedAt = time.Now()
 			comp.Enabled = false
-			r.Called(call.Return(nil))
+			r.Mock.Called(call.Return(nil))
 			return nil
 		}
 	}
 
 	err := errors.NewInternal("NOT_FOUND").SetPath("composition/mock.Delete")
-	r.Called(call.Return(err))
+	r.Mock.Called(call.Return(err))
 	return err
 }
 

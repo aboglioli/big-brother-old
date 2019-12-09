@@ -20,7 +20,6 @@ type Repository interface {
 	Insert(*Composition) error
 	InsertMany([]*Composition) error
 	Update(*Composition) error
-	SetUpdateUses(id string, updateUses bool) error
 	Delete(id string) error
 }
 
@@ -209,34 +208,6 @@ func (r *repository) Update(c *Composition) error {
 	}
 
 	_, err := r.collection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return errors.NewInternal("UPDATE_ONE").SetPath(path).SetRef(err)
-	}
-
-	return nil
-}
-
-func (r *repository) SetUpdateUses(id string, updateUses bool) error {
-	path := "composition/repository.SetUpdateUses"
-	ctx := context.Background()
-
-	objID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return errors.NewInternal("OBJECTID").SetPath(path).SetRef(err)
-	}
-
-	filter := bson.M{
-		"_id": objID,
-	}
-
-	update := bson.D{
-		{"$set", bson.D{
-			{"updatedAt", time.Now()},
-			{"updateUses", updateUses},
-		}},
-	}
-
-	_, err = r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return errors.NewInternal("UPDATE_ONE").SetPath(path).SetRef(err)
 	}

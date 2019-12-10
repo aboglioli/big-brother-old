@@ -133,15 +133,16 @@ func (r *mockRepository) Delete(id string) error {
 	return err
 }
 
-func (r *mockRepository) Count() int {
-	count := 0
-	for _, u := range r.users {
-		if u.Enabled {
-			count++
+func (r *mockRepository) Count() (int, int) {
+	totalCount, enabledCount := 0, 0
+	for _, c := range r.users {
+		totalCount++
+		if c.Enabled {
+			enabledCount++
 		}
 	}
 
-	return count
+	return totalCount, enabledCount
 }
 
 func copyUser(u *User) *User {

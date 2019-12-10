@@ -271,3 +271,45 @@ func TestUpdateUser(t *testing.T) {
 		assert.Equal(t, updatedUser, userInDB)
 	})
 }
+
+func TestDeleteUser(t *testing.T) {
+	repo, eventMgr := newMockRepository(), events.Mock()
+	serv := NewService(repo, eventMgr)
+
+	// Error
+	t.Run("Delete non existing user", func(t *testing.T) {
+		err := serv.Delete("123")
+		assert.ErrCode(t, err, "NOT_FOUND")
+	})
+
+	// OK
+	t.Run("Delete existing user", func(t *testing.T) {
+		user := newUser()
+		repo.Insert(user)
+		repo.Mock.Reset()
+		eventMgr.Mock.Reset()
+
+		err := serv.Delete(user.ID.Hex())
+		assert.Ok(t, err)
+
+		total, enabled := repo.Count()
+		assert.Equal(t, total, 1)
+		assert.Equal(t, enabled, 0)
+
+		repo.Mock.Assert(t,
+			mock.Call("FindByID", user.ID.Hex()),
+			mock.Call("Delete", user.ID.Hex()),
+		)
+		deletedUser, err := repo.FindByID(user.ID.Hex())
+		assert.Ok(t, err)
+		assert.Equal(t, deletedUser.Enabled, false)
+
+		eventMgr.Mock.Assert(t,
+			mock.Call("Publish", mock.NotNil, mock.NotNil),
+		)
+		event := eventMgr.Calls[0].Args[0].(*UserChangedEvent)
+		publishedUser := event.User
+		assert.Equal(t, publishedUser.ID.Hex(), user.ID.Hex())
+		assert.Equal(t, publishedUser.Enabled, false)
+	})
+}

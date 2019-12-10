@@ -156,13 +156,20 @@ func (s *service) Update(id string, req *UpdateRequest) (*User, error) {
 func (s *service) Delete(id string) error {
 	path := "user/service.Delete"
 
-	_, err := s.repository.FindByID(id)
+	u, err := s.repository.FindByID(id)
 	if err != nil {
 		return errors.NewStatus("NOT_FOUND").SetPath(path).SetRef(err)
 	}
 
 	if err := s.repository.Delete(id); err != nil {
 		return errors.NewInternal("DELETE").SetPath(path).SetRef(err)
+	}
+
+	u.Enabled = false
+	// Event
+	event, opts := NewUserDeletedEvent(u)
+	if err := s.eventMgr.Publish(event, opts); err != nil {
+		return err
 	}
 
 	return nil
